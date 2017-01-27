@@ -39,6 +39,7 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %       5: Labyrinth Devices VOG Goggle data files
 %
 %
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
