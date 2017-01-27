@@ -400,9 +400,9 @@ switch handles.params.system_code
         FieldGains = []; % Input parameter for processing coil signals
         coilzeros = []; % Input parameter for processing coil signals
         ref = 0; % Input parameter for processing rotation vectors
-        system_code = 5; % System code, in this case it tells the routine
+        system_code = 1; % System code, in this case it tells the routine
         % NOT to apply and additional coordinate system trasnformation
-        DAQ_code = 3; % Indicates we are processing Labyrinth Devices VOG Data
+        DAQ_code = 5; % Indicates we are processing Labyrinth Devices VOG Data
         
         [EyeVel] = voma__processeyemovements(PathName,FileName,FieldGains,coilzeros,ref,system_code,DAQ_code);
         

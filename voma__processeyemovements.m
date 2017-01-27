@@ -83,7 +83,7 @@ switch data_rot
         
 end
 
-FBinFAfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H V T] convention
+dbdbFBinFAfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H V T] convention
 
 
 %% Extract and process the raw coil data
