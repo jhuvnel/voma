@@ -244,8 +244,8 @@ if ~exist('QP_range','var')
             for i=1:length(start_ind)
                 % if total detected saccade is less than tSaccDur, most likely not a saccade
                 % if stop_ind(i-1)-start_ind(i-1)<(tSaccDur*Fs)
-                
-                if (stop_ind(i)-start_ind(i))>(tSaccMax*Fs) || (stop_ind(i)-start_ind(i)) >(tSaccMin*Fs)
+                if ((stop_ind(i)-start_ind(i)) >(tSaccMin*Fs))
+%                 if (stop_ind(i)-start_ind(i))>(tSaccMax*Fs) || (stop_ind(i)-start_ind(i)) >(tSaccMin*Fs)
                     test=[test i];
                     stop_ind(i)=NaN;
                     start_ind(i)=NaN;
