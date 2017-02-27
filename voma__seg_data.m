@@ -182,8 +182,12 @@ switch handles.params.system_code
     case 1
         Segment.Stim_Trig = handles.Data.Stim_Trig(i_start_eye:i_end_eye);
     case 2
-        Segment.Stim_Trig = handles.Data.Stim_Trig(i_start_stim:i_end_stim);
         
+        if isempty(handles.Data.Stim_Trig)
+            Segment.Stim_Trig = [];
+        else
+            Segment.Stim_Trig = handles.Data.Stim_Trig(i_start_stim:i_end_stim);
+        end
 end
 
 Segment.HeadMPUVel_X = handles.Data.HeadMPUVel_X(i_start_stim:i_end_stim);
@@ -226,7 +230,14 @@ if handles.params.plot_MVIGPIO == 1
         case 1 %NOTE: For the LD VOG system, we plot the GPIO line as a function of the EYE time stamps, since the GPIO line is sampled with the eye data
             plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.Stim_Trig*handles.params.gpio_mult,'color','k','DisplayName','Stim - Trig')
         case 2
-            plot(handles.data_plot,handles.Segment.Time_Stim(1,:),ones(1,length(handles.Segment.Time_Stim(1,:)))*handles.params.gpio_mult,'color','k','Marker','*','DisplayName','Stim - Trig')
+            
+            if isempty(handles.Segment.Stim_Trig)
+%                 Stim = [];
+            else
+                Stim = handles.Segment.Time_Stim(1,:);
+                plot(handles.data_plot,Stim,ones(1,length(Stim))*handles.params.gpio_mult,'color','k','Marker','*','DisplayName','Stim - Trig')
+                
+            end
     end
 end
 
@@ -618,10 +629,10 @@ switch handles.params.system_code
                 system_code = 4;
         end
         % Indicate the DAQ code
-        DAQ_code = 2; % Lasker System as recorded by a CED 1401 device
+        DAQ_code = 3; % Lasker System as recorded by a CED 1401 device
                 
         
-        [RawData] = processeyemovements_v7(PathName,FileName,FieldGains,coilzeros,ref,system_code,DAQ_code);
+        [RawData] = voma__processeyemovements(PathName,FileName,FieldGains,coilzeros,ref,system_code,DAQ_code);
         
         % Attempt to
         
@@ -635,52 +646,53 @@ switch handles.params.system_code
         Data.RE_Position_Y = RawData.RE_Pos_Y;
         Data.RE_Position_Z = RawData.RE_Pos_Z;
 
-        Data.LE_Velocity_X = RawData.lx;
-        Data.LE_Velocity_Y = RawData.ly;
-        Data.LE_Velocity_LARP = RawData.ll;
-        Data.LE_Velocity_RALP = RawData.lr;
-        Data.LE_Velocity_Z = RawData.lz;
+        Data.LE_Velocity_X = RawData.LE_Vel_X;
+        Data.LE_Velocity_Y = RawData.LE_Vel_Y;
+        Data.LE_Velocity_LARP = RawData.LE_Vel_LARP;
+        Data.LE_Velocity_RALP = RawData.LE_Vel_RALP;
+        Data.LE_Velocity_Z = RawData.LE_Vel_Z;
         
-        Data.RE_Velocity_X = RawData.rx;
-        Data.RE_Velocity_Y = RawData.ry;
-        Data.RE_Velocity_LARP = RawData.rl;
-        Data.RE_Velocity_RALP = RawData.rr;
-        Data.RE_Velocity_Z = RawData.rz;
+        Data.RE_Velocity_X = RawData.RE_Vel_X;
+        Data.RE_Velocity_Y = RawData.RE_Vel_Y;
+        Data.RE_Velocity_LARP = RawData.RE_Vel_LARP;
+        Data.RE_Velocity_RALP = RawData.RE_Vel_RALP;
+        Data.RE_Velocity_Z = RawData.RE_Vel_Z;
         
         Data.Fs = RawData.Fs;
         
              
         
         
-        Data.Time_Eye = [0:length(RawData.ll)-1]/Data.Fs;
+        Data.Time_Eye = [0:length(RawData.LE_Vel_LARP)-1]/Data.Fs;
         Data.Time_Stim = RawData.ElecStimTrig';
         
         if isempty(RawData.ElecStimTrig)
         
             Data.Stim_Trig = [];
+            Data.Time_Stim = Data.Time_Eye;
         else
             % We will calculate PR using a first order backwards difference
             % instantaneous rate approx. We are not using a central
             % difference, since it will smear/smooth the Pulse rate values
             PR = 1./diff(RawData.ElecStimTrig(:,1));
-            % To have the same number of PR valuse as pulse times, we will
+            % To have the same number of PR values as pulse times, we will
             % copy the first entry in the array, and append the PR array in
             % the front. The first value in the PR array is really
             % "PulseTime(2)-PulseTime(1)". The actual value plotted/saved
-            % here is vor graphical purposes only and the actual pulse
+            % here is for graphical purposes only and the actual pulse
             % times themselves will be used for analysis.
             Data.Stim_Trig = [PR(1) PR'];
             
         end
         
         % Kludge for now!
-        Data.HeadMPUVel_X = zeros(1,length(Data.Stim_Trig));
-        Data.HeadMPUVel_Y = zeros(1,length(Data.Stim_Trig));
-        Data.HeadMPUVel_Z = zeros(1,length(Data.Stim_Trig));
+        Data.HeadMPUVel_X = zeros(length(Data.Time_Stim),1);
+        Data.HeadMPUVel_Y = zeros(length(Data.Time_Stim),1);
+        Data.HeadMPUVel_Z = RawData.Var_x083;
         
-        Data.HeadMPUAccel_X = zeros(1,length(Data.Stim_Trig));
-        Data.HeadMPUAccel_Y = zeros(1,length(Data.Stim_Trig));
-        Data.HeadMPUAccel_Z = zeros(1,length(Data.Stim_Trig));
+        Data.HeadMPUAccel_X = zeros(length(Data.Time_Stim),1);
+        Data.HeadMPUAccel_Y = zeros(length(Data.Time_Stim),1);
+        Data.HeadMPUAccel_Z = zeros(length(Data.Time_Stim),1);
         
     otherwise
         

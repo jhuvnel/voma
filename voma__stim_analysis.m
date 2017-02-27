@@ -25,7 +25,7 @@ function varargout = voma__stim_analysis(varargin)
 
 % Edit the above text to modify the response to help voma__stim_analysis
 
-% Last Modified by GUIDE v2.5 21-Jan-2017 22:06:53
+% Last Modified by GUIDE v2.5 01-Feb-2017 16:32:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,6 +71,11 @@ handles.curr_file = varargin{3};
 handles.pathname = varargin{4};
 handles.filename = varargin{5};
 
+if isrow(handles.CurrData.VOMA_data.Stim_t)
+    handles.CurrData.VOMA_data.Stim_t = handles.CurrData.VOMA_data.Stim_t';
+end
+
+
 % Plot the Stimulus Trace
 plot_stim_trace(hObject, eventdata, handles)
 
@@ -81,11 +86,15 @@ set(handles.trig_time_params,'Visible','Off')
 
 handles.params.detect_method = 1;
 
-handles.params.align_thresh = 65;
+handles.params.align_thresh = 0;
+
+handles.params.pre_stim_dur = 0;
 
 handles.params.btwn_stim_dur = str2double(get(handles.btwn_stim_duration,'String'))/1000;
 
 set(handles.align_thresh,'String',num2str(handles.params.align_thresh));
+
+set(handles.pre_stim_dur,'String',num2str(handles.params.pre_stim_dur));
 
 % Update handles structure
 guidata(hObject, handles);
@@ -152,13 +161,15 @@ handles.Time_Up = [handles.CurrData.VOMA_data.Stim_t(1):1/Fs_up:handles.CurrData
 
 handles.Stimulus_Up = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Stim_Trace,handles.Time_Up);
 
-handles.LE_L = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.ll,handles.Time_Up);
-handles.LE_R = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.lr,handles.Time_Up);
-handles.LE_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.lz,handles.Time_Up);
+handles.UpSamp.LE_L = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP,handles.Time_Up);
+handles.UpSamp.LE_R = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP,handles.Time_Up);
+handles.UpSamp.LE_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z,handles.Time_Up);
 
-handles.RE_L = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.rl,handles.Time_Up);
-handles.RE_R = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.rr,handles.Time_Up);
-handles.RE_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.rz,handles.Time_Up);
+handles.UpSamp.RE_L = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP,handles.Time_Up);
+handles.UpSamp.RE_R = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP,handles.Time_Up);
+handles.UpSamp.RE_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z,handles.Time_Up);
+
+% REPLOT?
 
 % Update handles structure
 guidata(hObject, handles);
@@ -211,8 +222,11 @@ switch handles.params.detect_method
         stim_pos_thresh_ind = inds(pos_ind > 0 )';
         stim_neg_thresh_ind = inds(neg_ind > 0 )';
         
+        
         handles.pos_stim_ind = stim_pos_thresh_ind;
-        handles.neg_stim_ind = stim_neg_thresh_ind;
+
+%         handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.params.upsamp_Fs);
+%         handles.neg_stim_ind = stim_neg_thresh_ind;
         
 %         set(handles.cycle_table,'Data',[handles.Time_Up([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus_Up([stim_pos_thresh_ind stim_neg_thresh_ind])]);
         set(handles.cycle_table,'Data',[handles.Time_Up([stim_pos_thresh_ind ]) handles.Stimulus_Up([stim_pos_thresh_ind ])]);
@@ -227,6 +241,7 @@ switch handles.params.detect_method
         plot(handles.stim_plot,handles.Time_Up(stim_pos_thresh_ind),handles.Stimulus_Up(stim_pos_thresh_ind),'rx')
 %         plot(handles.stim_plot,handles.Time_Up(stim_neg_thresh_ind),handles.Stimulus_Up(stim_neg_thresh_ind),'bx')
         handles.CurrData.VOMA_data.stim_ind = [handles.pos_stim_ind ];
+        
     case 2
         inds = [1:length(handles.CurrData.VOMA_data.Stim_Trace)];
         
@@ -468,6 +483,34 @@ function stim_ind_end_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function stim_ind_end_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to stim_ind_end (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function pre_stim_dur_Callback(hObject, eventdata, handles)
+% hObject    handle to pre_stim_dur (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = get(hObject,'String');
+
+handles.params.pre_stim_dur = str2double(input);
+
+
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of pre_stim_dur as text
+%        str2double(get(hObject,'String')) returns contents of pre_stim_dur as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function pre_stim_dur_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pre_stim_dur (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

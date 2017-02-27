@@ -577,7 +577,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         %         plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),handles.CurrData.VOMA_data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),'k','LineWidth',1)
         
     case {2,3}
-        switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
+        switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
             case 'Current Fitting'
                 %                 plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                 plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_Trace(1,handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
@@ -965,7 +965,7 @@ if handles.params.plot_cycleavg_flag == 1
             plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
             
         case {2,3}
-            switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
+            switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
                 case 'Current Fitting'
                     %             plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                     
