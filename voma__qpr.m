@@ -25,7 +25,7 @@ function varargout = voma__qpr(varargin)
 
 % Edit the above text to modify the response to help voma__qpr
 
-% Last Modified by GUIDE v2.5 08-Feb-2017 17:41:35
+% Last Modified by GUIDE v2.5 03-Mar-2017 13:16:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -252,7 +252,7 @@ elseif handles.reload_flag == 1
     
     % If the 'current file' variable does not exist yet, just initialize it
     % to zero
-    if ~exist('handles.curr_file','var')
+    if ~isfield(handles,'curr_file')
         handles.curr_file = 1;
     end
     
@@ -380,6 +380,7 @@ else
         
         
     end
+    
     
     
     % Mark the file as SAVED
@@ -1707,9 +1708,9 @@ switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
 end
 guidata(hObject,handles)
 end
-% --- Executes on button press in open_voranalysis.
-function open_voranalysis_Callback(hObject, eventdata, handles)
-% hObject    handle to open_voranalysis (see GCBO)
+% --- Executes on button press in open_cycleanalysis.
+function open_cycleanalysis_Callback(hObject, eventdata, handles)
+% hObject    handle to open_cycleanalysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1812,44 +1813,81 @@ function save_qp_params_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% The 'voma__stim_analysis' GUI offers the option to upsample the processed
+% Eye and Stimulus data traces, and save them in parallel to the processed
+% data in the original time base. We will ask the user which traces they
+% want to process in this GUI.
+if isfield(handles.CurrData.VOMA_data,'UpSamp')
+    
+    
+    choice = questdlg('You are about to save edited Eye Data traces that have previously been upsampled and stored in this file. How would you like to proceed?', ...
+        'Upsampled Data Found', ...
+        'Delete the old upsampled data, and save my new traces','Leave everything alone and don''t save!','Leave everything alone and don''t save!');
+    % Handle response
+    switch choice
+        case 'Delete the old upsampled data, and save my new traces'
+            % Delete the old, upsampled data traces
+            handles.CurrData.VOMA_data = rmfield(handles.CurrData.VOMA_data,'UpSamp');
+            % Flag the system to save the data as normal
+            handles.upsamp_flag = true;
+        case 'Leave everything alone and don''t save!'
+            handles.upsamp_flag = false;
+        otherwise
+            % If the user closes the dialog box WITHOUT making a choice, DO
+            % NOT SAVE/DELETE ANY DATA
+            handles.upsamp_flag = false;
+    end
+else
+    % If the no upsampled data was ever saved with the file, then flag the
+    % system to save as normal.
+    handles.upsamp_flag = true;
+    
+end
 
-[handles] = update_eye_vel(hObject, eventdata, handles, 2);
+if handles.upsamp_flag
+    
+    [handles] = update_eye_vel(hObject, eventdata, handles, 2);
+    
+    % Even though the user may have normalized the time vector for plotting
+    % purposes, we will reload the time vector for clarity.
+    handles.CurrData.VOMA_data.Eye_t = handles.RootData(handles.curr_file).VOMA_data.Eye_t;
+    handles.CurrData.VOMA_data.Stim_t = handles.RootData(handles.curr_file).VOMA_data.Stim_t;
+    
+    handles.CurrData.QPparams.filt_params = get(handles.filt_params,'Data');
+        
+    handles.RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
+    handles.RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;
+    handles.RootData(handles.curr_file).QPparams = handles.CurrData.QPparams;
+    handles.RootData(handles.curr_file).cyc2plot = handles.CurrData.cyc2plot;
+    
+    RootData = handles.RootData;
+    
+    cd(handles.pathname);
+    
+    eval(['save ' handles.filename ' RootData'])
+    
+    
+    handles.reload_flag = 1;
+    
+    analyze_new_voma_file_Callback(hObject, 1, handles)
+    
+    % We have nested changes to the GUI's handles, so I want to pull them
+    % from the global hObject variable
+    handles = guidata(hObject);
+    
+    % Now set the 'reload_flag'
+    handles.reload_flag =0;
+    
+    % Mark the file as UNSAVED
+    handles.params.save_flag = false;
+    
+    [handles] = update_eye_pos(hObject, eventdata, handles, 3);
+    [handles] = update_eye_vel(hObject, eventdata, handles, 3);
+    
+else
 
-% Even though the user may have normalized the time vector for plotting
-% purposes, we will reload the time vector for clarity.
-handles.CurrData.VOMA_data.Eye_t = handles.RootData(handles.curr_file).VOMA_data.Eye_t;
-handles.CurrData.VOMA_data.Stim_t = handles.RootData(handles.curr_file).VOMA_data.Stim_t;
+end
 
-handles.CurrData.QPparams.filt_params = get(handles.filt_params,'Data');
-
-handles.RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
-handles.RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;
-handles.RootData(handles.curr_file).QPparams = handles.CurrData.QPparams;
-handles.RootData(handles.curr_file).cyc2plot = handles.CurrData.cyc2plot;
-
-RootData = handles.RootData;
-
-cd(handles.pathname);
-
-eval(['save ' handles.filename ' RootData'])
-
-
-handles.reload_flag = 1;
-
-analyze_new_voma_file_Callback(hObject, 1, handles)
-
-% We have nested changes to the GUI's handles, so I want to pull them
-% from the global hObject variable
-handles = guidata(hObject);
-
-% Now set the 'reload_flag'
-handles.reload_flag =0;
-
-% Mark the file as UNSAVED
-handles.params.save_flag = false;
-
-[handles] = update_eye_pos(hObject, eventdata, handles, 3);
-[handles] = update_eye_vel(hObject, eventdata, handles, 3);
 
 % Globally save the handles
 guidata(hObject, handles);
@@ -1971,7 +2009,7 @@ guidata(hObject,handles)
 end
 
 % --- Executes on button press in UGQPR_go.
-function UGQPR_go_Callback(hObject, eventdata, handles)
+function [handles] = UGQPR_go_Callback(hObject, eventdata, handles)
 % hObject    handle to UGQPR_go (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2692,8 +2730,8 @@ switch flag
     case 2 % Eye Velocities were Recalculated
         set(handles.recalc_angvel_ind,'BackgroundColor','y')
         set(handles.recalc_angvel_ind,'String',['AngVel Recal. @ ' char(datetime)])
-        % Mark the file as SAVED
-        handles.params.save_flag = false;
+        % Mark the file as UNSAVED
+        handles.params.save_flag = true;
     case 3 % Eye position Data was Saved!
         set(handles.recalc_angvel_ind,'BackgroundColor','g')
         set(handles.recalc_angvel_ind,'String',['Changes Saved @ ' char(datetime)])
@@ -2864,6 +2902,8 @@ function post_qpr_filt_Callback(hObject, eventdata, handles)
 handles.params.post_qpr_filt_param1;
 
 [handles] = start_deseccade_Callback(hObject, eventdata, handles);
+
+[handles] = UGQPR_go_Callback(hObject, eventdata, handles);
 
 % Update the 'filter parameter spreadsheet'
 filt_params = get(handles.filt_params,'Data');

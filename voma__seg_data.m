@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 19-Jan-2017 22:56:55
+% Last Modified by GUIDE v2.5 06-Mar-2017 15:54:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -45,7 +45,7 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
+end
 
 % --- Executes just before voma__seg_data is made visible.
 function voma__seg_data_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -85,8 +85,11 @@ handles.params.Lasker_param2 = 1;
 
 handles.Yaxis_MPU_Rot_theta = str2double(get(handles.Yaxis_Rot_Theta,'String'));
 
+handles.params.gpio_trig_opt = 1;
 
 set(handles.LaskerSystPanel,'Visible','Off')
+
+set(handles.mpuoffsetpanel,'Visible','On')
 
 [handles] = update_seg_filename(hObject, eventdata, handles);
 
@@ -95,7 +98,7 @@ guidata(hObject, handles);
 
 % UIWAIT makes voma__seg_data wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = voma__seg_data_OutputFcn(hObject, eventdata, handles) 
@@ -106,41 +109,54 @@ function varargout = voma__seg_data_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-
+end
 
 % --- Executes on button press in new_segment.
-function new_segment_Callback(hObject, eventdata, handles)
+function [handles] = new_segment_Callback(hObject, eventdata, handles,user_seg_flag)
 % hObject    handle to new_segment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% if user_seg_flag
+
 set(handles.save_indicator,'String','UNSAVED')
 set(handles.save_indicator,'BackgroundColor','r')
 
-% Ask user to choose segmentation points
-uiwait(msgbox('Please align the vertical line of the crosshair with the starting point of the stimulus','Segment Eye Movement Data'));
-[x1,y1] = ginput(1);
-uiwait(msgbox('Please align the vertical line of the crosshair with the ending point of the stimulus','Segment Eye Movement Data'));
-[x2,y2] = ginput(1);
-time_cutout_s = [x1 ; x2];
-
-%
-[a1,i_start_eye] = min(abs(handles.Data.Time_Eye - time_cutout_s(1,1)));
-[a2,i_end_eye] = min(abs(handles.Data.Time_Eye - time_cutout_s(2,1)));
-
-if isvector(handles.Data.Time_Stim)
+if user_seg_flag
+    % Ask user to choose segmentation points
+    uiwait(msgbox('Please align the vertical line of the crosshair with the starting point of the stimulus','Segment Eye Movement Data'));
+    [x1,y1] = ginput(1);
+    uiwait(msgbox('Please align the vertical line of the crosshair with the ending point of the stimulus','Segment Eye Movement Data'));
+    [x2,y2] = ginput(1);
+    time_cutout_s = [x1 ; x2];
     
-    [b1,i_start_stim] = min(abs(handles.Data.Time_Stim - time_cutout_s(1,1)));
-    [b2,i_end_stim] = min(abs(handles.Data.Time_Stim - time_cutout_s(2,1)));
+    [a1,i_start_eye] = min(abs(handles.Data.Time_Eye - time_cutout_s(1,1)));
+    [a2,i_end_eye] = min(abs(handles.Data.Time_Eye - time_cutout_s(2,1)));
     
+    if isvector(handles.Data.Time_Stim)
+        
+        [b1,i_start_stim] = min(abs(handles.Data.Time_Stim - time_cutout_s(1,1)));
+        [b2,i_end_stim] = min(abs(handles.Data.Time_Stim - time_cutout_s(2,1)));
+        
+    else
+        
+        
+        [b1,i_start_stim] = min(abs(handles.Data.Time_Stim(1,:) - time_cutout_s(1,1)));
+        [b2,i_end_stim] = min(abs(handles.Data.Time_Stim(1,:) - time_cutout_s(2,1)));
+        
+        
+    end
 else
+    i_start_eye = handles.i_start_eye;
+    i_end_eye = handles.i_end_eye;
+    i_start_stim = handles.i_start_stim;
+    i_end_stim = handles.i_end_stim;
     
-    
-    [b1,i_start_stim] = min(abs(handles.Data.Time_Stim(1,:) - time_cutout_s(1,1)));
-    [b2,i_end_stim] = min(abs(handles.Data.Time_Stim(1,:) - time_cutout_s(2,1)));
-    
-    
+    time_cutout_s(1) =  handles.Segment.start_t;
+    time_cutout_s(2) =  handles.Segment.end_t;
 end
+%
+
 
 % Time_Eye = handles.Data.Time_Eye(i_start_eye:i_end_eye);
 
@@ -208,6 +224,8 @@ plot_segment_data(hObject, eventdata, handles)
 
 
 guidata(hObject,handles)
+end
+
 
 function plot_segment_data(hObject, eventdata, handles)
 
@@ -248,7 +266,7 @@ if handles.params.plot_LEData == 1
 end
 
 if handles.params.plot_REData == 1
-    plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.RE_Position_X,'color',[255 165 0]/255,'DisplayName','RE-X')
+    plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.RE_Position_X,'color',[255 255 0]/255,'DisplayName','RE-X')
     plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.RE_Position_Y,'color',[138 43 226]/255,'DisplayName','RE-Y')
     plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.RE_Position_Z,'color',[255,0,255]/255,'DisplayName','RE-Z')
 end
@@ -257,7 +275,7 @@ xlabel('Time [s]')
 ylabel('Stimulus Amplitude')
 
 legend('show')
-
+end
 
 % --- Executes on button press in save_segment.
 function save_segment_Callback(hObject, eventdata, handles)
@@ -287,9 +305,10 @@ set(handles.save_indicator,'String','SAVED!')
 set(handles.save_indicator,'BackgroundColor','g')
 
 guidata(hObject,handles)
+end
 
 % --- Executes on button press in load_raw.
-function load_raw_Callback(hObject, eventdata, handles)
+function [handles] = load_raw_Callback(hObject, eventdata, handles)
 % hObject    handle to load_raw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -391,7 +410,7 @@ switch handles.params.system_code
         Time_Eye = Time_Eye - Time_Eye(1);
         
         % Generate the time vector for the MPU9250 Data
-        Head_Sensor_Latency = 0.047; % From Mehdi Anwar bench tests, the data acquisition of the MPU9250 leads the LD VOG Goggles by 47ms
+        Head_Sensor_Latency = 0.047; % From Mehdi Rahman bench tests, the data acquisition of the MPU9250 leads the LD VOG Goggles by 47ms
 
         Time_Stim = Time_Eye - Head_Sensor_Latency;
 
@@ -404,7 +423,7 @@ switch handles.params.system_code
         Vertical_RE_Position = data(:,VRightIndex);
         Torsion_RE_Position = data(:,TRightIndex);
         
-        % We will use my 'processeyemovements' routine to process the RAW
+        % We will use PJB's 'processeyemovements' routine to process the RAW
         % position data into 3D angular velocities. Note that this will be
         % an angular velocity calculation with NO filtering.
         
@@ -422,7 +441,19 @@ switch handles.params.system_code
             
             case {1,2}
                 % Index for the VOG GPIO line
-                StimIndex = 35;
+                
+                switch handles.params.gpio_trig_opt
+                    
+                    case 1 % The user has chosen to use the hardware trigger from the MVI PCU
+                        
+                        StimIndex = 35;
+                        
+                    case 2 % The user has chosen to use the software trigger from the MVI fitting software (toggled by the operator
+                        
+                        
+                        StimIndex = 46;
+                        
+                end
                 
                 Stim = data(1:length(Time_Eye),StimIndex);
                 
@@ -431,10 +462,7 @@ switch handles.params.system_code
                 Stim = zeros(1,length(Time_Eye));
                 
         end
-        % NOTE, this is a kludge! I do not have the MPU offsets/notes for
-        % each set of goggles the patient used. I will take an average of
-        % the first 50 sample points to estimate the offset for each axis
-        % of rotation
+        
         
         gyroscale = 1;
         
@@ -486,7 +514,9 @@ switch handles.params.system_code
 
         end
         
-        
+        set(handles.Xoffset_txt,'String',num2str(XvelHeadOffset))
+        set(handles.Yoffset_txt,'String',num2str(YvelHeadOffset))
+        set(handles.Zoffset_txt,'String',num2str(ZvelHeadOffset))
                
         XvelHeadRaw = data(1:length(Time_Eye),XvelHeadIndex)*gyroscale + XvelHeadOffset;
         YvelHeadRaw = data(1:length(Time_Eye),YvelHeadIndex)*gyroscale + YvelHeadOffset;
@@ -711,6 +741,8 @@ plot_segment_data(hObject, eventdata, handles)
 
 
 guidata(hObject,handles)
+end
+
 
 % --- Executes on selection change in eye_mov_system.
 function eye_mov_system_Callback(hObject, eventdata, handles)
@@ -732,24 +764,24 @@ switch handles.params.system_code
 
         set(handles.LaskerSystPanel,'Visible','Off')
 
-        
+        set(handles.mpuoffsetpanel,'Visible','On')
         
     case 2 % Labyrinth Devices VOG Goggles
         
         set(handles.LaskerSystPanel,'Visible','On')
-        
+        set(handles.mpuoffsetpanel,'Visible','Off')
         set(handles.LabDevVOG,'Visible','Off')
         
     otherwise
         set(handles.LabDevVOG,'Visible','Off')
         set(handles.LaskerSystPanel,'Visible','Off')
-        
+        set(handles.mpuoffsetpanel,'Visible','Off')
 end
     
 guidata(hObject,handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns eye_mov_system contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from eye_mov_system
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function eye_mov_system_CreateFcn(hObject, eventdata, handles)
@@ -763,9 +795,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+end
+
 
 % --- Executes on button press in reload_raw.
-function reload_raw_Callback(hObject, eventdata, handles)
+function [handles] = reload_raw_Callback(hObject, eventdata, handles)
 % hObject    handle to reload_raw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -775,8 +809,8 @@ handles.params.reloadflag = 1;
 
 guidata(hObject,handles)
 
-load_raw_Callback(hObject, eventdata, handles)
-
+[handles] = load_raw_Callback(hObject, eventdata, handles)
+end
 
 function subj_id_Callback(hObject, eventdata, handles)
 % hObject    handle to subj_id (see GCBO)
@@ -787,7 +821,7 @@ handles.params.subj_id = get(hObject,'String');
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of subj_id as text
 %        str2double(get(hObject,'String')) returns contents of subj_id as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function subj_id_CreateFcn(hObject, eventdata, handles)
@@ -801,7 +835,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
+end
 
 function date_Callback(hObject, eventdata, handles)
 % hObject    handle to date (see GCBO)
@@ -812,7 +846,7 @@ handles.params.date = get(hObject,'String');
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of date as text
 %        str2double(get(hObject,'String')) returns contents of date as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function date_CreateFcn(hObject, eventdata, handles)
@@ -826,7 +860,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
+end
 
 function exp_type_Callback(hObject, eventdata, handles)
 % hObject    handle to exp_type (see GCBO)
@@ -837,7 +871,7 @@ handles.params.exp_type = get(hObject,'String');
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of exp_type as text
 %        str2double(get(hObject,'String')) returns contents of exp_type as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function exp_type_CreateFcn(hObject, eventdata, handles)
@@ -851,7 +885,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
+end
 
 function stim_axis_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_axis (see GCBO)
@@ -862,7 +896,7 @@ handles.params.stim_axis = get(hObject,'String');
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_axis as text
 %        str2double(get(hObject,'String')) returns contents of stim_axis as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function stim_axis_CreateFcn(hObject, eventdata, handles)
@@ -876,7 +910,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
+end
 
 function stim_type_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_type (see GCBO)
@@ -887,7 +921,7 @@ handles.params.stim_type = get(hObject,'String');
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
 %        str2double(get(hObject,'String')) returns contents of stim_type as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function stim_type_CreateFcn(hObject, eventdata, handles)
@@ -900,7 +934,7 @@ function stim_type_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 
 function stim_intensity_Callback(hObject, eventdata, handles)
@@ -912,7 +946,7 @@ handles.params.stim_intensity = get(hObject,'String');
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
 %        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function stim_intensity_CreateFcn(hObject, eventdata, handles)
@@ -925,21 +959,21 @@ function stim_intensity_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 function [handles] = update_seg_filename(hObject, eventdata, handles)
 
 handles.params.segment_filename = [handles.params.subj_id '-' handles.params.date '-' handles.params.exp_type '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_intensity '.mat'];
 
 set(handles.seg_filename,'String',handles.params.segment_filename);
-
+end
 
 % --------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+end
 
 % --- Executes on button press in plot_MPUData.
 function plot_MPUData_Callback(hObject, eventdata, handles)
@@ -957,7 +991,7 @@ plot_segment_data(hObject, eventdata, handles)
 
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of plot_MPUData
-
+end
 
 % --- Executes on button press in plot_MVIGPIO.
 function plot_MVIGPIO_Callback(hObject, eventdata, handles)
@@ -975,7 +1009,7 @@ plot_segment_data(hObject, eventdata, handles)
 
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of plot_MVIGPIO
-
+end
 
 % --- Executes on button press in plot_LEData.
 function plot_LEData_Callback(hObject, eventdata, handles)
@@ -993,7 +1027,7 @@ plot_segment_data(hObject, eventdata, handles)
 
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of plot_LEData
-
+end
 
 % --- Executes on button press in plot_REData.
 function plot_REData_Callback(hObject, eventdata, handles)
@@ -1011,7 +1045,7 @@ plot_segment_data(hObject, eventdata, handles)
 
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of plot_REData
-
+end
 
 
 function gpio_mult_Callback(hObject, eventdata, handles)
@@ -1026,7 +1060,7 @@ plot_segment_data(hObject, eventdata, handles)
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of gpio_mult as text
 %        str2double(get(hObject,'String')) returns contents of gpio_mult as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function gpio_mult_CreateFcn(hObject, eventdata, handles)
@@ -1039,7 +1073,7 @@ function gpio_mult_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 % --- Executes on selection change in labdev_goggleID.
 function labdev_goggleID_Callback(hObject, eventdata, handles)
@@ -1053,7 +1087,7 @@ handles.params.goggleID = index_selected;
 guidata(hObject,handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns labdev_goggleID contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from labdev_goggleID
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function labdev_goggleID_CreateFcn(hObject, eventdata, handles)
@@ -1066,7 +1100,7 @@ function labdev_goggleID_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 % --- Executes on selection change in vog_data_acq_version.
 function vog_data_acq_version_Callback(hObject, eventdata, handles)
@@ -1080,7 +1114,7 @@ handles.params.vog_data_acq_version = index_selected;
 guidata(hObject,handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns vog_data_acq_version contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from vog_data_acq_version
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function vog_data_acq_version_CreateFcn(hObject, eventdata, handles)
@@ -1093,7 +1127,7 @@ function vog_data_acq_version_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 % --- Executes on selection change in Lasker_param1.
 function Lasker_param1_Callback(hObject, eventdata, handles)
@@ -1107,7 +1141,7 @@ guidata(hObject,handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Lasker_param1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Lasker_param1
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function Lasker_param1_CreateFcn(hObject, eventdata, handles)
@@ -1120,7 +1154,7 @@ function Lasker_param1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 % --- Executes on selection change in Lasker_param2.
 function Lasker_param2_Callback(hObject, eventdata, handles)
@@ -1133,7 +1167,7 @@ handles.params.Lasker_param1 = index_selected;
 guidata(hObject,handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns Lasker_param2 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Lasker_param2
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function Lasker_param2_CreateFcn(hObject, eventdata, handles)
@@ -1146,7 +1180,7 @@ function Lasker_param2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 
 function Xaxis_Rot_Theta_Callback(hObject, eventdata, handles)
@@ -1160,7 +1194,7 @@ guidata(hObject,handles)
 
 % Hints: get(hObject,'String') returns contents of Xaxis_Rot_Theta as text
 %        str2double(get(hObject,'String')) returns contents of Xaxis_Rot_Theta as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function Xaxis_Rot_Theta_CreateFcn(hObject, eventdata, handles)
@@ -1173,7 +1207,7 @@ function Xaxis_Rot_Theta_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 
 function Yaxis_Rot_Theta_Callback(hObject, eventdata, handles)
@@ -1184,7 +1218,7 @@ handles.Yaxis_MPU_Rot_theta = str2double(get(hObject,'String'));
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of Yaxis_Rot_Theta as text
 %        str2double(get(hObject,'String')) returns contents of Yaxis_Rot_Theta as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function Yaxis_Rot_Theta_CreateFcn(hObject, eventdata, handles)
@@ -1197,7 +1231,7 @@ function Yaxis_Rot_Theta_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+end
 
 
 function Zaxis_Rot_Theta_Callback(hObject, eventdata, handles)
@@ -1208,7 +1242,7 @@ handles.Zaxis_MPU_Rot_theta = str2double(get(hObject,'String'));
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of Zaxis_Rot_Theta as text
 %        str2double(get(hObject,'String')) returns contents of Zaxis_Rot_Theta as a double
-
+end
 
 % --- Executes during object creation, after setting all properties.
 function Zaxis_Rot_Theta_CreateFcn(hObject, eventdata, handles)
@@ -1220,4 +1254,388 @@ function Zaxis_Rot_Theta_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+end
+
+% --- Executes during object creation, after setting all properties.
+function LaskerSystPanel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to LaskerSystPanel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+end
+
+
+function Xoffset_txt_Callback(hObject, eventdata, handles)
+% hObject    handle to Xoffset_txt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Xoffset_txt as text
+%        str2double(get(hObject,'String')) returns contents of Xoffset_txt as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function Xoffset_txt_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Xoffset_txt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+function Yoffset_txt_Callback(hObject, eventdata, handles)
+% hObject    handle to Yoffset_txt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Yoffset_txt as text
+%        str2double(get(hObject,'String')) returns contents of Yoffset_txt as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function Yoffset_txt_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Yoffset_txt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+function Zoffset_txt_Callback(hObject, eventdata, handles)
+% hObject    handle to Zoffset_txt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Zoffset_txt as text
+%        str2double(get(hObject,'String')) returns contents of Zoffset_txt as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function Zoffset_txt_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Zoffset_txt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','w++hite');
+end
+end
+
+% --- Executes on button press in calc_mpu_offsets.
+function calc_mpu_offsets_Callback(hObject, eventdata, handles)
+% hObject    handle to calc_mpu_offsets (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Ask user to choose segmentation points
+uiwait(msgbox('Please align the vertical line of the crosshair with the starting point of the data segment used to calculate MPU offsets','Segment Eye Movement Data'));
+[x1,y1] = ginput(1);
+uiwait(msgbox('Please align the vertical line of the crosshair with the ending point of the data segment used to calculate MPU offsets','Segment Eye Movement Data'));
+[x2,y2] = ginput(1);
+time_cutout_s = [x1 ; x2];
+
+[a1,i_start_eye] = min(abs(handles.Segment.Time_Eye - time_cutout_s(1,1)));
+[a2,i_end_eye] = min(abs(handles.Segment.Time_Eye - time_cutout_s(2,1)));
+
+X_off = mean(handles.Segment.HeadMPUVel_X(i_start_eye:i_start_eye));
+Y_off = mean(handles.Segment.HeadMPUVel_Y(i_start_eye:i_start_eye));
+Z_off = mean(handles.Segment.HeadMPUVel_Z(i_start_eye:i_start_eye));
+
+handles.Segment.HeadMPUVel_X = handles.Segment.HeadMPUVel_X - X_off;
+handles.Segment.HeadMPUVel_Y = handles.Segment.HeadMPUVel_Y - Y_off;
+handles.Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z - Z_off;
+
+
+set(handles.Xoffset_txt,'String',num2str(X_off))
+set(handles.Yoffset_txt,'String',num2str(Y_off))
+set(handles.Zoffset_txt,'String',num2str(Z_off))
+
+plot_segment_data(hObject, eventdata, handles)
+
+guidata(hObject,handles)
+end
+
+% --- Executes on selection change in gpio_trigger_source.
+function gpio_trigger_source_Callback(hObject, eventdata, handles)
+% hObject    handle to gpio_trigger_source (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+index_selected = get(hObject,'Value');
+
+handles.params.gpio_trig_opt = index_selected;
+
+guidata(hObject,handles)
+% Hints: contents = cellstr(get(hObject,'String')) returns gpio_trigger_source contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from gpio_trigger_source
+end
+
+% --- Executes during object creation, after setting all properties.
+function gpio_trigger_source_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to gpio_trigger_source (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+% --- Executes on button press in auto_segment.
+function auto_segment_Callback(hObject, eventdata, handles)
+% hObject    handle to auto_segment (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+[choice] = auto_seg_dialog(hObject, eventdata, handles);
+
+switch choice.stim
+    
+    case 1 % Pulse Trains
+        
+        % Let's detect the ON/OFF times based on the GPIO trigger line.
+        inds = [1:length(handles.Segment.Stim_Trig)];
+        on_samp = inds([false ; (diff(handles.Segment.Stim_Trig) > 0)]);
+        off_samp = inds([false ; (diff(handles.Segment.Stim_Trig) < 0)]);
+        
+        % NOTE: I should check if there are unequal numbers of detected ON and
+        % OFF triggers
+        
+        % Let's create a trigger level to determine the PAUSES between
+        % stimuli levels. We will set this level to half of the interstimulus interval.
+        % We will relaize this by adding half of the ISI to the ON+OFF
+        % times.
+        trig_level = ((choice.ontime + choice.offtime) + choice.ISI/2)*(handles.Segment.Fs/1000);
+        
+        stim_interval_startpoints = [ on_samp([false  (diff(on_samp) > trig_level)])];
+        
+        
+        stim_interval_endpoints = [off_samp(diff(off_samp) > trig_level) ];
+        
+        seg_times = [on_samp(1)-(choice.ISI/2)*(handles.Segment.Fs/1000) round((stim_interval_startpoints(1)-stim_interval_endpoints(1))/2+stim_interval_endpoints(1))];
+        for k=1:length(stim_interval_startpoints)
+            
+            if k==length(stim_interval_startpoints)
+                seg_times = [seg_times ; round((stim_interval_startpoints(end)-stim_interval_endpoints(end))/2+stim_interval_endpoints(end)) on_samp(end)+(choice.ISI/2)*(handles.Segment.Fs/1000)];
+                
+            else
+                seg_times = [seg_times ; seg_times(k,2) round((stim_interval_startpoints(k+1)-stim_interval_endpoints(k+1))/2+stim_interval_endpoints(k+1))];
+                
+                %                 seg_times = [seg_times ; round((stim_interval_startpoints(k-1)-stim_interval_endpoints(k-1))/2+stim_interval_endpoints(k-1)) round((stim_interval_startpoints(k)-stim_interval_endpoints(k))/2+stim_interval_endpoints(k))];
+            end
+            
+        end
+        
+        stem(handles.Segment.Time_Eye(seg_times(:,1)),1.5*ones(length(seg_times(:,1)),1))
+        
+        stem(handles.Segment.Time_Eye(seg_times(:,2)),0.75*ones(length(seg_times(:,1)),1))
+        
+        % Now that we have our segmentation times, lets load the
+        % user-generated excel sheet containing the file names, and begin
+        % segmenting!
+        
+        [filename, pathname] = ...
+            uigetfile('*.xlsx','Please load an Excel spreadsheet containing the segmented filenames in the first row of the first sheet.');
+        
+        [num,txt,raw] = xlsread([pathname filename]);
+        
+        for k=1:size(seg_times,1)
+            
+            handles.i_start_eye = seg_times(k,1);
+            handles.i_end_eye = seg_times(k,2);
+            handles.i_start_stim = seg_times(k,1);
+            handles.i_end_stim = seg_times(k,2);
+            
+            
+            handles.Segment.start_t = handles.Segment.Time_Eye(handles.i_start_eye);
+            handles.Segment.end_t = handles.Segment.Time_Eye(handles.i_end_eye);
+            
+            
+            
+            [handles] = new_segment_Callback(hObject, eventdata, handles,false);
+            
+            handles.params.segment_filename = [raw{k,1} '.mat'];
+            
+            save_segment_Callback(hObject, eventdata, handles);
+            
+            [handles] = reload_raw_Callback(hObject, eventdata, handles);
+        end
+        
+end
+end
+
+
+function edit15_Callback(hObject, eventdata, handles)
+% hObject    handle to edit15 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit15 as text
+%        str2double(get(hObject,'String')) returns contents of edit15 as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit15_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit15 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+function [options] = auto_seg_dialog(hObject, eventdata, handles)
+
+
+d = dialog('Position',[300 300 400 150],'Name','Select stimulus type');
+txt = uicontrol('Parent',d,...
+    'Style','text',...
+    'Position',[20 80 300 40],...
+    'String','Please select the DAQ System used to acquire your file');
+
+popup = uicontrol('Parent',d,...
+    'Style','popup',...
+    'Position',[75 70 225 25],...
+    'String',{'Pulse Train';'Electric Only Sinusoid';'Mechanical Sinusoid'},...
+    'Callback',@choose_stimuli_callback);
+%             'Callback',{@popup_callback,hObject, eventdata, handles});
+
+btn = uicontrol('Parent',d,...
+    'Position',[89 20 70 25],...
+    'String','Proceed',...
+    'Callback','delete(gcf)');
+
+%     'Callback',@popup_closefcn);
+
+choice = 'Pulse Train';
+
+% Wait for d to close before running to completion
+uiwait(d);
+
+    function choose_stimuli_callback(popup,event)
+        idx = popup.Value;
+        popup_items = popup.String;
+        
+        choice = char(popup_items(idx,:));
+        
+        
+        
+    end
+
+switch choice
+    
+    case 'Pulse Train'
+        options = pulse_train_dialog(hObject, eventdata, handles);
+        options.stim = 1;
+    case 'Electric Only Sinusoid'
+        % If the user is processing an electrical-only sinusoid,
+                % they need to input the stimulus parameters
+                
+%                 [sine_options]=sine_param_dialog(hObject, eventdata, handles);
+%                 options.sin = sine_options;
+    case 'Mechanical Sinusoid'
+        
+        
+        
+end
+
+
+
+% analyze_new_voma_file_Callback(hObject, eventdata, handles)
+
+
+end
+
+
+
+
+
+function [options] = pulse_train_dialog(hObject, eventdata, handles)
+
+
+d2 = dialog('Position',[300 300 400 400],'Name','Pulse Train Params');
+txt1 = uicontrol('Parent',d2,...
+    'Style','text',...
+    'Position',[20 300 350 40],...
+    'String','Please enter the ON time of each pulse train cycle [ms]:');
+
+in1 = uicontrol('Parent',d2,...
+    'Style','edit',...
+    'Position',[140 290 75 25],...
+    'Units','normalized',...
+    'Callback',@ontime_callback);
+
+txt2 = uicontrol('Parent',d2,...
+    'Style','text',...
+    'Position',[20 225 300 40],...
+    'String','Please enter the OFF time of each pulse train cycle [ms]:');
+
+in2 = uicontrol('Parent',d2,...
+    'Style','edit',...
+    'Position',[140 215 75 25],...
+    'Units','normalized',...
+    'Callback',@offtime_callback);
+
+txt3 = uicontrol('Parent',d2,...
+    'Style','text',...
+    'Position',[20 150 300 40],...
+    'String','Please enter the pause time between stimulus conditions [ms]');
+
+in3 = uicontrol('Parent',d2,...
+    'Style','edit',...
+    'Position',[140 140 75 25],...
+    'Units','normalized',...
+    'Callback',@ISI_callback);
+
+
+btn = uicontrol('Parent',d2,...
+    'Position',[89 20 70 25],...
+    'String','Proceed',...
+    'Callback','delete(gcf)');
+
+
+options.ontime = [];
+options.offtime = [];
+options.ISI = [];
+
+% Wait for d to close before running to completion
+uiwait(d2);
+
+
+    function ontime_callback(popup,event)
+        ontime = str2double(get(popup,'string'));
+        
+    end
+
+
+    function offtime_callback(popup,event)
+        offtime = str2double(get(popup,'string'));
+    end
+
+    function ISI_callback(popup,event)
+        ISI = str2double(get(popup,'string'));
+    end
+
+
+options.ontime = ontime;
+options.offtime = offtime;
+options.ISI = ISI;
+
 end
