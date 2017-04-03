@@ -239,7 +239,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                 
         end
         
-    case {1,4,5}
+    case {1,4,5,6}
         
         % Check if the variable is empty. If it is, set the 'stimulus length' to
         % the starting and ending point of the stimulus trace.
@@ -539,9 +539,9 @@ if handles.params.lefteye_flag == 1
         
         
     catch
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[0,128,0]/255,'LineWidth',1)
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
+        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[0,128,0]/255,'LineWidth',1)
+        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
+        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
         
         
     end
@@ -562,15 +562,15 @@ if handles.params.righteye_flag == 1
         
     catch
         
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[64,224,208]/255,'LineWidth',1)
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[255,0,255]/255,'LineWidth',1)
+        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
+        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[64,224,208]/255,'LineWidth',1)
+        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[255,0,255]/255,'LineWidth',1)
     end
     
 end
 
 switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5}
+    case {1,4,5,6}
         
         plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
         
@@ -961,7 +961,7 @@ if handles.params.plot_cycleavg_flag == 1
     end
     
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-        case {1,4,5}
+        case {1,4,5,6}
             plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
             
         case {2,3}

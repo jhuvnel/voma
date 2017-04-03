@@ -39,7 +39,7 @@ num = length(Data_LE_Pos_X);
 
 % If the user did not input a parameter vector, just assign one
 % parameter value to the filename and make the rest empty
-if nargin<9
+if nargin<17
     for k = 1:num
         Parameters(k).Stim_Info.Stim_Type = Filenames{k};
         Parameters(k).Stim_Info.ModCanal = {''};
@@ -68,6 +68,7 @@ end
 
 % Load and format all data.
 for k=1:num
+    Parameters(k).Stim_Info.Stim_Type = Filenames{k};
     Data_QPR(k).name = Filenames{k}{1};
     Data_QPR(k).VOMA_data.Fs = Fs{k}{1};
     % Stimulus Data
