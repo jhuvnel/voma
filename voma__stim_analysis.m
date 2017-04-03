@@ -119,6 +119,14 @@ else
     
 end
 
+if isrow(handles.Stimulus)
+    handles.Stimulus = handles.Stimulus';
+end
+
+if isrow(handles.Time)
+    handles.Stimulus = handles.Time';
+end
+
 % Plot the Stimulus Trace
 plot_stim_trace(hObject, eventdata, handles)
 

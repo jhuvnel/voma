@@ -578,7 +578,14 @@ function plot_cycle_Callback(hObject, eventdata, handles)
 
 % Retrieve the current cycle number
 cycle = handles.params.plot_cycle_val;
-
+% 
+% % If, due to reloading this gui/removing upsampled data, the 'stim_list'
+% % gets  reset incorrectly, we will just reinitialize the 'cyc2plot' list to
+% % include all cycles.
+% if cycle>length(handles.stim_list)
+%     handles.stim_list = true(1,length(handles.Final_Data.stim_ind));
+%     updatestimlist(hObject, eventdata, handles)
+% end
 % Check if the 'stim_list' has this cycle marked to be kept and update the
 % checkbox accordingly.
 if handles.stim_list(cycle) == true(1)

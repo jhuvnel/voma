@@ -26,12 +26,29 @@
 %           - v5: Cleaned up the QPR file format to avoid old, confusing
 %                 parameter names
 %
+% VOMA INTEGRATION
+% Since this file is now part of the 'VOMA Suite, I will nn longer adding
+% version history notes here and iterating the file suffix: '_v#'. As the 
+% code is migrated to a GIT repository, I will add all of this information
+% in the commit notes.
+%
+%
 %   - Peter J. Boutros, November 2015
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters)
+function [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,RawFileName)
 
+% Note: the 'RawFileName' variable is optional. For data coming from the
+% MVI clinical trial Lab. Dev. VOG system, data files are given a simple 
+% name which singals the DATE and TIME the file was created on. After the 
+% is segmented, it is often given a more accurate description. We would
+% like to still save that file name with all future analysis files.
+if exist('RawFileName','var')
+    rawfilename_flag = true;
+else
+    rawfilename_flag = false;
+end
 
 % Determine the number of elements in the data arrays
 num = length(Data_LE_Pos_X);
@@ -106,6 +123,11 @@ for k=1:num
         Data_QPR(k).SoftwareVer = Parameters(k).SoftwareVer;
     end
     Data_QPR(k).SoftwareVer.VOMAformatcode = mfilename;
+    
+    if rawfilename_flag
+        Data_QPR(k).RawFileName = RawFileName{k};
+    else
+    end
     
     
 end
