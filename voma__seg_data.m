@@ -1442,6 +1442,8 @@ switch choice.stim
             
         end
         
+        seg_times(seg_times(:,2)>length(inds),2) = length(inds)*ones(size(seg_times(seg_times(:,2)>length(inds),2),2),1);
+        
         stem(handles.Segment.Time_Eye(seg_times(:,1)),1.5*ones(length(seg_times(:,1)),1))
         
         stem(handles.Segment.Time_Eye(seg_times(:,2)),0.75*ones(length(seg_times(:,1)),1))
