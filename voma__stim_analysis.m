@@ -25,7 +25,7 @@ function varargout = voma__stim_analysis(varargin)
 
 % Edit the above text to modify the response to help voma__stim_analysis
 
-% Last Modified by GUIDE v2.5 21-Jan-2017 22:06:53
+% Last Modified by GUIDE v2.5 02-Mar-2017 19:12:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,21 +71,81 @@ handles.curr_file = varargin{3};
 handles.pathname = varargin{4};
 handles.filename = varargin{5};
 
+if isrow(handles.CurrData.VOMA_data.Stim_t)
+    handles.CurrData.VOMA_data.Stim_t = handles.CurrData.VOMA_data.Stim_t';
+end
+
+set(handles.upsamp_Fs,'String',num2str(handles.CurrData.VOMA_data.Fs));
+
+if isfield(CurrData.VOMA_data,'UpSamp')
+    
+    
+    choice = questdlg('You have previously upsampled the data for this file. How would you like to proceed?', ...
+        'Upsampled Data Found', ...
+        'Use the upsampled data in this GUI','Load the data on its original time base.','Load the data on its original time base.');
+    % Handle response
+    switch choice
+        case 'Use the upsampled data in this GUI'
+            handles.upsamp_flag = true;
+        case 'Load the data on its original time base.'
+            handles.upsamp_flag = false;
+        otherwise
+            % If the user exits the dialog box, just load the data on the
+            % original time base.
+            handles.upsamp_flag = false;
+    end
+else
+    % If the file being processed has not been upsampled, load the
+    % processed data on the original time base.
+    handles.upsamp_flag = false;
+    
+end
+
+if handles.upsamp_flag
+    
+    handles.Stimulus = handles.CurrData.VOMA_data.UpSamp.Stim_Trace;
+    handles.Time = handles.CurrData.VOMA_data.UpSamp.Stim_t;
+    handles.stim_ind = handles.CurrData.VOMA_data.UpSamp.stim_ind;
+    
+    handles.UpSamp = handles.CurrData.VOMA_data.UpSamp;
+    
+    
+else
+    
+    handles.Stimulus = handles.CurrData.VOMA_data.Stim_Trace;
+    handles.Time = handles.CurrData.VOMA_data.Stim_t;
+    handles.stim_ind = handles.CurrData.VOMA_data.stim_ind;
+    
+    
+end
+
+if isrow(handles.Stimulus)
+    handles.Stimulus = handles.Stimulus';
+end
+
+if isrow(handles.Time)
+    handles.Stimulus = handles.Time';
+end
+
 % Plot the Stimulus Trace
 plot_stim_trace(hObject, eventdata, handles)
 
-handles.Stimulus_Up = handles.CurrData.VOMA_data.Stim_Trace;
-handles.Time_Up = handles.CurrData.VOMA_data.Stim_t;
 
 set(handles.trig_time_params,'Visible','Off')
 
 handles.params.detect_method = 1;
 
-handles.params.align_thresh = 65;
+handles.params.align_thresh = 0;
+
+handles.params.pre_stim_dur = 0;
 
 handles.params.btwn_stim_dur = str2double(get(handles.btwn_stim_duration,'String'))/1000;
 
 set(handles.align_thresh,'String',num2str(handles.params.align_thresh));
+
+set(handles.pre_stim_dur,'String',num2str(handles.params.pre_stim_dur));
+
+
 
 % Update handles structure
 guidata(hObject, handles);
@@ -101,31 +161,31 @@ cla
 CurrData = handles.CurrData;
 switch CurrData.VOMA_data.Parameters.DAQ_code
     case {1,4,5}
-        plot(handles.stim_plot,handles.CurrData.VOMA_data.Stim_t,CurrData.VOMA_data.Stim_Trace,'k')
+        plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
         hold on
-        plot(handles.stim_plot,handles.CurrData.VOMA_data.Stim_t(CurrData.VOMA_data.stim_ind(:,1)),handles.CurrData.VOMA_data.Stim_Trace(CurrData.VOMA_data.stim_ind(:,1)),'rx')
+        plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')
         
-        set(handles.cycle_table,'Data',[handles.CurrData.VOMA_data.Stim_t(CurrData.VOMA_data.stim_ind(:,1)) handles.CurrData.VOMA_data.Stim_Trace(CurrData.VOMA_data.stim_ind(:,1))]);
+        set(handles.cycle_table,'Data',[handles.Time(handles.stim_ind(:,1)) handles.Stimulus(handles.stim_ind(:,1))]);
         
         
     case {2,3} % These case involve using the CED to record precise eletrical
         % Stimulus pulse arrival times.
         switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
             case 'Current Fitting'
-                plot(handles.stim_plot,CurrData.VOMA_data.Stim_Trace(1,:),ones(1,length(CurrData.VOMA_data.Stim_Trace(1,:))),'Marker','*','color','k','LineWidth',0.5)
+                plot(handles.stim_plot,handles.Stimulus(1,:),ones(1,length(handles.Stimulus(1,:))),'Marker','*','color','k','LineWidth',0.5)
                 hold on
-                plot(handles.stim_plot,CurrData.VOMA_data.Stim_Trace(1,CurrData.VOMA_data.stim_ind(:,1)),ones(1,length(CurrData.VOMA_data.Stim_Trace(1,CurrData.VOMA_data.stim_ind(:,1)))),'ro')
-                %         plot(handles.stim_plot,CurrData.VOMA_data.Stim_Trace(1,CurrData.VOMA_data.stim_ind(:,2)),ones(1,length(CurrData.VOMA_data.Stim_Trace(1,CurrData.VOMA_data.stim_ind(:,2)))),'go')
+                plot(handles.stim_plot,handles.Stimulus(1,handles.stim_ind(:,1)),ones(1,length(handles.Stimulus(1,handles.stim_ind(:,1)))),'ro')
+                %         plot(handles.stim_plot,handles.Stimulus(1,handles.stim_ind(:,2)),ones(1,length(handles.Stimulus(1,handles.stim_ind(:,2)))),'go')
                 
-                set(handles.cycle_table,'Data',[handles.CurrData.VOMA_data.Stim_Trace(1,CurrData.VOMA_data.stim_ind(:,1))' CurrData.VOMA_data.Stim_Trace(1,CurrData.VOMA_data.stim_ind(:,2))']);
-                %         set(handles.cycle_table,'Data',[handles.CurrData.VOMA_data.Stim_Trace(1,CurrData.VOMA_data.stim_ind(:,1))]');
+                set(handles.cycle_table,'Data',[handles.Stimulus(1,handles.stim_ind(:,1))' handles.Stimulus(1,handles.stim_ind(:,2))']);
+                %         set(handles.cycle_table,'Data',[handles.Stimulus(1,handles.stim_ind(:,1))]');
             otherwise
                 
-                plot(handles.stim_plot,handles.CurrData.VOMA_data.Stim_t,CurrData.VOMA_data.Stim_Trace,'k')
+                plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
                 hold on
-                plot(handles.stim_plot,handles.CurrData.VOMA_data.Stim_t(CurrData.VOMA_data.stim_ind(:,1)),handles.CurrData.VOMA_data.Stim_Trace(CurrData.VOMA_data.stim_ind(:,1)),'rx')
+                plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')
                 
-                set(handles.cycle_table,'Data',[handles.CurrData.VOMA_data.Stim_t(CurrData.VOMA_data.stim_ind(:,1)) handles.CurrData.VOMA_data.Stim_Trace(CurrData.VOMA_data.stim_ind(:,1))]);
+                set(handles.cycle_table,'Data',[handles.Time(handles.stim_ind(:,1)) handles.Stimulus(handles.stim_ind(:,1))]);
                 
         end
 end
@@ -146,19 +206,38 @@ function upsample_data_Callback(hObject, eventdata, handles)
 % hObject    handle to upsample_data (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+handles.upsamp_flag = true;
+
+% Before upsampling, lets reset the traces
+[handles] = reset_stim_Callback(hObject, eventdata, handles);
+
 Fs_up = handles.params.upsamp_Fs;
 
-handles.Time_Up = [handles.CurrData.VOMA_data.Stim_t(1):1/Fs_up:handles.CurrData.VOMA_data.Stim_t(end)];
+handles.UpSamp.Fs = Fs_up;
 
-handles.Stimulus_Up = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Stim_Trace,handles.Time_Up);
+handles.UpSamp.Stim_t = [handles.Time(1):1/Fs_up:handles.Time(end)]';
 
-handles.LE_L = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.ll,handles.Time_Up);
-handles.LE_R = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.lr,handles.Time_Up);
-handles.LE_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.lz,handles.Time_Up);
+handles.UpSamp.Stim_Trace = interp1(handles.Time,handles.Stimulus,handles.UpSamp.Stim_t);
 
-handles.RE_L = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.rl,handles.Time_Up);
-handles.RE_R = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.rr,handles.Time_Up);
-handles.RE_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.DataSmth.rz,handles.Time_Up);
+
+
+handles.UpSamp.Data_LE_Vel_LARP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_LE_Vel_RALP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_LE_Vel_Z = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z,handles.UpSamp.Stim_t);
+
+handles.UpSamp.Data_RE_Vel_LARP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_RE_Vel_RALP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_RE_Vel_Z = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z,handles.UpSamp.Stim_t);
+
+handles.UpSamp.stim_ind = [1];
+
+handles.Stimulus = handles.UpSamp.Stim_Trace;
+handles.Time = handles.UpSamp.Stim_t;
+handles.stim_ind = handles.UpSamp.stim_ind;
+
+plot_stim_trace(hObject, eventdata, handles) 
+
 
 % Update handles structure
 guidata(hObject, handles);
@@ -196,39 +275,42 @@ function find_cycles_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-if isrow(handles.Time_Up)
-    handles.Time_Up = handles.Time_Up';
+if isrow(handles.Time)
+    handles.Time = handles.Time';
 end
 
 switch handles.params.detect_method
     
     case 1
-        inds = [1:length(handles.Time_Up)];
+        inds = [1:length(handles.Time)];
         
-        pos_ind = [false ; diff(handles.Stimulus_Up>handles.params.align_thresh)];
-        neg_ind = [false ; diff(handles.Stimulus_Up<-handles.params.align_thresh)];
+        pos_ind = [false ; diff(handles.Stimulus>handles.params.align_thresh)];
+        neg_ind = [false ; diff(handles.Stimulus<-handles.params.align_thresh)];
         
         stim_pos_thresh_ind = inds(pos_ind > 0 )';
         stim_neg_thresh_ind = inds(neg_ind > 0 )';
         
-        handles.pos_stim_ind = stim_pos_thresh_ind;
-        handles.neg_stim_ind = stim_neg_thresh_ind;
         
-%         set(handles.cycle_table,'Data',[handles.Time_Up([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus_Up([stim_pos_thresh_ind stim_neg_thresh_ind])]);
-        set(handles.cycle_table,'Data',[handles.Time_Up([stim_pos_thresh_ind ]) handles.Stimulus_Up([stim_pos_thresh_ind ])]);
+        handles.pos_stim_ind = stim_pos_thresh_ind;
+
+%         handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.params.upsamp_Fs);
+%         handles.neg_stim_ind = stim_neg_thresh_ind;
+        
+%         set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus([stim_pos_thresh_ind stim_neg_thresh_ind])]);
+        set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind ]) handles.Stimulus([stim_pos_thresh_ind ])]);
 
         axes(handles.stim_plot);
         cla
-%         handles.CurrData.VOMA_data.stim_ind = [handles.pos_stim_ind handles.neg_stim_ind];
-        handles.CurrData.VOMA_data.stim_ind = [handles.pos_stim_ind ];
+%         handles.stim_ind = [handles.pos_stim_ind handles.neg_stim_ind];
+        handles.stim_ind = [handles.pos_stim_ind ];
 
-        plot(handles.stim_plot,handles.Time_Up,handles.Stimulus_Up,'k')
+        plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
         hold on
-        plot(handles.stim_plot,handles.Time_Up(stim_pos_thresh_ind),handles.Stimulus_Up(stim_pos_thresh_ind),'rx')
-%         plot(handles.stim_plot,handles.Time_Up(stim_neg_thresh_ind),handles.Stimulus_Up(stim_neg_thresh_ind),'bx')
-        handles.CurrData.VOMA_data.stim_ind = [handles.pos_stim_ind ];
+        plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.Stimulus(stim_pos_thresh_ind),'rx')
+%         plot(handles.stim_plot,handles.Time(stim_neg_thresh_ind),handles.Stimulus(stim_neg_thresh_ind),'bx')
+
     case 2
-        inds = [1:length(handles.CurrData.VOMA_data.Stim_Trace)];
+        inds = [1:length(handles.Stimulus)];
         
         % This case is applicable for ELECTRICAL stimulation trigger
         % timestamps
@@ -239,24 +321,24 @@ switch handles.params.detect_method
         % 'inter-stimulus-interval' is LONGER than the user defined
         % thhreshold. We will grab the indices of all pulses where this
         % occurs, starting with the the FIRST stimulus index.
-        stim_inds_new = [1 inds([false diff(handles.CurrData.VOMA_data.Stim_Trace(1,:))>handles.params.btwn_stim_dur])];
+        stim_inds_new = [1 inds([false diff(handles.Stimulus(1,:))>handles.params.btwn_stim_dur])];
         
         if length(stim_inds_new)>1        
-        handles.CurrData.VOMA_data.stim_ind = [stim_inds_new' [stim_inds_new(2:end)' ;  stim_inds_new(end)]];
+        handles.stim_ind = [stim_inds_new' [stim_inds_new(2:end)' ;  stim_inds_new(end)]];
             
         else
             
-            handles.CurrData.VOMA_data.stim_ind = [stim_inds_new' 0];
+            handles.stim_ind = [stim_inds_new' 0];
         
         end
         plot_stim_trace(hObject, eventdata, handles) 
         
     case 3
-        [stim_ind_temp] = voma__find_stim_ind(handles.CurrData.VOMA_data.Stim_Trace,handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Stim_t,'n');
+        [stim_ind_temp] = voma__find_stim_ind(handles.Stimulus,handles.CurrData.VOMA_data.Fs,handles.Time,'n');
         
-        set(handles.cycle_table,'Data',[handles.CurrData.VOMA_data.Stim_t(stim_ind_temp)]);
+        set(handles.cycle_table,'Data',[handles.Time(stim_ind_temp)]);
         
-        handles.CurrData.VOMA_data.stim_ind = stim_ind_temp;
+        handles.stim_ind = stim_ind_temp;
         
         plot_stim_inds(hObject, eventdata, handles)
 end
@@ -269,11 +351,11 @@ function plot_stim_inds(hObject, eventdata, handles)
  axes(handles.stim_plot);
  cla
  
- plot(handles.stim_plot,handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Stim_Trace,'k')
+ plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
  hold on
- plot(handles.stim_plot,handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(:,1)),handles.CurrData.VOMA_data.Stim_Trace(handles.CurrData.VOMA_data.stim_ind(:,1)),'rx')
+ plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')
  try
- plot(handles.stim_plot,handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(:,2)),handles.CurrData.VOMA_data.Stim_Trace(handles.CurrData.VOMA_data.stim_ind(:,2)),'bx')
+ plot(handles.stim_plot,handles.Time(handles.stim_ind(:,2)),handles.Stimulus(handles.stim_ind(:,2)),'bx')
  catch
  end
 
@@ -286,12 +368,12 @@ function delete_ind_Callback(hObject, eventdata, handles)
 
 if isfield(handles.params,'r') && ~isempty(handles.params.r)
     r = handles.params.r;
-%     handles.CurrData.VOMA_data.stim_ind = handles.CurrData.VOMA_data.stim_ind([true(1,r-1) false(1,1) true(1,size(handles.CurrData.VOMA_data.stim_ind,1)-r)],:);
-    handles.CurrData.VOMA_data.stim_ind(r,:) = [];
+%     handles.stim_ind = handles.stim_ind([true(1,r-1) false(1,1) true(1,size(handles.stim_ind,1)-r)],:);
+    handles.stim_ind(r,:) = [];
     guidata(hObject,handles)
     r = [];
     plot_stim_inds(hObject, eventdata, handles)
-    set(handles.cycle_table,'Data',handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind))
+    set(handles.cycle_table,'Data',handles.Time(handles.stim_ind))
 
 else
     
@@ -331,6 +413,22 @@ function go_back_vor_gui_Callback(hObject, eventdata, handles)
 % hObject    handle to go_back_vor_gui (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+if handles.upsamp_flag 
+    handles.CurrData.VOMA_data.UpSamp = handles.UpSamp;
+    handles.CurrData.VOMA_data.UpSamp.stim_ind = handles.stim_ind;
+else
+    handles.CurrData.VOMA_data.stim_ind = handles.stim_ind;
+end
+
+handles.RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
+handles.RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;
+handles.RootData(handles.curr_file).QPparams = handles.CurrData.QPparams;
+handles.RootData(handles.curr_file).cyc2plot = handles.CurrData.cyc2plot;
+
+if handles.upsamp_flag
+    handles.RootData(handles.curr_file).VOMA_data.UpSamp = handles.CurrData.VOMA_data.UpSamp;
+end
 
 
 close(handles.figure1)
@@ -423,9 +521,9 @@ c = indices(:,2);
 
 handles.params.r = r;
 
-set(handles.stim_ind_start,'string',handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(r,1)));
+set(handles.stim_ind_start,'string',handles.Time(handles.stim_ind(r,1)));
 try
-    set(handles.stim_ind_end,'string',handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(r,2)));
+    set(handles.stim_ind_end,'string',handles.Time(handles.stim_ind(r,2)));
 
 catch
 end
@@ -476,3 +574,76 @@ function stim_ind_end_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function pre_stim_dur_Callback(hObject, eventdata, handles)
+% hObject    handle to pre_stim_dur (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = get(hObject,'String');
+
+handles.params.pre_stim_dur = str2double(input);
+
+
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of pre_stim_dur as text
+%        str2double(get(hObject,'String')) returns contents of pre_stim_dur as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function pre_stim_dur_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pre_stim_dur (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in reset_stim.
+function [handles] = reset_stim_Callback(hObject, eventdata, handles)
+% hObject    handle to reset_stim (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Stimulus = handles.CurrData.VOMA_data.Stim_Trace;
+handles.Time = handles.CurrData.VOMA_data.Stim_t;
+handles.stim_ind = handles.CurrData.VOMA_data.stim_ind;
+
+% Check if a 'UpSamp' field already exists in the GUI handles. If so, let's
+% remove it since we are reseting the stimulus trace.
+if isfield(handles,'UpSamp')
+    handles = rmfield(handles,'UpSamp');
+end
+
+% Plot the Stimulus Trace
+plot_stim_trace(hObject, eventdata, handles)
+
+guidata(hObject,handles)
+
+
+% --- Executes on button press in remove_offsets.
+function remove_offsets_Callback(hObject, eventdata, handles)
+% hObject    handle to remove_offsets (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+uiwait(msgbox('Please align the vertical line of the crosshair with the starting point of the data segment used to calculate MPU offsets','Segment Eye Movement Data'));
+[x1,y1] = ginput(1);
+uiwait(msgbox('Please align the vertical line of the crosshair with the ending point of the data segment used to calculate MPU offsets','Segment Eye Movement Data'));
+[x2,y2] = ginput(1);
+time_cutout_s = [x1 ; x2];
+
+[a1,i_start_eye] = min(abs(handles.Time - time_cutout_s(1,1)));
+[a2,i_end_eye] = min(abs(handles.Time - time_cutout_s(2,1)));
+
+Stim_off = mean(handles.Stimulus(i_start_eye:i_start_eye));
+
+handles.Stimulus = handles.Stimulus - Stim_off;
+
+% Plot the Stimulus Trace
+plot_stim_trace(hObject, eventdata, handles)
+
+guidata(hObject,handles)
