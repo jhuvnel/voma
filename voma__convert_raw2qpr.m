@@ -1253,7 +1253,16 @@ switch handles.params.file_format
                             % Thus, we will overwrite the 'Stim_t' time
                             % vector w/ the VOG time vector.
                             Stim_t{n-1} = {Data.Time_Eye};
+                        
+                        case 'Activation'
+                            
+                            Stimulus{n-1} = {Data.Stim_Trig};
+                            Stim_t{n-1} = {Data.Time_Eye};
+                            stim_ind{n-1} ={[]};
+                        
                         otherwise
+                            
+                            
                             headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
                             
                             headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';

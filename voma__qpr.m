@@ -25,7 +25,7 @@ function varargout = voma__qpr(varargin)
 
 % Edit the above text to modify the response to help voma__qpr
 
-% Last Modified by GUIDE v2.5 29-Mar-2017 15:56:13
+% Last Modified by GUIDE v2.5 06-Apr-2017 22:59:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -135,7 +135,7 @@ set(handles.e_vel_param6,'Visible','off')
 set(handles.e_vel_param6_txt,'Visible','off')
 
 handles.params.APAQPR_derivthresh = str2double(get(handles.APAQPR_derivthresh,'String'));
-
+handles.params.min_spv_fit_time = str2double(get(handles.min_spv_fit_time,'String'));
 
 [handles] = update_angvel_filt_options(hObject, [], handles);
 
@@ -179,6 +179,8 @@ handles.params.norm_time = false;
 handles.params.stim_plot_mult = 1;
 
 handles.params.save_flag = false;
+
+handles.params.abs_APAQOR_thresh_flag = true;
 
 handles.params.link_x_axis_plots = false;
 
@@ -363,38 +365,42 @@ else
     
     [handles] = update_angvel_filt_options(hObject, eventdata, handles);
     
-    handles.params.e_vel_param1 = handles.CurrData.QPparams.filt_params{8,3};
-    set(handles.e_vel_param1,'String',handles.CurrData.QPparams.filt_params{8,3});
-    handles.params.e_vel_param2 = handles.CurrData.QPparams.filt_params{8,4};
-    set(handles.e_vel_param2,'String',handles.CurrData.QPparams.filt_params{8,4});
-    handles.params.e_vel_param3 = handles.CurrData.QPparams.filt_params{8,5};
-    set(handles.e_vel_param3,'String',handles.CurrData.QPparams.filt_params{8,5});
-    handles.params.e_vel_param4 = handles.CurrData.QPparams.filt_params{8,6};
-    set(handles.e_vel_param4,'String',handles.CurrData.QPparams.filt_params{8,6});
-    handles.params.e_vel_param5 = handles.CurrData.QPparams.filt_params{8,7};
-    set(handles.e_vel_param5,'String',handles.CurrData.QPparams.filt_params{8,7});
-    handles.params.e_vel_param6 = handles.CurrData.QPparams.filt_params{8,8};
-    set(handles.e_vel_param6,'String',handles.CurrData.QPparams.filt_params{8,8});
-    
-    % KLUDGE!
-    if strcmp(handles.CurrData.QPparams.filt_params{8,9},'')
-        handles.CurrData.QPparams.filt_params(8:11,9) = {1};
+    if isfield(handles.CurrData.QPparams,'filt_params')
+        
+        handles.params.e_vel_param1 = handles.CurrData.QPparams.filt_params{8,3};
+        set(handles.e_vel_param1,'String',handles.CurrData.QPparams.filt_params{8,3});
+        handles.params.e_vel_param2 = handles.CurrData.QPparams.filt_params{8,4};
+        set(handles.e_vel_param2,'String',handles.CurrData.QPparams.filt_params{8,4});
+        handles.params.e_vel_param3 = handles.CurrData.QPparams.filt_params{8,5};
+        set(handles.e_vel_param3,'String',handles.CurrData.QPparams.filt_params{8,5});
+        handles.params.e_vel_param4 = handles.CurrData.QPparams.filt_params{8,6};
+        set(handles.e_vel_param4,'String',handles.CurrData.QPparams.filt_params{8,6});
+        handles.params.e_vel_param5 = handles.CurrData.QPparams.filt_params{8,7};
+        set(handles.e_vel_param5,'String',handles.CurrData.QPparams.filt_params{8,7});
+        handles.params.e_vel_param6 = handles.CurrData.QPparams.filt_params{8,8};
+        set(handles.e_vel_param6,'String',handles.CurrData.QPparams.filt_params{8,8});
+        
+        % KLUDGE!
+        if strcmp(handles.CurrData.QPparams.filt_params{8,9},'')
+            handles.CurrData.QPparams.filt_params(8:11,9) = {1};
+        end
+        
+        handles.params.spline_sep_flag = handles.CurrData.QPparams.filt_params{8,9};
+        set(handles.spline_sep_flag,'Value',handles.CurrData.QPparams.filt_params{8,9});
+        
+        if size(handles.CurrData.QPparams.filt_params,2)==10
+            handles.params.post_qpr_filt_param1 = handles.CurrData.QPparams.filt_params{8,10};
+            set(handles.post_qpr_filt_param1,'String',handles.CurrData.QPparams.filt_params{8,10});
+        end
+        
+        
+        
+        %     try
+        set(handles.filt_params,'Data',handles.CurrData.QPparams.filt_params);
+        %     catch
+        %
+        %     end
     end
-    
-    handles.params.spline_sep_flag = handles.CurrData.QPparams.filt_params{8,9};
-    set(handles.spline_sep_flag,'Value',handles.CurrData.QPparams.filt_params{8,9});
-    
-    if size(handles.CurrData.QPparams.filt_params,2)==10
-        handles.params.post_qpr_filt_param1 = handles.CurrData.QPparams.filt_params{8,10};
-        set(handles.post_qpr_filt_param1,'String',handles.CurrData.QPparams.filt_params{8,10});
-    end
-    
-    %     try
-    set(handles.filt_params,'Data',handles.CurrData.QPparams.filt_params);
-    %     catch
-    %
-    %     end
-    
     % Set the 'smooth_flag' to true, since this file has already been
     % processed.
     handles.params.smooth_flag = 1;
@@ -577,8 +583,8 @@ end
 % else
 %     handles.CurrData.QPparams.APAQPR.Flag.LE_Z = false;
 % end
-% 
-% 
+%
+%
 % if strcmp(filt_params{11,11},'y')
 %     handles.CurrData.QPparams.APAQPR.Flag.RE_X = true;
 % else
@@ -595,7 +601,7 @@ end
 %     handles.CurrData.QPparams.APAQPR.Flag.RE_Z = false;
 % end
 
-        
+
 switch handles.params.pos_filt_trace
     case 1
         set(handles.APAQPR_table,'Data',handles.CurrData.QPparams.APAQPR.Array.LE_X);
@@ -1263,7 +1269,7 @@ switch handles.CurrData.QPparams.qpr_routine
         
         LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
         inds = [1:length(LE_Vel_RALP)];
-                LE_Vel_RALP(isnan(LE_Vel_RALP)) = interp1(inds(~isnan(LE_Vel_RALP)),LE_Vel_RALP(~isnan(LE_Vel_RALP)),inds(isnan(LE_Vel_RALP)));
+        LE_Vel_RALP(isnan(LE_Vel_RALP)) = interp1(inds(~isnan(LE_Vel_RALP)),LE_Vel_RALP(~isnan(LE_Vel_RALP)),inds(isnan(LE_Vel_RALP)));
         if isnan(LE_Vel_RALP(1))
             non_nan = inds(~isnan(LE_Vel_RALP));
             LE_Vel_RALP(1:non_nan(1)-1) = LE_Vel_RALP(non_nan(1));
@@ -1276,7 +1282,7 @@ switch handles.CurrData.QPparams.qpr_routine
         
         LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
         inds = [1:length(LE_Vel_Z)];
-                LE_Vel_Z(isnan(LE_Vel_Z)) = interp1(inds(~isnan(LE_Vel_Z)),LE_Vel_Z(~isnan(LE_Vel_Z)),inds(isnan(LE_Vel_Z)));
+        LE_Vel_Z(isnan(LE_Vel_Z)) = interp1(inds(~isnan(LE_Vel_Z)),LE_Vel_Z(~isnan(LE_Vel_Z)),inds(isnan(LE_Vel_Z)));
         if isnan(LE_Vel_Z(1))
             non_nan = inds(~isnan(LE_Vel_Z));
             LE_Vel_Z(1:non_nan(1)-1) = LE_Vel_Z(non_nan(1));
@@ -1738,9 +1744,14 @@ if handles.params.R_3==1
     plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z),'Color',handles.colors.r_z)
 end
 
-
-plot(handles.CurrData.VOMA_data.Eye_t,handles.params.APAQPR_derivthresh*ones(1,length(handles.CurrData.VOMA_data.Eye_t)),'k')
-plot(handles.CurrData.VOMA_data.Eye_t,-handles.params.APAQPR_derivthresh*ones(1,length(handles.CurrData.VOMA_data.Eye_t)),'k')
+if handles.params.abs_APAQOR_thresh_flag
+    plot(handles.CurrData.VOMA_data.Eye_t,handles.params.APAQPR_derivthresh*ones(1,length(handles.CurrData.VOMA_data.Eye_t)),'k')
+    plot(handles.CurrData.VOMA_data.Eye_t,-handles.params.APAQPR_derivthresh*ones(1,length(handles.CurrData.VOMA_data.Eye_t)),'k')
+    
+    
+else
+    plot(handles.CurrData.VOMA_data.Eye_t,handles.params.APAQPR_derivthresh*ones(1,length(handles.CurrData.VOMA_data.Eye_t)),'k')
+end
 
 xlabel('Time [s]')
 ylabel('Point-by-point Derivative magnitude')
@@ -2345,7 +2356,7 @@ switch handles.CurrData.QPparams.qpr_routine
         set(handles.e_vel_param6_txt,'Visible','off')
         set(handles.e_vel_param4_txt,'String','Frame Length [samples]')
         
-        handles.params.qpr_routine_string = 'irlssmooth';     
+        handles.params.qpr_routine_string = 'irlssmooth';
 end
 
 
@@ -2826,6 +2837,25 @@ if ~isempty(filt_params{handles.params.pos_filt_trace+1,2})
             set(handles.angpos_filt_type,'Value',3)
             handles.params.pos_filt_method = 3;
     end
+    
+    try
+        temp_APAQPR_derivthresh = filt_params{handles.params.pos_filt_trace + 1,14};
+        if ~isempty(temp_APAQPR_derivthresh)
+            handles.params.APAQPR_derivthresh = temp_APAQPR_derivthresh;
+            set(handles.APAQPR_derivthresh,'String',num2str(handles.params.APAQPR_derivthresh))
+        end
+    catch
+    end
+    
+    try
+        temp_min_spv_fit_time = filt_params{handles.params.pos_filt_trace + 1,15};
+        if ~isempty(temp_min_spv_fit_time)
+            handles.params.min_spv_fit_time = temp_min_spv_fit_time;
+            set(handles.min_fit_time,'String',num2str(handles.params.min_spv_fit_time))
+            
+        end
+    catch
+    end
 end
 
 switch handles.params.pos_filt_trace
@@ -2986,7 +3016,7 @@ switch handles.params.pos_filt_method
             temp(non_nan(end)+1:end) = temp(non_nan(end));
         end
         temp_smth = voma__irlssmooth(temp,handles.params.angpos_filt_param1);
-
+        
         filt_type = 'irlssmooth';
         filt_param1 = handles.params.angpos_filt_param1;
         filt_param2 = '';
@@ -3874,7 +3904,7 @@ switch options.vogver
     case {1,2}
         switch options.stim
             
-            case 5 % The user has chosen to use the hardware trigger from the MVI PCU
+            case {1,2,3,4,5} % The user has chosen to use the hardware trigger from the MVI PCU
                 
                 StimIndex = 35;
                 
@@ -4218,7 +4248,7 @@ txt4 = uicontrol('Parent',d,...
 in4 = uicontrol('Parent',d,...
     'Style','popup',...
     'Position',[75 65 225 25],...
-    'String',{'LHRH-Axis MPU Angular Velocity';'LHRH-Axis MPU Angular Velocity';'LHRH-Axis MPU Angular Velocity';'Pulse Train';'Electric-Only Sinusoid';'MVI Fitting Software Toggle Button'},...
+    'String',{'LHRH-Axis MPU Angular Velocity';'LARP-Axis MPU Angular Velocity';'RALP-Axis MPU Angular Velocity';'Pulse Train';'Electric-Only Sinusoid';'MVI Fitting Software Toggle Button'},...
     'Callback',@raw_stimtrace_callback);
 %             'Callback',{@popup_callback,hObject, eventdata, handles});
 
@@ -4327,11 +4357,22 @@ end
 
 thresh = handles.params.APAQPR_derivthresh;
 
-diff_pos = abs(diff(Trace2));
-
-
-temp_inds = inds([(diff_pos>thresh) false]);
-
+if handles.params.abs_APAQOR_thresh_flag
+    diff_pos = abs(diff(Trace2));
+    
+    
+    
+    temp_inds = inds([(diff_pos>abs(thresh)) false]);
+else
+    diff_pos = (diff(Trace2));
+    if thresh>=0
+        temp_inds = inds([(diff_pos>thresh) false]);
+    else
+        temp_inds = inds([(diff_pos<thresh) false]);
+        
+        
+    end
+end
 sacc = zeros(1,length(Trace2));
 sacc(temp_inds) = ones(1,length(inds(temp_inds)));
 
@@ -4472,51 +4513,51 @@ function remove_APAQPRpt_Callback(hObject, eventdata, handles)
 if isfield(handles.params,'s') && ~isempty(handles.params.s)
     s = handles.params.s;
     
-%     switch handles.params.pos_filt_trace
-%         
-%         case 1
-%             handles.CurrData.QPparams.APAQPR.Array.LE_X = handles.CurrData.QPparams.APAQPR.Array.LE_X([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.LE_X,1)-s)],:);
-%             Data = handles.CurrData.QPparams.APAQPR.Array.LE_X;
-%         case 2
-%             handles.CurrData.QPparams.APAQPR.Array.LE_Y = handles.CurrData.QPparams.APAQPR.Array.LE_Y([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.LE_Y,1)-s)],:);
-%             Data = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
-%         case 3
-%             handles.CurrData.QPparams.APAQPR.Array.LE_Z = handles.CurrData.QPparams.APAQPR.Array.LE_Z([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.LE_Z,1)-s)],:);
-%             Data = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
-%         case 4
-%             handles.CurrData.QPparams.APAQPR.Array.RE_X = handles.CurrData.QPparams.APAQPR.Array.RE_X([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.RE_X,1)-s)],:);
-%             Data = handles.CurrData.QPparams.APAQPR.Array.RE_X;
-%         case 5
-%             handles.CurrData.QPparams.APAQPR.Array.RE_Y = handles.CurrData.QPparams.APAQPR.Array.RE_Y([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.RE_Y,1)-s)],:);
-%             Data = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
-%         case 6
-%             handles.CurrData.QPparams.APAQPR.Array.RE_Z = handles.CurrData.QPparams.APAQPR.Array.RE_Z([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.RE_Z,1)-s)],:);
-%             Data = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
-%     end
+    %     switch handles.params.pos_filt_trace
+    %
+    %         case 1
+    %             handles.CurrData.QPparams.APAQPR.Array.LE_X = handles.CurrData.QPparams.APAQPR.Array.LE_X([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.LE_X,1)-s)],:);
+    %             Data = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+    %         case 2
+    %             handles.CurrData.QPparams.APAQPR.Array.LE_Y = handles.CurrData.QPparams.APAQPR.Array.LE_Y([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.LE_Y,1)-s)],:);
+    %             Data = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+    %         case 3
+    %             handles.CurrData.QPparams.APAQPR.Array.LE_Z = handles.CurrData.QPparams.APAQPR.Array.LE_Z([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.LE_Z,1)-s)],:);
+    %             Data = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
+    %         case 4
+    %             handles.CurrData.QPparams.APAQPR.Array.RE_X = handles.CurrData.QPparams.APAQPR.Array.RE_X([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.RE_X,1)-s)],:);
+    %             Data = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+    %         case 5
+    %             handles.CurrData.QPparams.APAQPR.Array.RE_Y = handles.CurrData.QPparams.APAQPR.Array.RE_Y([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.RE_Y,1)-s)],:);
+    %             Data = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+    %         case 6
+    %             handles.CurrData.QPparams.APAQPR.Array.RE_Z = handles.CurrData.QPparams.APAQPR.Array.RE_Z([true(1,s-1) false(1,1) true(1,size(handles.CurrData.QPparams.APAQPR.Array.RE_Z,1)-s)],:);
+    %             Data = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
+    %     end
     
-switch handles.params.pos_filt_trace
+    switch handles.params.pos_filt_trace
+        
+        case 1
+            handles.CurrData.QPparams.APAQPR.Array.LE_X(s,:) = [];
+            Data = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+        case 2
+            handles.CurrData.QPparams.APAQPR.Array.LE_Y(s,:) = [];
+            Data = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+        case 3
+            handles.CurrData.QPparams.APAQPR.Array.LE_Z(s,:) = [];
+            Data = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
+        case 4
+            handles.CurrData.QPparams.APAQPR.Array.RE_X(s,:) = [];
+            Data = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+        case 5
+            handles.CurrData.QPparams.APAQPR.Array.RE_Y(s,:) = [];
+            Data = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+        case 6
+            handles.CurrData.QPparams.APAQPR.Array.RE_Z(s,:) = [];
+            Data = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
+    end
     
-    case 1
-        handles.CurrData.QPparams.APAQPR.Array.LE_X(s,:) = [];
-        Data = handles.CurrData.QPparams.APAQPR.Array.LE_X;
-    case 2
-        handles.CurrData.QPparams.APAQPR.Array.LE_Y(s,:) = [];
-        Data = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
-    case 3
-        handles.CurrData.QPparams.APAQPR.Array.LE_Z(s,:) = [];
-        Data = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
-    case 4
-        handles.CurrData.QPparams.APAQPR.Array.RE_X(s,:) = [];
-        Data = handles.CurrData.QPparams.APAQPR.Array.RE_X;
-    case 5
-        handles.CurrData.QPparams.APAQPR.Array.RE_Y(s,:) = [];
-        Data = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
-    case 6
-        handles.CurrData.QPparams.APAQPR.Array.RE_Z(s,:) = [];
-        Data = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
-end
-
-
+    
     guidata(hObject,handles)
     s = [];
     handles.params.s = s;
@@ -4575,12 +4616,12 @@ time = handles.CurrData.VOMA_data.Eye_t;
 Trace(isnan(Trace)) = interp1(inds(~isnan(Trace)),Trace(~isnan(Trace)),inds(isnan(Trace)));
 
 if isnan(Trace(1))
-   non_nan = inds(~isnan(Trace));
+    non_nan = inds(~isnan(Trace));
     Trace(1:non_nan(1)-1) = Trace(non_nan(1));
 end
 
 if isnan(Trace(end))
-   non_nan = inds(~isnan(Trace));
+    non_nan = inds(~isnan(Trace));
     Trace(non_nan(end)+1:end) = Trace(non_nan(end));
 end
 
@@ -4750,7 +4791,7 @@ switch h
                 Trend = zeros(length(Data),1);
                 Trend(start:stop) = B(1) + B(2)*handles.CurrData.VOMA_data.Eye_t(start:stop);
                 Trend(1:start) = Trend(start)*ones(length(Trend(1:start)),1);
-                Trend(stop:end) = Trend(stop)*ones(length(Trend(stop:end)),1);             
+                Trend(stop:end) = Trend(stop)*ones(length(Trend(stop:end)),1);
                 handles.CurrData.QPparams.APAQPR.Trend.RE_Z = [handles.CurrData.QPparams.APAQPR.Trend.RE_Z Trend];
                 
         end
@@ -4759,9 +4800,9 @@ switch h
         
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,Trend)
         
-%         filt_params = get(handles.filt_params,'Data');
-%         filt_params{handles.params.pos_filt_trace + 1,13} = ['AngPos = ' num2str(B(2)) '*Time + ' num2str(B(1))];
-%         set(handles.filt_params,'Data',filt_params);
+        %         filt_params = get(handles.filt_params,'Data');
+        %         filt_params{handles.params.pos_filt_trace + 1,13} = ['AngPos = ' num2str(B(2)) '*Time + ' num2str(B(1))];
+        %         set(handles.filt_params,'Data',filt_params);
         
     case 'Nevermind'
         
@@ -4873,4 +4914,175 @@ set(handles.APAQPR_end_text,'string',handles.CurrData.VOMA_data.Eye_t(APAQPRarra
 guidata(hObject,handles)
 
 
+end
+
+
+% --- Executes on button press in fit_line_btwn_QPs.
+function fit_line_btwn_QPs_Callback(hObject, eventdata, handles)
+% hObject    handle to fit_line_btwn_QPs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% I noticed that when the subject blinks (causing NaNs in the ddata
+% record), linear interpolation can be intepreted as a QP. This code may
+% potentially try to fit a line to these interpolated value. This typically
+% happens in extreme angular position values (>abs(17deg)). To avoid this,
+% we wont run this routine on angular position values above this threshold.
+% I will monitor this to see if this causes us to exclude data.
+mag_thresh = 11;
+
+
+switch handles.params.pos_filt_trace
+    
+    case 1
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X;
+    case 2
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y;
+    case 3
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z;
+    case 4
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X;
+    case 5
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y;
+    case 6
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z;
+        
+end
+
+
+inds = [1:length(Trace)];
+time = handles.CurrData.VOMA_data.Eye_t;
+
+% Remove NaNs
+Trace(isnan(Trace)) = interp1(inds(~isnan(Trace)),Trace(~isnan(Trace)),inds(isnan(Trace)));
+
+if isnan(Trace(1))
+    non_nan = inds(~isnan(Trace));
+    Trace(1:non_nan(1)-1) = Trace(non_nan(1));
+end
+
+if isnan(Trace(end))
+    non_nan = inds(~isnan(Trace));
+    Trace(non_nan(end)+1:end) = Trace(non_nan(end));
+end
+
+if isrow(time)
+    time = time';
+end
+Fs = handles.CurrData.VOMA_data.Fs;
+
+angvel_fit = [];
+
+Trace2 = zeros(length(Trace),1);
+
+for k=2:size(sacc_inds,1)
+    
+    if (length(time(sacc_inds(k-1,2):sacc_inds(k,1))) > ((handles.params.min_spv_fit_time)/1000)*Fs) && (max(abs(Trace(sacc_inds(k-1,2):sacc_inds(k,1)))) < mag_thresh)
+        
+        X_temp = [ones(length(time(sacc_inds(k-1,2):sacc_inds(k,1))),1) [time(sacc_inds(k-1,2):sacc_inds(k,1))]];
+        Y_temp = Trace(sacc_inds(k-1,2):sacc_inds(k,1));
+        
+        B_temp = X_temp\Y_temp;
+        
+        plot(time(sacc_inds(k-1,2):sacc_inds(k,1)),(time(sacc_inds(k-1,2):sacc_inds(k,1)))*B_temp(2) + B_temp(1),'k')
+        
+        angvel_fit = [angvel_fit ; mean(time(sacc_inds(k-1,2):sacc_inds(k,1))) B_temp(2)];
+    end
+    
+end
+
+
+%
+[a,I] = min(abs(repmat(time,1,length(angvel_fit(:,1))) - repmat(angvel_fit(:,1)',length(time),1)));
+
+Trace2(I) = angvel_fit(:,2);
+
+switch handles.params.pos_filt_trace
+    
+    case 1
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = Trace2;
+    case 2
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = Trace2;
+    case 3
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = Trace2;
+        
+    case 4
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = Trace2;
+    case 5
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = Trace2;
+    case 6
+        
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = Trace2;
+end
+
+% [handles] = plot_smth_data(hObject,eventdata,handles);
+
+% Update the user indicator that the position traces were changed
+[handles] = update_eye_pos(hObject, eventdata, handles, 1);
+
+
+filt_params = get(handles.filt_params,'Data');
+filt_params{1,14} = 'APAQPR Thresh.';
+filt_params{handles.params.pos_filt_trace + 1,14} = handles.params.APAQPR_derivthresh;
+filt_params{1,15} = 'Min. SPV Fit Time [ms]';
+filt_params{handles.params.pos_filt_trace + 1,15} = handles.params.min_spv_fit_time;
+set(handles.filt_params,'Data',filt_params);
+
+
+guidata(hObject,handles)
+
+
+end
+
+
+% --- Executes on button press in abs_APAQPR_thresh.
+function abs_APAQPR_thresh_Callback(hObject, eventdata, handles)
+% hObject    handle to abs_APAQPR_thresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (get(hObject,'Value') == get(hObject,'Max'))
+    handles.params.abs_APAQOR_thresh_flag = true;
+else
+    handles.params.abs_APAQOR_thresh_flag = false;
+end
+
+guidata(hObject,handles)
+% Hint: get(hObject,'Value') returns toggle state of abs_APAQPR_thresh
+end
+
+
+
+function min_spv_fit_time_Callback(hObject, eventdata, handles)
+% hObject    handle to min_spv_fit_time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+input = get(hObject,'String');
+handles.params.min_spv_fit_time = str2double(input);
+
+
+guidata(hObject,handles)
+
+end
+% Hints: get(hObject,'String') returns contents of min_spv_fit_time as text
+%        str2double(get(hObject,'String')) returns contents of min_spv_fit_time as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function min_spv_fit_time_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to min_spv_fit_time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end

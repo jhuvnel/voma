@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 03-Mar-2017 13:22:10
+% Last Modified by GUIDE v2.5 03-Apr-2017 12:59:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,6 +79,7 @@ handles.params.stim_plot_mult = 1;
 axes(handles.main_plot);
 handles.H = axis;
 
+handles.params.keyboard_flag = true;
 
 % The 'voma__stim_analysis' GUI offers the option to upsample the processed
 % Eye and Stimulus data traces, and save them in parallel to the processed
@@ -234,7 +235,7 @@ updatestimlist(hObject, eventdata, handles);
 cycle = handles.params.plot_cycle_val;
 
 % Retrieve the 'stim_ind' variable holding the indices of the starting
-% point of each cycle. 
+% point of each cycle.
 % ** this is a poorly named variable. I need to review and revamp the
 % structure of this code **
 stim_ind = handles.Final_Data.stim_ind;
@@ -292,7 +293,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                 
                 eye_stim_ind(end,2) = eye_stim_ind(end,1)+handles.len;
                 
-%                 plot(handles.main_plot,CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+                %                 plot(handles.main_plot,CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                 hold on
             otherwise
                 
@@ -344,7 +345,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
             
         end
         eye_stim_ind = stim_ind;
-%         plot(handles.main_plot,handles.Final_Data.Stim_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),handles.Final_Data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),'k','LineWidth',1)
+        %         plot(handles.main_plot,handles.Final_Data.Stim_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),handles.Final_Data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),'k','LineWidth',1)
         hold on
 end
 
@@ -406,7 +407,7 @@ guidata(hObject, handles);
 
 
 % function plot_cycle_data(hObject, eventdata, handles)
-% 
+%
 % % Plot the chosen cycle of data
 % if handles.params.lefteye_flag == 1
 %     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_LE_Vel_Z(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'r','LineWidth',1)
@@ -414,25 +415,25 @@ guidata(hObject, handles);
 %     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_LE_Vel_LARP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[0,128,0]/255,'LineWidth',1)
 %     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_LE_Vel_RALP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'b','LineWidth',1)
 % end
-% 
+%
 % if handles.params.righteye_flag == 1
 %     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_RE_Vel_Z(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[255,0,255]/255,'LineWidth',1)
 %     hold on
 %     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_RE_Vel_LARP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'g','LineWidth',1)
 %     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_RE_Vel_RALP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[64,224,208]/255,'LineWidth',1)
 % end
-% 
+%
 %     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
-% 
-% 
+%
+%
 % switch handles.CurrData.VOMA_data.Parameters.DAQ_code
 %     case {1,4,5}
 %         plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
 %     case {2,3}
 %         plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
-%         
+%
 % end
-% 
+%
 % xlabel(handles.main_plot,'Time [s]')
 % ylabel(handles.main_plot,'Eye Velocity [dps]')
 % hold off
@@ -478,6 +479,17 @@ function prev_cycle_Callback(hObject, eventdata, handles)
 % When the 'prev_cycle' button is pressed, decrement the 'plot_cycle_val'
 % variable
 handles.params.plot_cycle_val = handles.params.plot_cycle_val - 1;
+
+if handles.params.plot_cycle_val<1
+    handles.params.plot_cycle_val = 1;
+    
+end
+
+if handles.params.plot_cycle_val> length(handles.stim_list)
+    handles.params.plot_cycle_val = length(handles.stim_list);
+    
+end
+
 % Update the display in the gui
 set(handles.plot_cycle_val,'String',handles.params.plot_cycle_val);
 
@@ -496,6 +508,17 @@ function next_cycle_Callback(hObject, eventdata, handles)
 % When the 'next_cycle' button is pressed, decrement the 'plot_cycle_val'
 % variable
 handles.params.plot_cycle_val = handles.params.plot_cycle_val + 1;
+
+if handles.params.plot_cycle_val<1
+    handles.params.plot_cycle_val = 1;
+    
+end
+
+if handles.params.plot_cycle_val> length(handles.stim_list)
+    handles.params.plot_cycle_val = length(handles.stim_list);
+    
+end
+
 % Update the display in the gui
 set(handles.plot_cycle_val,'String',handles.params.plot_cycle_val);
 
@@ -506,7 +529,7 @@ plot_cycle_Callback(hObject, eventdata, handles)
 guidata(hObject, handles);
 
 % --- Executes on button press in keep_cycle.
-function keep_cycle_Callback(hObject, eventdata, handles)
+function keep_cycle_Callback(hObject, eventdata, handles,flag)
 % hObject    handle to keep_cycle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -514,16 +537,24 @@ function keep_cycle_Callback(hObject, eventdata, handles)
 % Retrieve the current cycle number
 cycle = handles.params.plot_cycle_val;
 
-% Check if the user has toggled to 'keep cycle' or not
-if (get(hObject,'Value') == get(hObject,'Max'))
-    % The user just chose to 'keep cycle', so make sure the value in the
-    % 'stim_list' logical array value for this cycle is a logical 'true'
-    handles.stim_list(cycle) = true(1);
+if exist('flag','var')
+    handles.stim_list(cycle) = flag;
+    set(handles.keep_cycle,'Value',flag);
     
 else
-    % The user just chose to not 'keep cycle', so make sure the value in the
-    % 'stim_list' logical array value for this cycle is a logical 'false'
-    handles.stim_list(cycle) = false(1);
+    % Check if the user has toggled to 'keep cycle' or not
+    if (get(hObject,'Value') == get(hObject,'Max'))
+        % The user just chose to 'keep cycle', so make sure the value in the
+        % 'stim_list' logical array value for this cycle is a logical 'true'
+        handles.stim_list(cycle) = true(1);
+        
+    elseif (get(hObject,'Value') == get(hObject,'Min'))
+        % The user just chose to not 'keep cycle', so make sure the value in the
+        % 'stim_list' logical array value for this cycle is a logical 'false'
+        handles.stim_list(cycle) = false(1);
+        
+    end
+    
 end
 
 % Since we changed the list of stimuli to keep, run the 'updatestimlist'
@@ -578,7 +609,7 @@ function plot_cycle_Callback(hObject, eventdata, handles)
 
 % Retrieve the current cycle number
 cycle = handles.params.plot_cycle_val;
-% 
+%
 % % If, due to reloading this gui/removing upsampled data, the 'stim_list'
 % % gets  reset incorrectly, we will just reinitialize the 'cyc2plot' list to
 % % include all cycles.
@@ -588,6 +619,9 @@ cycle = handles.params.plot_cycle_val;
 % end
 % Check if the 'stim_list' has this cycle marked to be kept and update the
 % checkbox accordingly.
+
+
+
 if handles.stim_list(cycle) == true(1)
     set(handles.keep_cycle,'Value',1)
 else
@@ -600,7 +634,7 @@ end
 axes(handles.main_plot);
 
 if handles.params.lock_yaxis
-H = axis;
+    H = axis;
 else
     
 end
@@ -627,7 +661,7 @@ if handles.params.lefteye_flag == 1
         patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','b','LineWidth',0.05,'edgealpha',0.5);
         patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','r','LineWidth',0.05,'edgealpha',0.5);
         
-       
+        
         
         
     catch
@@ -750,13 +784,22 @@ end
 
 
 % --- Executes on button press in cycle_average.
-function cycle_average_Callback(hObject, eventdata, handles)
+function cycle_average_Callback(hObject, eventdata, handles,flag)
 % hObject    handle to cycle_average (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-button_state = get(hObject,'Value');
-if button_state == get(hObject,'Max')
+if exist('flag','var')
+    button_state = flag;
+    high = true;
+    low = false;
+    
+else
+    button_state = get(hObject,'Value');
+    high = get(hObject,'Max');
+    low = get(hObject,'Min');
+end
+if button_state == high
     
     % Turn off the 'plot_final_trace' flag
     handles.params.plot_final_trace = 0;
@@ -764,7 +807,7 @@ if button_state == get(hObject,'Max')
     % Extract the cycle indices
     stim_ind = handles.Final_Data.stim_ind;
     eye_stim_ind = handles.Final_Data.eye_stim_ind;
-
+    
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
     
@@ -837,11 +880,11 @@ if button_state == get(hObject,'Max')
     handles.Results.lz_cyc = lz_cyc;
     handles.Results.lz_cycavg = lz_cycavg;
     handles.Results.lz_cycstd = lz_cycstd;
-
+    
     handles.Results.rz_cyc = rz_cyc;
     handles.Results.rz_cycavg = rz_cycavg;
     handles.Results.rz_cycstd = rz_cycstd;
-
+    
     handles.Results.stim = stim;
     
     handles.params.plot_cycleavg_flag = 1;
@@ -849,7 +892,7 @@ if button_state == get(hObject,'Max')
     
     
     
-elseif button_state == get(hObject,'Min')
+elseif button_state == low
     
     
     handles.params.plot_cycleavg_flag = 0;
@@ -923,20 +966,28 @@ drawnow
 
 
 % --- Executes on button press in plot_saved_cycles.
-function plot_saved_cycles_Callback(hObject, eventdata, handles)
+function plot_saved_cycles_Callback(hObject, eventdata, handles,flag)
 % hObject    handle to plot_saved_cycles (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-button_state = get(hObject,'Value');
-if button_state == get(hObject,'Max')
-    handles.params.plot_saved_cycles_flag = 1;
-    handles.params.plot_final_trace = 0;
-    
-elseif button_state == get(hObject,'Min')
-    handles.params.plot_saved_cycles_flag = 0;
+if exist('flag','var')
+    button_state = flag;
+    high = true;
+    low = false;
+else
+    button_state = get(hObject,'Value');
+    high = get(hObject,'Max');
+    low = get(hObject,'Min');
 end
 
+if button_state == high
+        handles.params.plot_saved_cycles_flag = 1;
+        handles.params.plot_final_trace = 0;
+        
+    elseif button_state == low;
+        handles.params.plot_saved_cycles_flag = 0;
+end
 % Update plot
 plot_data(hObject, eventdata, handles)
 
@@ -965,7 +1016,7 @@ if handles.params.plot_saved_cycles_flag == 1
     % Extract the cycle indices
     stim_ind = handles.Final_Data.stim_ind;
     eye_stim_ind = handles.Final_Data.eye_stim_ind;
-
+    
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
     
@@ -1006,7 +1057,7 @@ if handles.params.plot_cycleavg_flag == 1
     % Extract the cycle indices
     stim_ind = handles.Final_Data.stim_ind;
     eye_stim_ind = handles.Final_Data.eye_stim_ind;
-
+    
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
     
@@ -1082,7 +1133,7 @@ if handles.params.plot_final_trace == 1
     % Extract the cycle indices
     stim_ind = handles.Final_Data.stim_ind;
     eye_stim_ind = handles.Final_Data.eye_stim_ind;
-
+    
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
     
@@ -1114,28 +1165,28 @@ if handles.params.plot_final_trace == 1
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
         stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + len)];
-
+        
         
         t_cyc = [t_cyc  handles.Final_Data.Eye_t(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
     end
     
     % Plot the cycle average
     if handles.params.lefteye_flag == 1
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ll_cyc,'color' ,[0,128,0]/255,'LineWidth',1)
-    hold on
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lr_cyc,'b','LineWidth',1)
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lz_cyc,'r','LineWidth',1)
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ll_cyc,'color' ,[0,128,0]/255,'LineWidth',1)
+        hold on
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lr_cyc,'b','LineWidth',1)
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lz_cyc,'r','LineWidth',1)
     end
     
     if handles.params.righteye_flag == 1
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rl_cyc,'g','LineWidth',1)
-    hold on
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rr_cyc,'color' ,[64,224,208]/255,'LineWidth',1)
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rz_cyc,'color' ,[255,0,255]/255,'LineWidth',1)
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rl_cyc,'g','LineWidth',1)
+        hold on
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rr_cyc,'color' ,[64,224,208]/255,'LineWidth',1)
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rz_cyc,'color' ,[255,0,255]/255,'LineWidth',1)
     end
     
     plot(handles.main_plot,[1:length(stim)]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim,'color' ,'k','LineWidth',1)
-
+    
     
     drawnow
     
@@ -1344,7 +1395,7 @@ if button_state == get(hObject,'Max')
             
             handles.Results.SineFit.Freq = freq;
             
-        case 2 
+        case 2
             
             
             
@@ -1411,9 +1462,9 @@ RootData = handles.RootData;
 
 % Save QP params
 % RootData(handles.CurrData.curr_file).QPparams = handles.CurrData.QPparams;
-% 
+%
 % RootData(handles.CurrData.curr_file).cyc2plot = get(handles.stim_table,'Data');
-% 
+%
 % RootData(handles.CurrData.curr_file).CED.stim_ind = handles.Final_Data.stim_ind;
 
 
@@ -1488,9 +1539,9 @@ function lefteye_flag_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.lefteye_flag = 1;
+    handles.params.lefteye_flag = 1;
 else
-	handles.params.lefteye_flag = 0;
+    handles.params.lefteye_flag = 0;
 end
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of lefteye_flag
@@ -1502,9 +1553,9 @@ function righteye_flag_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.righteye_flag = 1;
+    handles.params.righteye_flag = 1;
 else
-	handles.params.righteye_flag = 0;
+    handles.params.righteye_flag = 0;
 end
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of righteye_flag
@@ -1568,13 +1619,13 @@ if (get(hObject,'Value') == get(hObject,'Max'))
     handles.params.lock_yaxis = true;
     
     
-
+    
     
 else
     handles.params.lock_yaxis = false;
     
     
-
+    
     
 end
 guidata(hObject,handles)
@@ -1594,3 +1645,80 @@ function Fs_txt_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to Fs_txt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in keybrd_shortcut_check.
+function keybrd_shortcut_check_Callback(hObject, eventdata, handles)
+% hObject    handle to keybrd_shortcut_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (get(hObject,'Value') == get(hObject,'Max'))
+    handles.params.keyboard_flag = true;
+else
+    handles.params.keyboard_flag = false;
+end
+
+guidata(hObject,handles)
+% Hint: get(hObject,'Value') returns toggle state of keybrd_shortcut_check
+
+
+% --- Executes on key press with focus on figure1 or any of its controls.
+function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+switch eventdata.Key
+    case 'a'
+        % Previous cycle
+        prev_cycle_Callback(hObject, eventdata, handles)
+    case 'd'
+        % Next Cycle
+        next_cycle_Callback(hObject, eventdata, handles)
+    case 'w'
+        % Add cycle
+        keep_cycle_Callback(hObject, eventdata, handles,true)
+    case 's'
+        % Remove cycle
+        keep_cycle_Callback(hObject, eventdata, handles,false)
+    case 'y'
+        % Plot final trace
+        plot_final_data_Callback(hObject, eventdata, handles)
+        
+    case 'u'
+        % Plot saved cycles
+        if handles.params.plot_saved_cycles_flag == 0
+            flag = true;
+            
+        else 
+            flag = false;
+            
+        end
+        plot_saved_cycles_Callback(hObject, eventdata, handles,flag)
+        
+    case 'i'
+        % Plot cycle average
+        if handles.params.plot_cycleavg_flag == 0
+            flag = true;
+            
+        else 
+            flag = false;
+            
+        end
+        
+        
+        
+        cycle_average_Callback(hObject, eventdata, handles,flag)
+    case 'o'
+        % Update Saved cycle list
+        update_cycle_list_Callback(hObject, eventdata, handles)
+    case 'p'
+        % Save Processed Data
+        savedata_Callback(hObject, eventdata, handles)
+end
+
+handles = guidata(hObject);
+
+guidata(hObject,handles)
