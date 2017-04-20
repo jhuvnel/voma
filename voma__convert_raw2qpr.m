@@ -25,7 +25,7 @@ function varargout = voma__convert_raw2qpr(varargin)
 
 % Edit the above text to modify the response to help voma__convert_Raw2qpr
 
-% Last Modified by GUIDE v2.5 20-Jan-2017 09:17:40
+% Last Modified by GUIDE v2.5 06-Feb-2017 17:03:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -101,19 +101,21 @@ function load_excel_sheet_Callback(hObject, eventdata, handles)
 % Prompt user for experimental file
 [FileName,PathName,FilterIndex] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet for analysis');
 
-handles.params.xlsname = FileName;
-handles.params.xlspath = PathName;
-
-[status,sheets] = xlsfinfo([PathName FileName]);
-
-set(handles.excel_sheet_list,'String',sheets);
-
-set(handles.excel_sheet_text,'String',FileName);
-
-% Assume the user is loading the first sheet
-[num1,txt1,raw1] = xlsread([handles.params.xlspath handles.params.xlsname],1);
-
-handles.params.raw = raw1;
+if FileName ~= 0
+    handles.params.xlsname = FileName;
+    handles.params.xlspath = PathName;
+    
+    [status,sheets] = xlsfinfo([PathName FileName]);
+    
+    set(handles.excel_sheet_list,'String',sheets);
+    
+    set(handles.excel_sheet_text,'String',FileName);
+    
+    % Assume the user is loading the first sheet
+    [num1,txt1,raw1] = xlsread([handles.params.xlspath handles.params.xlsname],1);
+    
+    handles.params.raw = raw1;
+end
 
 guidata(hObject,handles)
 
@@ -1082,6 +1084,213 @@ switch handles.params.file_format
                 end
                 
                 [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters);
+            case 4
+                filepath = handles.params.raw_data_path;
+                
+                
+                raw = handles.params.raw;
+                
+                data_fldr = handles.params.raw_data_path;
+                cd(data_fldr)
+                
+                fieldgainname = handles.params.fieldgain_name;
+                delimiter = '\t';
+                formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
+                
+                fileID = fopen(fieldgainname,'r');
+                
+                dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'EmptyValue' ,NaN, 'ReturnOnError', false);
+                
+                fclose(fileID);
+                
+                FieldGains = [dataArray{1:end-1}];
+                
+                zerosname = handles.params.zeros_name;
+                delimiter = '\t';
+                formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
+                
+                fileID = fopen(zerosname,'r');
+                
+                dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'EmptyValue' ,NaN, 'ReturnOnError', false);
+                
+                fclose(fileID);
+                
+                coilzeros = [dataArray{1:end-1}];
+                
+                ref = 1;
+                
+                Fs = {1000};
+                data_rot = 1;
+                
+                for n = 2:length(raw)
+                    
+                    FileName = [raw{n,1}];
+                    
+                    %% Check with peter on this? 
+                    DAQ_code = 6; % This is the code used in the 'processeyemovements' code to indicate we are dealing with a file that was only recorded using digital coil system
+
+                    inds = [];
+                    [direction, frequency, amplitude, theta, phi] = voma__readFileInfo(filepath,FileName);
+                    [Data] = voma__processeyemovements(filepath,FileName,FieldGains,coilzeros,ref,data_rot,DAQ_code);
+                    
+                    if isfield(Data, 'LE_Vel_Z')
+                        Fs{n-1} = {Data.Fs};
+                        
+                        Eye_t{n-1} = {[0:length(Data.LE_Vel_Z)-1]/Fs{n-1}{1}};
+                        Stim_t{n-1} = {Eye_t{n-1}};
+                        stim_ind{n-1} ={[]};
+                        
+                        Data_LE_Pos_X{n-1} = {Data.LE_Pos_X(1:length(Data.LE_Pos_X)-1)};
+                        Data_LE_Pos_Y{n-1} = {Data.LE_Pos_Y(1:length(Data.LE_Pos_Y)-1)};
+                        Data_LE_Pos_Z{n-1} = {Data.LE_Pos_Z(1:length(Data.LE_Pos_Z)-1)};
+                        
+                        Data_RE_Pos_X{n-1} = {Data.RE_Pos_X(1:length(Data.RE_Pos_X)-1)};
+                        Data_RE_Pos_Y{n-1} = {Data.RE_Pos_Y(1:length(Data.RE_Pos_Y)-1)};
+                        Data_RE_Pos_Z{n-1} = {Data.RE_Pos_Z(1:length(Data.RE_Pos_Z)-1)};
+                        
+                        Data_LE_Vel_X{n-1} = {Data.LE_Vel_X};
+                        Data_LE_Vel_Y{n-1} = {Data.LE_Vel_Y};
+                        Data_LE_Vel_LARP{n-1} = {Data.LE_Vel_LARP};
+                        Data_LE_Vel_RALP{n-1} = {Data.LE_Vel_RALP};
+                        Data_LE_Vel_Z{n-1} = {Data.LE_Vel_Z};
+                        
+                        Data_RE_Vel_X{n-1} = {Data.RE_Vel_X};
+                        Data_RE_Vel_Y{n-1} = {Data.RE_Vel_Y};
+                        Data_RE_Vel_LARP{n-1} = {Data.RE_Vel_LARP};
+                        Data_RE_Vel_RALP{n-1} = {Data.RE_Vel_RALP};
+                        Data_RE_Vel_Z{n-1} = {Data.RE_Vel_Z};
+                        
+                        
+                        
+                        Filenames{n-1} = {FileName};
+                        
+                        Parameters(n-1).DAQ = 'Digital Coil System';
+                        Parameters(n-1).DAQ_code = 6;
+                        
+                        Parameters(n-1).Stim_Info.ModCanal = {direction};
+                        Parameters(n-1).Stim_Info.Freq = {frequency};
+                        Parameters(n-1).Stim_Info.Max_Vel = {amplitude};
+                        Parameters(n-1).Stim_Info.Cycles = {10};
+                        Parameters(n-1).Stim_Info.Theta = {theta};
+                        Parameters(n-1).Stim_Info.Phi = {phi};
+                        mpuAligned = Data.MPU;
+                        Parameters(n-1).Stim_Info.ModCanal = {''};
+                        Parameters(n-1).Stim_Info.Phase = {''};
+                        Parameters(n-1).Stim_Info.PhaseDir = {''};
+                        Parameters(n-1).Stim_Info.Notes = {''};
+                        Parameters(n-1).Mapping.Type = {''};
+                        Parameters(n-1).Mapping.Compression = {''};
+                        Parameters(n-1).Mapping.Max_PR = {''};
+                        Parameters(n-1).Mapping.Baseline = {''};
+                        
+                        Nf = 50;
+                        if strcmp(direction, 'ObliqueAngle') || strcmp(direction,'ObliqueAngleHoriztonal')
+                            if strcmp(direction,'ObliqueAngleHorizontal') || isempty(phi)
+                                phi = 0;
+                            end
+                            addedvec = -mpuAligned(1:length(Data.LE_Vel_Z),4).*cosd(theta).*sind(phi) + mpuAligned(1:length(Data.LE_Vel_Z),3).*sind(theta).*sind(phi)+mpuAligned(1:length(Data.LE_Vel_Z),5).*cosd(phi);
+                            Stimulus{n-1}={atand((filtfilt(ones(1,Nf)/Nf,1,addedvec)/65536*9.8*8)/9.8)};
+                            
+                        
+                            %%STATIC TILT
+                        elseif (strcmp(direction,'LED')||strcmp(direction,'RED')||strcmp(direction,'NU')||strcmp(direction,'ND'))
+                            if (strcmp(direction,'LED')||strcmp(direction,'RED'))
+                                sensorColumn=4;
+                            else %NU or ND
+                                sensorColumn=3;
+                            end
+                            Stimulus{n-1}={asind((filtfilt(ones(1,Nf)/Nf,1,mpuAligned(1:length(Data.LE_Vel_Z),sensorColumn))/65536*9.8*8)/9.8)};
+   
+                        elseif (strcmp(direction,'Lateral'))||strcmp(direction,'Surge')||strcmp(direction,'Heave')
+                            if (strcmp(direction,'Lateral'))
+                                sensorColumn=3;
+                            elseif (strcmp(direction,'Surge'))
+                                sensorColumn=4;
+                            else %Heave
+                                sensorColumn=5;
+                            end
+                            Stimulus{n-1}={atand((filtfilt(ones(1,Nf)/Nf,1,mpuAligned(1:length(Data.LE_Vel_Z),sensorColumn))/65536*9.8*8)/9.8)};
+                        elseif strcmp(direction, 'Yaw') || strcmp(direction, 'Pitch') || strcmp(direction, 'Roll') || strcmp(direction,'Utricle') || strcmp(direction,'Saccule')  %change from rotation matrix to rotational velocity
+                            
+                            
+                            if strcmp(direction,'Roll')
+                                sensorColumn=6;
+                            elseif strcmp(direction,'Pitch')
+                                sensorColumn=7;
+                            else %For Yaw
+                                sensorColumn=8;
+                            end
+                            
+                            Stimulus{n-1} = {mpuAligned(1:length(Data.LE_Vel_Z),sensorColumn)/65536*500};
+                            
+                            
+                            
+                            %%FOR LARP and RALP
+                            %Gyro- 6,7,8 dps R,P,Y
+                        elseif (strcmp(direction,'LARP') || strcmp(direction,'RALP') || strcmp(direction,'LA') || strcmp(direction,'LP') || strcmp(direction,'RP') ) ||strcmp(direction,'RA')
+                            %for dual axes plot
+                            larpang = (45-90)*pi/180;
+                            ralpang = (45)*pi/180;
+                            if (strcmp(direction,'LARP')) ||(strcmp(direction,'LA')) || (strcmp(direction,'RP'))
+                                ang = larpang;
+                            else
+                                ang = ralpang;
+                            end
+                            RPY=[];
+                            RPY(:,1) = mpuAligned(1:length(Data.LE_Vel_Z),6)./65536.*500; %dps
+                            RPY(:,2) = mpuAligned(1:length(Data.LE_Vel_Z),7)./65536.*500;
+                            RPY(:,3) = mpuAligned(1:length(Data.LE_Vel_Z),8)./65536.*500;
+                            alpha = 0;
+                            beta = 0;
+                            gamma = 0;
+                            dt = 0.001;
+                            projectedAngVel = zeros(1,length(Data.LE_Vel_Z));
+                            for i = 1:length(RPY(:,1))
+                                alpha = alpha + dt*RPY(i,3)*pi/180;
+                                beta = beta + dt*RPY(i,2)*pi/180;
+                                gamma = gamma + dt*RPY(i,1)*pi/180;
+                                R = rpyToMat(gamma,beta,alpha);
+                                projectedAngVel(i) = (R*RPY(i,:)')'*[cos(ang);sin(ang);0];
+                            end
+                            Stimulus{n-1} = {projectedAngVel};
+                        end
+                    else
+                        inds = [inds n-1];
+                    end
+                    
+                end
+                for i = 1:length(inds)
+                    Parameters(i) = [];
+                    Filenames(i) = [];
+                    Fs(i) = [];
+                    Eye_t(i) = [];
+                    Stim_t(i) = [];
+                    stim_ind(i) =[];
+                    
+                    Data_LE_Pos_X(i) = [];
+                    Data_LE_Pos_Y(i) = [];
+                    Data_LE_Pos_Z(i) = [];
+                    
+                    Data_RE_Pos_X(i) = [];
+                    Data_RE_Pos_Y(i) = [];
+                    Data_RE_Pos_Z(i) = [];
+                    
+                    Data_LE_Vel_X(i) = [];
+                    Data_LE_Vel_Y(i) = [];
+                    Data_LE_Vel_LARP(i) = [];
+                    Data_LE_Vel_RALP(i) = [];
+                    Data_LE_Vel_Z(i) = [];
+                    
+                    Data_RE_Vel_X(i) = [];
+                    Data_RE_Vel_Y(i) = [];
+                    Data_RE_Vel_LARP(i) = [];
+                    Data_RE_Vel_RALP(i) = [];
+                    Data_RE_Vel_Z(i) = [];
+                    Stimulus(i) =[];
+                end
+                
+                [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters);
+                
             otherwise
                 
         end
@@ -1709,4 +1918,19 @@ else
 	handles.params.interp_ldvog_mpu = false;
 end
 % Hint: get(hObject,'Value') returns toggle state of interp_ldvog_mpu
+guidata(hObject,handles)
+
+
+% --- Executes on button press in zerosPushButton.
+function zerosPushButton_Callback(hObject, eventdata, handles)
+% hObject    handle to zerosPushButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[FileName,PathName,FilterIndex] = uigetfile('*.*', 'Please choose the file containing the zeros for the data being processed');
+
+handles.params.zeros_name = FileName;
+handles.params.zeros_path = PathName;
+
+set(handles.zerosText,'String',FileName);
+
 guidata(hObject,handles)
