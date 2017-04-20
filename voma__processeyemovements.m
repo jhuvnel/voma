@@ -19,6 +19,7 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %           Renamed 'system_code' to 'data_rot', since the code is used to
 %           indicate what coordinate system transformation needs to be
 %           applied for the specific data acquisition system.
+%       v8: Meg is adding digital coil processing info
 %
 %   data_rot:
 %       1: Apply no coordinate system transformations to raw data
@@ -37,6 +38,7 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %          software
 %       4: McGill Coil System [2D]
 %       5: Labyrinth Devices VOG Goggle data files
+%       6: Digital Coil Moog System
 %
 %
 %
@@ -93,7 +95,7 @@ FBinFAfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H V T
 
 %% Extract and process the raw coil data
 
-% If the user supplied this function with the raw angular velocity eye
+% If the user supplied this function with the raw angular position eye
 % movement data, we do not need to load any raw files and can just prep the
 % data for the angular velocity computation.
 %
@@ -167,6 +169,32 @@ if exist('Data_In','var') && ~isempty(Data_In)
             
             rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
             rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
+            
+        case 6 % LD VOG Goggles - MVI Trial
+            Fs = Data_In.Fs;
+            
+            if (isrow(Data_In.Data_LE_Pos_X))
+                Data_In.Data_LE_Pos_X=Data_In.Data_LE_Pos_X';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Y))
+                Data_In.Data_LE_Pos_Y=Data_In.Data_LE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Z))
+                Data_In.Data_LE_Pos_Z=Data_In.Data_LE_Pos_Z';
+            end
+            if (isrow(Data_In.Data_RE_Pos_X))
+                Data_In.Data_RE_Pos_X=Data_In.Data_RE_Pos_X';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Y))
+                Data_In.Data_RE_Pos_Y=Data_In.Data_RE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Z))
+                Data_In.Data_RE_Pos_Z=Data_In.Data_RE_Pos_Z';
+            end
+            
+            rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
+            rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
+            % Here need to calculate velocity now.
             
     end
     
@@ -307,7 +335,7 @@ else % i.e., the user did NOT provide any angular position data into the routine
                 Var_x083 = double(d(2).imp.adc(1:len))*d(2).hdr.adc.Scale + d(2).hdr.adc.DC;
             end
             
-     
+            
             
         case 4 % McGill 2D Coil System
             % I NEED TO ADD THIS
@@ -346,7 +374,63 @@ else % i.e., the user did NOT provide any angular position data into the routine
             
             rawData_L = [Torsion_LE_Position Vertical_LE_Position Horizontal_LE_Position];
             rawData_R = [Torsion_RE_Position Vertical_RE_Position Horizontal_RE_Position];
+            
+        case 6 %Digital coil system
+            Fs = 1000;
+            
+            f2=fopen(char(strcat(filepath,'\',filename)), 'rb');
+            
+            if f2 == -1
+                coils = [];
+            else
+                coils=fread(f2,[15,inf],'int32')';
+                
+                fclose(f2);
+            end
+            
+            mpuFilename = filename(1:length(filename)-5);
+            mpuFilename = strcat(mpuFilename,'_MPUdata.txt');
+            f2=fopen(char(strcat(filepath,'\',mpuFilename)));
+            if f2 == -1
+                mpu = [];
+            else
+                mpu = fscanf(f2,'%i',[8,inf]);
+                mpu = mpu';
+                fclose(f2);
+            end
+            
+            
+            if isempty(mpu) || isempty(coils)
+                fickR = [];
+            else
+                [fickR, fickL, rotR, rotL, velR, velL, LRZR, LRZL,mpuAligned] = voma__analyzeMoogCoils(mpu, coils, ref, FieldGains,coilzeros);
+            end
+            if isempty(fickR)
+                mpuFilename
+            else
+                Data.LE_Pos_X = fickL(:,3);
+                Data.LE_Pos_Y = fickL(:,2);
+                Data.LE_Pos_Z = fickL(:,1);
+                
+                Data.RE_Pos_X = fickR(:,3);
+                Data.RE_Pos_Y = fickR(:,2);
+                Data.RE_Pos_Z = fickR(:,1);
+                
+                Data.LE_Vel_X = velL(:,1);
+                Data.LE_Vel_Y = velL(:,2);
+                Data.LE_Vel_Z = velL(:,3);
+                Data.LE_Vel_LARP = LRZL(:,1);
+                Data.LE_Vel_RALP = LRZL(:,2);
+                
+                Data.RE_Vel_X = velR(:,1);
+                Data.RE_Vel_Y = velR(:,2);
+                Data.RE_Vel_Z = velR(:,3);
+                Data.RE_Vel_LARP = LRZR(:,1);
+                Data.RE_Vel_RALP = LRZR(:,2);
+                Data.MPU = mpuAligned;
+            end
     end
+  
     
     
     
@@ -457,23 +541,27 @@ for j=1:2
             
     end
     
-    switch j
-        case 1
-            % Store Data
-            Data.LE_Vel_X = angvel_dps_b(:,1);
-            Data.LE_Vel_Y = angvel_dps_b(:,2);
-            Data.LE_Vel_Z = angvel_dps_b(:,3);
-            Data.LE_Vel_LARP = angvel_dps_c(:,1);
-            Data.LE_Vel_RALP = angvel_dps_c(:,2);
-            
-        case 2
-            % Store Data
-            Data.RE_Vel_X = angvel_dps_b(:,1);
-            Data.RE_Vel_Y = angvel_dps_b(:,2);
-            Data.RE_Vel_Z = angvel_dps_b(:,3);
-            Data.RE_Vel_LARP = angvel_dps_c(:,1);
-            Data.RE_Vel_RALP = angvel_dps_c(:,2);
-            
+    switch DAQ_code
+        case 6
+        otherwise
+            switch j
+                
+                case 1
+                    % Store Data
+                    Data.LE_Vel_X = angvel_dps_b(:,1);
+                    Data.LE_Vel_Y = angvel_dps_b(:,2);
+                    Data.LE_Vel_Z = angvel_dps_b(:,3);
+                    Data.LE_Vel_LARP = angvel_dps_c(:,1);
+                    Data.LE_Vel_RALP = angvel_dps_c(:,2);
+                    
+                case 2
+                    % Store Data
+                    Data.RE_Vel_X = angvel_dps_b(:,1);
+                    Data.RE_Vel_Y = angvel_dps_b(:,2);
+                    Data.RE_Vel_Z = angvel_dps_b(:,3);
+                    Data.RE_Vel_LARP = angvel_dps_c(:,1);
+                    Data.RE_Vel_RALP = angvel_dps_c(:,2);
+            end
     end
     
     

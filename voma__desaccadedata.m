@@ -73,10 +73,10 @@ if E==2 % 'Event based' smoothing
     % Smooth Data 5s before and after each event
     for i=1:size(Event,1)
         DataSmth=Data;
-        DataSmth(Event(i,1)-5*Fs:Event(i,2)+5*Fs)=smooth(1:length(Data(Event(i,1)-5*Fs:Event(i,2)+5*Fs)),Data(Event(i,1)-5*Fs:Event(i,2)+5*Fs),splineVal,1:length(Data(Event(i,1)-5*Fs:Event(i,2)+5*Fs)));
+        DataSmth(Event(i,1)-5*Fs:Event(i,2)+5*Fs)=voma__smooth(1:length(Data(Event(i,1)-5*Fs:Event(i,2)+5*Fs)),Data(Event(i,1)-5*Fs:Event(i,2)+5*Fs),splineVal,1:length(Data(Event(i,1)-5*Fs:Event(i,2)+5*Fs)));
     end
 elseif E==1 % Smooth the entire trace
-    DataSmth=smooth([1:length(Data)]',Data,splineVal,[1:length(Data)]');
+    DataSmth=voma__smooth([1:length(Data)]',Data,splineVal,[1:length(Data)]');
 elseif E==0 % Do nothing, do QP removal on the raw trace
     DataSmth=Data;
 end
