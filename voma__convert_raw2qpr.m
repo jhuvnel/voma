@@ -23,7 +23,7 @@ function varargout = voma__convert_raw2qpr(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help voma__convert_raw2qpr
+% Edit the above text to modify the response to help voma__convert_Raw2qpr
 
 % Last Modified by GUIDE v2.5 06-Feb-2017 17:03:31
 
@@ -472,7 +472,7 @@ switch handles.params.file_format
                     
                     switch handles.params.lasker_stim_chan
                         case 1
-                            Stimulus_p{n-1} = {Data.angvel};
+                            Stimulus{n-1} = {Data.angvel};
                         case 2
                             angvel_calc_temp = gradient(Data.angpos)*Data.Fs;                            
                     end
@@ -487,7 +487,7 @@ switch handles.params.file_format
                             polarity = 2;
                         end
                         
-                        %                 [stim_ind_temp] = find_stim_ind_v4(Stimulus_p{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity);
+                        %                 [stim_ind_temp] = find_stim_ind_v4(Stimulus{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity);
                         [stim_ind_temp] = [];
                         if isempty([stim_ind_temp])
                             stim_ind{n-1} = {0};
@@ -498,7 +498,7 @@ switch handles.params.file_format
                         end
                     else
                         polarity = 1;
-                        %                 [stim_ind_temp] = find_stim_ind_v5(Stimulus_p{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity,0.07);
+                        %                 [stim_ind_temp] = find_stim_ind_v5(Stimulus{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity,0.07);
                         [stim_ind_temp] = [];
                         if isempty([stim_ind_temp])
                             stim_ind{n-1} = {0};
@@ -627,7 +627,7 @@ switch handles.params.file_format
                         % To conform to our lab's right-hand-rule convention, I will leave
                         % the polarity of the H-signal in its raw state (Positive =
                         % Leftward), and flip the vleocity comand signal to match it)
-                        Stimulus_p{n-1} = {-(VelCmd+ADC_offset)/TableVelCmd2DPS};
+                        Stimulus{n-1} = {-(VelCmd+ADC_offset)/TableVelCmd2DPS};
                         
                         
                         H1_vel = gradient(H1)*Fs{n-1}{1};
@@ -645,7 +645,7 @@ switch handles.params.file_format
                         
                         Data_r{n-1} = {V1_vel};
                         
-                        Data_z{n-1} = {H1_vel - Stimulus_p{n-1}{1}};
+                        Data_z{n-1} = {H1_vel - Stimulus{n-1}{1}};
                         
                         if ~isempty(strfind(raw{n,9}, 'Velocity Step'))
                             
@@ -655,13 +655,13 @@ switch handles.params.file_format
                                 polarity = 2;
                             end
                             
-                            [stim_ind_temp] = voma__find_stim_ind(Stimulus_p{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity);
+                            [stim_ind_temp] = voma__find_stim_ind(Stimulus{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity);
                             
                             stimdur_samp = raw{n,12}*Fs{n-1}{1};
                             stim_ind_temp(:,2) = stim_ind_temp(:,2)+stimdur_samp;
                             stim_ind{n-1} = {stim_ind_temp(:,:)};
                         else
-                            [stim_ind_temp] = voma__find_stim_ind(Stimulus_p{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust);
+                            [stim_ind_temp] = voma__find_stim_ind(Stimulus{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust);
                             stim_ind{n-1} = {stim_ind_temp(:,:)};
                         end
                         
@@ -681,9 +681,9 @@ switch handles.params.file_format
                         
                         
                         if ~isempty(PRate)
-                            Stimulus_p{n-1} = {interp1(PRate_t,PRate,Time{n-1}{1})};
+                            Stimulus{n-1} = {interp1(PRate_t,PRate,Time{n-1}{1})};
                         else
-                            Stimulus_p{n-1} = {zeros(1,length(H1))};
+                            Stimulus{n-1} = {zeros(1,length(H1))};
                         end
                         
                         useradjust = 'y';
@@ -701,13 +701,13 @@ switch handles.params.file_format
                                 polarity = 2;
                             end
                             
-                            [stim_ind_temp] = voma__find_stim_ind(Stimulus_p{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity);
+                            [stim_ind_temp] = voma__find_stim_ind(Stimulus{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust,polarity);
                             
                             stimdur_samp = raw{n,12}*Fs{n-1}{1};
                             stim_ind_temp(:,2) = stim_ind_temp(:,2)+stimdur_samp;
                             stim_ind{n-1} = {stim_ind_temp(:,:)};
                         else
-                            [stim_ind_temp] = voma__find_stim_ind(Stimulus_p{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust);
+                            [stim_ind_temp] = voma__find_stim_ind(Stimulus{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust);
                             stim_ind{n-1} = {stim_ind_temp(:,:)};
                         end
                         
@@ -728,12 +728,12 @@ switch handles.params.file_format
                     
                     Filenames{n-1} = {FileName};
                     
-                    Parameters(n-1).Stimulus_p.Stim_Type = raw(n,9);
-                    Parameters(n-1).Stimulus_p.ModCanal = raw(n,10);
-                    Parameters(n-1).Stimulus_p.Freq = raw(n,12);
-                    Parameters(n-1).Stimulus_p.Max_Vel = raw(n,13);
-                    Parameters(n-1).Stimulus_p.Cycles = raw(n,15);
-                    Parameters(n-1).Stimulus_p.Notes = raw(n,17);
+                    Parameters(n-1).Stim_Info.Stim_Type = raw(n,9);
+                    Parameters(n-1).Stim_Info.ModCanal = raw(n,10);
+                    Parameters(n-1).Stim_Info.Freq = raw(n,12);
+                    Parameters(n-1).Stim_Info.Max_Vel = raw(n,13);
+                    Parameters(n-1).Stim_Info.Cycles = raw(n,15);
+                    Parameters(n-1).Stim_Info.Notes = raw(n,17);
                     Parameters(n-1).Mapping.Type = raw(n,11);
                     Parameters(n-1).Mapping.Compression = raw(n,6);
                     Parameters(n-1).Mapping.Max_PR = raw(n,7);
@@ -744,7 +744,7 @@ switch handles.params.file_format
                     
                 end
                 
-                [Data_QPR] = voma__qpr_data_convert(Stimulus_p,Data_l,Data_r,Data_z,Time,stim_ind,Fs,Filenames,Parameters);
+                [Data_QPR] = voma__qpr_data_convert(Stimulus,Data_l,Data_r,Data_z,Time,stim_ind,Fs,Filenames,Parameters);
                 
             case 3 % Lab. Dev. VOG Goggles [3D]
                 
@@ -954,21 +954,21 @@ switch handles.params.file_format
                         case {'LARP','LARP-Axis'}
                             %                     stim_temp = interp1(Time_Head,headmpu_lrz(:,1),Time_new);
                             stim_temp = interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye);
-                            %                     Stimulus_p{n-1} = {smooth([1:length(headmpu_lrz(:,1))],headmpu_lrz(:,1),0.01,[1:length(headmpu_lrz(:,1))])};
+                            %                     Stimulus{n-1} = {smooth([1:length(headmpu_lrz(:,1))],headmpu_lrz(:,1),0.01,[1:length(headmpu_lrz(:,1))])};
                         case {'RALP','RALP-Axis'}
                             %                     stim_temp = interp1(Time_Head,headmpu_lrz(:,2),Time_new);
                             stim_temp = interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye);
-                            %                     Stimulus_p{n-1} = {smooth([1:length(headmpu_lrz(:,2))],headmpu_lrz(:,2),0.01,[1:length(headmpu_lrz(:,2))])};
+                            %                     Stimulus{n-1} = {smooth([1:length(headmpu_lrz(:,2))],headmpu_lrz(:,2),0.01,[1:length(headmpu_lrz(:,2))])};
                         case {'LHRH','LHRH-Axis'}
                             %                     stim_temp = interp1(Time_Head,headmpu_lrz(:,3),Time_new);
                             stim_temp = interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye);
-                            %                     Stimulus_p{n-1} = {smooth([1:length(headmpu_lrz(:,3))],headmpu_lrz(:,3),0.01,[1:length(headmpu_lrz(:,3))])};
+                            %                     Stimulus{n-1} = {smooth([1:length(headmpu_lrz(:,3))],headmpu_lrz(:,3),0.01,[1:length(headmpu_lrz(:,3))])};
                     end
                     
                     switch raw{n,9}
                         
                         case 'Pulse Train'
-                            Stimulus_p{n-1} = {Stimulus*200};
+                            Stimulus{n-1} = {Stimulus};
                             
                             inds = [1:length(Data.ll)];
                             
@@ -978,7 +978,7 @@ switch handles.params.file_format
                             
                         case 'Current Fitting'
                             
-                            Stimulus_p{n-1} = {Data.Stim_Trig};
+                            Stimulus{n-1} = {Data.Stim_Trig};
                             
                             inds = [1:length(Data.Stim_Trig)]';
                             on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
@@ -1001,11 +1001,11 @@ switch handles.params.file_format
                             
                             sine = A*sin(2*pi*f*t_sine + phi);
                             VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Stimulus)-(transition_inds(end)+floor(mean_period*Fs_temp)))];
-                            Stimulus_p{n-1} = {VirtSine};
+                            Stimulus{n-1} = {VirtSine};
                             
                             stim_ind{n-1} = {transition_inds'};
                         case 'Gaussian'
-                            Stimulus_p{n-1} = {stim_temp};
+                            Stimulus{n-1} = {stim_temp};
                         otherwise
                             
                             %                             switch raw{n,12}
@@ -1019,15 +1019,15 @@ switch handles.params.file_format
                             
                             % Check for NaNs
                             stim_temp(isnan(stim_temp)) = zeros(1,length(stim_temp(isnan(stim_temp))));
-                            Stimulus_p{n-1} = {stim_temp};
+                            Stimulus{n-1} = {stim_temp};
                             stim_ind{n-1} = {[]};
                             %
-                            %                     Stimulus_p{n-1} = {smooth([1:length(stim_temp)],stim_temp,spline_val,[1:length(stim_temp)])};
+                            %                     Stimulus{n-1} = {smooth([1:length(stim_temp)],stim_temp,spline_val,[1:length(stim_temp)])};
                             %
                             % %                     % If the stimulus IS a Gaussian impulse, let's not alter
                             % %                     % the stim. trace at all since we are fitting a line to a constant
                             % %                     % acceleration ramp.
-                            % %                     [stim_ind_temp] = find_stim_ind_v3(Stimulus_p{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust);
+                            % %                     [stim_ind_temp] = find_stim_ind_v3(Stimulus{n-1}{1},Fs{n-1}{1},Time{n-1}{1},useradjust);
                             % %                     stim_ind{n-1} = {stim_ind_temp(:,:)};
                             
                     end
@@ -1372,6 +1372,33 @@ switch handles.params.file_format
                             Parameters(n-1).DAQ_code = 3;
                             
                     end
+                    
+                    if isrow(Data.HeadMPUVel_X)
+                        Data.HeadMPUVel_X = Data.HeadMPUVel_X';
+                    end
+                    if isrow(Data.HeadMPUVel_Y)
+                        Data.HeadMPUVel_Y = Data.HeadMPUVel_Y';
+                    end
+                    if isrow(Data.HeadMPUVel_Z)
+                        Data.HeadMPUVel_Z = Data.HeadMPUVel_Z';
+                    end
+                    
+                    
+                    headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                    
+                    headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                    
+                    switch raw{n,10}
+                        case {'LARP-Axis','LA','LARP','RP'}
+                            Stimulus{n-1} = {headmpu_lrz(:,1)};
+                        case {'RALP-Axis','LP','RALP','RA'}
+                            Stimulus{n-1} = {headmpu_lrz(:,2)};
+                            
+                        case {'LHRH-Axis','LH','LHRH','RH'}
+                            Stimulus{n-1} = {headmpu_lrz(:,3)};
+                            
+                    end
+                    stim_ind{n-1} = {[]};
                 case 2
                     Parameters(n-1).DAQ = 'McGill';
                     Parameters(n-1).DAQ_code = 4;
@@ -1399,7 +1426,7 @@ switch handles.params.file_format
                             sine = A*sin(2*pi*f*t_sine + phi);
                             VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
                             
-                            Stimulus_p{n-1} = {VirtSine};
+                            Stimulus{n-1} = {VirtSine};
                             stim_ind{n-1} = {transition_inds'};
                             % For Elec. Only stimuli w/ the MVI LD goggles,
                             % the GPIO line is collected w/ the VOG data.
@@ -1409,7 +1436,7 @@ switch handles.params.file_format
                             
                         case 'Pulse Train'
                             
-                            Stimulus_p{n-1} = {Data.Stim_Trig};
+                            Stimulus{n-1} = {Data.Stim_Trig};
                             
                             inds = [1:length(Data.Stim_Trig)]';
                             on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
@@ -1423,7 +1450,7 @@ switch handles.params.file_format
                             Stim_t{n-1} = {Data.Time_Eye};
                         case 'Current Fitting'
                             
-                            Stimulus_p{n-1} = {Data.Stim_Trig};
+                            Stimulus{n-1} = {Data.Stim_Trig};
                             
                             inds = [1:length(Data.Stim_Trig)]';
                             on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
@@ -1452,13 +1479,13 @@ switch handles.params.file_format
                                 
                                 switch raw{n,10}
                                     case {'LARP-Axis','LA','LARP','RP'}
-                                        Stimulus_p{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye)};
+                                        Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye)};
                                         
                                     case {'RALP-Axis','LP','RALP','RA'}
-                                        Stimulus_p{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye)};
+                                        Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye)};
                                         
                                     case {'LHRH-Axis','LH','LHRH','RH'}
-                                        Stimulus_p{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye)};
+                                        Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye)};
                                         
                                 end
                                Stim_t{n-1} = {Data.Time_Eye};
@@ -1466,12 +1493,12 @@ switch handles.params.file_format
                                 
                                 switch raw{n,10}
                                     case {'LARP-Axis','LA','LARP','RP'}
-                                        Stimulus_p{n-1} = {headmpu_lrz(:,1)};
+                                        Stimulus{n-1} = {headmpu_lrz(:,1)};
                                     case {'RALP-Axis','LP','RALP','RA'}
-                                        Stimulus_p{n-1} = {headmpu_lrz(:,2)};
+                                        Stimulus{n-1} = {headmpu_lrz(:,2)};
                                         
                                     case {'LHRH-Axis','LH','LHRH','RH'}
-                                        Stimulus_p{n-1} = {headmpu_lrz(:,3)};
+                                        Stimulus{n-1} = {headmpu_lrz(:,3)};
                                         
                                 end
                                 
@@ -1484,12 +1511,16 @@ switch handles.params.file_format
                     Parameters(n-1).DAQ_code = 6;
             end
             
+            
+            
+            Raw_Filenames{n-1} = Data.raw_filename;
+            
         end
         
         
         
         
-        [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus_p,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters);
+        [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
         
         
 end
@@ -1739,7 +1770,7 @@ end
 
 
 
-[Data_QPR] = voma__qpr_data_convert(Stimulus_p,Data_l_l,Data_l_r,Data_l_z,Data_r_l,Data_r_r,Data_r_z,Time,stim_ind,Fs,Filenames,Parameters);
+[Data_QPR] = voma__qpr_data_convert(Stimulus,Data_l_l,Data_l_r,Data_l_z,Data_r_l,Data_r_r,Data_r_z,Time,stim_ind,Fs,Filenames,Parameters);
 
 
 % --- Executes when selected object is changed in file_type.

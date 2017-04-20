@@ -41,6 +41,11 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %       6: Digital Coil Moog System
 %
 %
+%
+%
+%
+%s
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -85,7 +90,7 @@ switch data_rot
         
 end
 
-dbdbFBinFAfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H V T] convention
+FBinFAfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H V T] convention
 
 
 %% Extract and process the raw coil data
@@ -98,13 +103,45 @@ dbdbFBinFAfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H
 % empty
 if exist('Data_In','var') && ~isempty(Data_In)
     
+    Data_In_flag = true;
+    
     switch DAQ_code
         
         case 1
             
         case 2
             
-        case 3
+        case 3 % Lasker System, CED Only
+            
+            Fs = Data_In.Fs;
+            
+            if (isrow(Data_In.Data_LE_Pos_X))
+                Data_In.Data_LE_Pos_X=Data_In.Data_LE_Pos_X';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Y))
+                Data_In.Data_LE_Pos_Y=Data_In.Data_LE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Z))
+                Data_In.Data_LE_Pos_Z=Data_In.Data_LE_Pos_Z';
+            end
+            if (isrow(Data_In.Data_RE_Pos_X))
+                Data_In.Data_RE_Pos_X=Data_In.Data_RE_Pos_X';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Y))
+                Data_In.Data_RE_Pos_Y=Data_In.Data_RE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Z))
+                Data_In.Data_RE_Pos_Z=Data_In.Data_RE_Pos_Z';
+            end
+            
+            rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
+            rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
+            
+            zeros_L = [0 0 0 0 0 0 0 0 0 0 0 0];
+            gains_L = [0 0 0 0 0 0 0 0 0 0 0 0];
+            
+            zeros_R = [0 0 0 0 0 0 0 0 0 0 0 0];
+            gains_R = [0 0 0 0 0 0 0 0 0 0 0 0];
             
         case 4
             
@@ -163,7 +200,7 @@ if exist('Data_In','var') && ~isempty(Data_In)
     
 else % i.e., the user did NOT provide any angular position data into the routine, and we must load the data from the raw files.
     
-    
+    Data_In_flag = false;
     
     
     switch DAQ_code % Each DAQ system requires a different method of extracting raw data
@@ -406,6 +443,8 @@ for j=1:2
         
         case {1,2,3} % Raw Coil Signals to Rotation Vectors
             
+            
+            
             switch j
                 
                 case 1 % Left Eye
@@ -414,14 +453,24 @@ for j=1:2
                     gains = gains_L;
                 case 2 % Right Eye
                     rawData = rawData_R;
-                    coilzeros = zeros_R([3 1 2 6 4 5]);
+                    coilzeros = zeros_R;
                     gains = gains_R;
             end
             
-            % Converting raw data to rotation vectors
-            % Note that the output of the raw2rot routine is a time series of
-            % Eye-in-FrameA rotation vectors
-            rot = raw2rot(rawData - repmat(coilzeros,length(rawData),1), gains, ref);
+            if Data_In_flag
+                % If the user is recalculating angular velocity for coil
+                % data, we will reload the ROTATION VECTORS and not the raw
+                % coil signals, so we can skip the 'raw2rot' section.
+                
+                rot = rawData;
+                
+            else
+                
+                % Converting raw data to rotation vectors
+                % Note that the output of the raw2rot routine is a time series of
+                % Eye-in-FrameA rotation vectors
+                rot = raw2rot(rawData - repmat(coilzeros,length(rawData),1), gains, ref);
+            end
             
             % Here we are converting the Eye-in-FrameA rotation vectors into the
             % 'correct' Eye-in-FrameB by doing [FrameB-in-FrameA]^T[Eye-in-FrameA] = [Eye-in-FrameB]

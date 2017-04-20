@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 22-Jan-2017 17:11:31
+% Last Modified by GUIDE v2.5 03-Mar-2017 13:22:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,6 +79,84 @@ handles.params.stim_plot_mult = 1;
 axes(handles.main_plot);
 handles.H = axis;
 
+
+% The 'voma__stim_analysis' GUI offers the option to upsample the processed
+% Eye and Stimulus data traces, and save them in parallel to the processed
+% data in the original time base. We will ask the user which traces they
+% want to process in this GUI.
+if isfield(CurrData.VOMA_data,'UpSamp')
+    
+    
+    choice = questdlg('You have previously upsampled the data for this file. How would you like to proceed?', ...
+        'Upsampled Data Found', ...
+        'Use the upsampled data in this GUI','Load the data on its original time base.','Load the data on its original time base.');
+    % Handle response
+    switch choice
+        case 'Use the upsampled data in this GUI'
+            handles.upsamp_flag = true;
+        case 'Load the data on its original time base.'
+            handles.upsamp_flag = false;
+        otherwise
+            % If the user exits the dialog box, just load the data on the
+            % original time base.
+            handles.upsamp_flag = false;
+    end
+else
+    % If the file being processed has not been upsampled, load the
+    % processed data on the original time base.
+    handles.upsamp_flag = false;
+    
+end
+
+
+
+
+if handles.upsamp_flag
+    
+    handles.Final_Data.Fs = handles.CurrData.VOMA_data.UpSamp.Fs;
+    handles.Final_Data.Stim_t = handles.CurrData.VOMA_data.UpSamp.Stim_t;
+    handles.Final_Data.Eye_t = handles.CurrData.VOMA_data.UpSamp.Stim_t;
+    handles.Final_Data.Stim_Trace = handles.CurrData.VOMA_data.UpSamp.Stim_Trace;
+    handles.Final_Data.stim_ind = handles.CurrData.VOMA_data.UpSamp.stim_ind;
+    handles.Final_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_LARP;
+    handles.Final_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_RALP;
+    handles.Final_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_Z;
+    handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_LARP;
+    handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_RALP;
+    handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_Z;
+    
+    handles.Raw_Data.Data_LE_Vel_LARP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_LE_Vel_RALP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_LE_Vel_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_RE_Vel_LARP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_RE_Vel_RALP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_RE_Vel_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.Final_Data.Eye_t);
+    
+    
+else
+    
+    handles.Final_Data.Fs = handles.CurrData.VOMA_data.Fs;
+    handles.Final_Data.Stim_t = handles.CurrData.VOMA_data.Stim_t;
+    handles.Final_Data.Eye_t = handles.CurrData.VOMA_data.Eye_t;
+    handles.Final_Data.Stim_Trace = handles.CurrData.VOMA_data.Stim_Trace;
+    handles.Final_Data.stim_ind = handles.CurrData.VOMA_data.stim_ind;
+    handles.Final_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP;
+    handles.Final_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP;
+    handles.Final_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
+    handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP;
+    handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP;
+    handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
+    
+    handles.Raw_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
+    handles.Raw_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
+    handles.Raw_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
+    handles.Raw_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP;
+    handles.Raw_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP;
+    handles.Raw_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
+    
+end
+
+
 % % Initialize the 'cycle to plot' variable as cycle #1
 % handles.params.plot_cycle_val = 1;
 
@@ -105,7 +183,7 @@ if (~isfield(CurrData,'cyc2plot')) || (isempty(CurrData.cyc2plot))
     % stimulus presentation will be included in further analysis or not,
     % respectively. We will initialize by including all of the stimulus
     % presentations.
-    handles.stim_list = true(1,size(CurrData.VOMA_data.stim_ind,1));
+    handles.stim_list = true(1,size(handles.Final_Data.stim_ind,1));
     
     % Initialize the 'cycle to plot' variable as cycle #1
     handles.params.plot_cycle_val = 1;
@@ -139,6 +217,10 @@ else
     
 end
 
+
+
+set(handles.Fs_txt,'String',num2str(handles.Final_Data.Fs));
+
 % Initialize the stim_table plot with the included cycles
 updatestimlist(hObject, eventdata, handles);
 
@@ -155,11 +237,11 @@ cycle = handles.params.plot_cycle_val;
 % point of each cycle. 
 % ** this is a poorly named variable. I need to review and revamp the
 % structure of this code **
-stim_ind = handles.CurrData.VOMA_data.stim_ind;
+stim_ind = handles.Final_Data.stim_ind;
 
 switch handles.CurrData.VOMA_data.Parameters.DAQ_code
     
-    case {2,3} % These case involve using the CED to record precise eletrical
+    case {2,3} % These case involves using the CED to record precise eletrical
         % Stimulus pulse arrival times.
         
         switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
@@ -173,8 +255,8 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                     handles.len_stim = size(CurrData.VOMA_data.Stim_Trace,2)-1;
                     stim_ind = [1 size(CurrData.VOMA_data.Stim_Trace,2)];
                 else
-                    % I am finding the minimum length of each
-                    % cycle and use that for the length of each cycle I extract
+                    % I am finding the minimum length of all
+                    % cycles and use that for the length of each cycle I extract
                     handles.len_stim = min(diff(stim_ind(:,1)))-1;
                 end
                 
@@ -225,8 +307,8 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                     
                     stim_ind = [1 handles.len+1];
                 else
-                    % I am finding the minimum length of each
-                    % cycle and use that for the length of each cycle I extract
+                    % I am finding the minimum length of all
+                    % cycles and use that for the length of each cycle I extract
                     handles.len = min(diff(stim_ind(:,1)));
                     if isempty(handles.len)
                         handles.len = stim_ind(1,2) - stim_ind(1,1);
@@ -252,8 +334,8 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
             
             stim_ind = [1 handles.len+1];
         else
-            % I am finding the minimum length of each
-            % cycle and use that for the length of each cycle I extract
+            % I am finding the minimum length of all
+            % cycles and use that for the length of each cycle I extract
             handles.len = min(diff(stim_ind(:,1)));
             if isempty(handles.len)
                 handles.len = stim_ind(1,2) - stim_ind(1,1);
@@ -262,12 +344,15 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
             
         end
         eye_stim_ind = stim_ind;
-%         plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),'k','LineWidth',1)
+%         plot(handles.main_plot,handles.Final_Data.Stim_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),handles.Final_Data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len),'k','LineWidth',1)
         hold on
 end
 
-handles.CurrData.VOMA_data.eye_stim_ind = eye_stim_ind;
+handles.Final_Data.eye_stim_ind = eye_stim_ind;
+handles.Final_Data.stim_ind = stim_ind;
+
 handles.CurrData.VOMA_data.stim_ind = stim_ind;
+handles.RootData(handles.curr_file).VOMA_data.stim_ind = stim_ind;
 
 if isempty(handles.stim_list)
     handles.stim_list = [true];
@@ -324,27 +409,27 @@ guidata(hObject, handles);
 % 
 % % Plot the chosen cycle of data
 % if handles.params.lefteye_flag == 1
-%     plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'r','LineWidth',1)
+%     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_LE_Vel_Z(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'r','LineWidth',1)
 %     hold on
-%     plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[0,128,0]/255,'LineWidth',1)
-%     plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'b','LineWidth',1)
+%     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_LE_Vel_LARP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[0,128,0]/255,'LineWidth',1)
+%     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_LE_Vel_RALP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'b','LineWidth',1)
 % end
 % 
 % if handles.params.righteye_flag == 1
-%     plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[255,0,255]/255,'LineWidth',1)
+%     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_RE_Vel_Z(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[255,0,255]/255,'LineWidth',1)
 %     hold on
-%     plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'g','LineWidth',1)
-%     plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[64,224,208]/255,'LineWidth',1)
+%     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_RE_Vel_LARP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'g','LineWidth',1)
+%     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.Final_Data.Data_RE_Vel_RALP(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),'color' ,[64,224,208]/255,'LineWidth',1)
 % end
 % 
-%     plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
+%     plot(handles.main_plot,handles.Final_Data.Eye_t(handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.eye_stim_ind(handles.params.plot_cycle_val,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
 % 
 % 
 % switch handles.CurrData.VOMA_data.Parameters.DAQ_code
 %     case {1,4,5}
-%         plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
+%         plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
 %     case {2,3}
-%         plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_Trace(1,handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+%         plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
 %         
 % end
 % 
@@ -493,7 +578,14 @@ function plot_cycle_Callback(hObject, eventdata, handles)
 
 % Retrieve the current cycle number
 cycle = handles.params.plot_cycle_val;
-
+% 
+% % If, due to reloading this gui/removing upsampled data, the 'stim_list'
+% % gets  reset incorrectly, we will just reinitialize the 'cyc2plot' list to
+% % include all cycles.
+% if cycle>length(handles.stim_list)
+%     handles.stim_list = true(1,length(handles.Final_Data.stim_ind));
+%     updatestimlist(hObject, eventdata, handles)
+% end
 % Check if the 'stim_list' has this cycle marked to be kept and update the
 % checkbox accordingly.
 if handles.stim_list(cycle) == true(1)
@@ -517,54 +609,56 @@ axes(handles.main_plot); % Make main_plot the current axes.
 cla reset; % Do a complete and total reset of the axes.
 
 % Retrieve the 'stim_ind' variable holding the cycle indices
-stim_ind = handles.CurrData.VOMA_data.stim_ind;
-eye_stim_ind = handles.CurrData.VOMA_data.eye_stim_ind;
+stim_ind = handles.Final_Data.stim_ind;
+eye_stim_ind = handles.Final_Data.eye_stim_ind;
 
 % Plot the chosen cycle of data
 if handles.params.lefteye_flag == 1
     
     % Plot Smooth Cycle Data
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
     hold on
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[0,128,0]/255,'LineWidth',1)
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[0,128,0]/255,'LineWidth',1)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
     
     try
-        patchline(handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',[0,128,0]/255,'LineWidth',0.05,'edgealpha',0.5);
-        patchline(handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','b','LineWidth',0.05,'edgealpha',0.5);
-        patchline(handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','r','LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',[0,128,0]/255,'LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','b','LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','r','LineWidth',0.05,'edgealpha',0.5);
         
        
         
         
     catch
-        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[0,128,0]/255,'LineWidth',1)
-        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
-        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[0,128,0]/255,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
+
         
         
     end
 end
 
 if handles.params.righteye_flag == 1
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[255,0,255]/255,'LineWidth',1)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[255,0,255]/255,'LineWidth',1)
     hold on
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[64,224,208]/255,'LineWidth',1)
-    plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[64,224,208]/255,'LineWidth',1)
+    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
     
     try
         
-        patchline(handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','g','LineWidth',0.05,'edgealpha',0.5);
-        patchline(handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',[64,224,208]/255,'LineWidth',0.05,'edgealpha',0.5);
-        patchline(handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor', [255,0,255]/255,'LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','g','LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',[64,224,208]/255,'LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor', [255,0,255]/255,'LineWidth',0.05,'edgealpha',0.5);
         
     catch
         
-        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
-        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[64,224,208]/255,'LineWidth',1)
-        plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.CurrData.VOMA_data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[255,0,255]/255,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[64,224,208]/255,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[255,0,255]/255,'LineWidth',1)
+
     end
     
 end
@@ -572,20 +666,20 @@ end
 switch handles.CurrData.VOMA_data.Parameters.DAQ_code
     case {1,4,5,6}
         
-        plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
         
-        %         plot(handles.main_plot,handles.CurrData.VOMA_data.Eye_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),handles.CurrData.VOMA_data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),'k','LineWidth',1)
+        %         plot(handles.main_plot,handles.Final_Data.Eye_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),handles.Final_Data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),'k','LineWidth',1)
         
     case {2,3}
-        switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
+        switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
             case 'Current Fitting'
-                %                 plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
-                plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_Trace(1,handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+                %                 plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+                plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                 
             otherwise
                 
                 
-                plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_t(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace(handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1):handles.CurrData.VOMA_data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
+                plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
         end
 end
 
@@ -670,8 +764,8 @@ if button_state == get(hObject,'Max')
     handles.params.plot_final_trace = 0;
     
     % Extract the cycle indices
-    stim_ind = handles.CurrData.VOMA_data.stim_ind;
-    eye_stim_ind = handles.CurrData.VOMA_data.eye_stim_ind;
+    stim_ind = handles.Final_Data.stim_ind;
+    eye_stim_ind = handles.Final_Data.eye_stim_ind;
 
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
@@ -694,15 +788,15 @@ if button_state == get(hObject,'Max')
     
     % Extract data
     for k=[cyc2plot']
-        ll_cyc = [ll_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
-        lr_cyc = [lr_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
-        lz_cyc = [lz_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        ll_cyc = [ll_cyc ; handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        lr_cyc = [lr_cyc ; handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        lz_cyc = [lz_cyc ; handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         
-        rl_cyc = [rl_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
-        rr_cyc = [rr_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
-        rz_cyc = [rz_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        rl_cyc = [rl_cyc ; handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         
-        stim = [stim ; handles.CurrData.VOMA_data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + len)'];
+        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + len)'];
     end
     
     % Compute the cycle average
@@ -815,7 +909,7 @@ Results = handles.Results;
 Results.name = handles.CurrData.name;
 Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
 Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
-Results.Fs = handles.CurrData.VOMA_data.Fs;
+Results.Fs = handles.Final_Data.Fs;
 Results.QPparams = handles.CurrData.QPparams;
 
 
@@ -871,8 +965,8 @@ cla reset; % Do a complete and total reset of the axes.
 if handles.params.plot_saved_cycles_flag == 1
     
     % Extract the cycle indices
-    stim_ind = handles.CurrData.VOMA_data.stim_ind;
-    eye_stim_ind = handles.CurrData.VOMA_data.eye_stim_ind;
+    stim_ind = handles.Final_Data.stim_ind;
+    eye_stim_ind = handles.Final_Data.eye_stim_ind;
 
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
@@ -889,15 +983,15 @@ if handles.params.plot_saved_cycles_flag == 1
         hold on
         
         if handles.params.lefteye_flag == 1
-            plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[0,128,0]/255,'LineWidth',1)
-            plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'b','LineWidth',1)
-            plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'r','LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[0,128,0]/255,'LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'b','LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'r','LineWidth',1)
         end
         
         if handles.params.righteye_flag == 1
-            plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'g','LineWidth',1)
-            plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[64,224,208]/255,'LineWidth',1)
-            plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[255,0,255]/255,'LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'g','LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[64,224,208]/255,'LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[255,0,255]/255,'LineWidth',1)
         end
         
     end
@@ -912,8 +1006,8 @@ end
 if handles.params.plot_cycleavg_flag == 1
     
     % Extract the cycle indices
-    stim_ind = handles.CurrData.VOMA_data.stim_ind;
-    eye_stim_ind = handles.CurrData.VOMA_data.eye_stim_ind;
+    stim_ind = handles.Final_Data.stim_ind;
+    eye_stim_ind = handles.Final_Data.eye_stim_ind;
 
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
@@ -927,51 +1021,52 @@ if handles.params.plot_cycleavg_flag == 1
     
     % Plot the cycle average
     if handles.params.lefteye_flag == 1
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.ll_cycavg,'Color',[0,128,0]/255,'LineWidth',2)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg,'Color',[0,128,0]/255,'LineWidth',2)
         hold on
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.lr_cycavg,'b','LineWidth',2)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.lz_cycavg,'r','LineWidth',2)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg,'b','LineWidth',2)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg,'r','LineWidth',2)
         
         % Plot the mean + 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.ll_cycavg + SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.lr_cycavg + SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.lz_cycavg + SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg + SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg + SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg + SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
         
         % Plot the mean - 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.ll_cycavg - SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.lr_cycavg - SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.lz_cycavg - SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg - SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg - SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg - SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
     end
     
     if handles.params.righteye_flag == 1
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rl_cycavg,'g','LineWidth',2)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg,'g','LineWidth',2)
         hold on
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rr_cycavg,'Color',[64,224,208]/255,'LineWidth',2)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rz_cycavg,'Color',[255,0,255]/255,'LineWidth',2)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg,'Color',[64,224,208]/255,'LineWidth',2)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg,'Color',[255,0,255]/255,'LineWidth',2)
         
         % Plot the mean + 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rl_cycavg + SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rr_cycavg + SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rz_cycavg + SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg + SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg + SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg + SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
         
         % Plot the mean - 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rl_cycavg - SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rr_cycavg - SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.Results.rz_cycavg - SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg - SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg - SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg - SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
     end
     
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         case {1,4,5,6}
-            plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
+
             
         case {2,3}
-            switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
+            switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
                 case 'Current Fitting'
-                    %             plot(handles.main_plot,handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+                    %             plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                     
                 otherwise
                     
-                    plot(handles.main_plot,[1:len+1]/handles.CurrData.VOMA_data.Fs,handles.CurrData.VOMA_data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
             end
     end
     
@@ -988,8 +1083,8 @@ if handles.params.plot_final_trace == 1
     cla reset; % Do a complete and total reset of the axes.
     
     % Extract the cycle indices
-    stim_ind = handles.CurrData.VOMA_data.stim_ind;
-    eye_stim_ind = handles.CurrData.VOMA_data.eye_stim_ind;
+    stim_ind = handles.Final_Data.stim_ind;
+    eye_stim_ind = handles.Final_Data.eye_stim_ind;
 
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
@@ -1013,36 +1108,36 @@ if handles.params.plot_final_trace == 1
     
     % Extract data
     for k=[cyc2plot']
-        ll_cyc = [ll_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        lr_cyc = [lr_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        lz_cyc = [lz_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        ll_cyc = [ll_cyc ; handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        lr_cyc = [lr_cyc ; handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        lz_cyc = [lz_cyc ; handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
-        rl_cyc = [rl_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        rr_cyc = [rr_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        rz_cyc = [rz_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rl_cyc = [rl_cyc ; handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
-        stim = [stim ; handles.CurrData.VOMA_data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + len)];
+        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + len)];
 
         
-        t_cyc = [t_cyc  handles.CurrData.VOMA_data.Eye_t(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        t_cyc = [t_cyc  handles.Final_Data.Eye_t(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
     end
     
     % Plot the cycle average
     if handles.params.lefteye_flag == 1
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.CurrData.VOMA_data.Fs,ll_cyc,'color' ,[0,128,0]/255,'LineWidth',1)
+    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ll_cyc,'color' ,[0,128,0]/255,'LineWidth',1)
     hold on
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.CurrData.VOMA_data.Fs,lr_cyc,'b','LineWidth',1)
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.CurrData.VOMA_data.Fs,lz_cyc,'r','LineWidth',1)
+    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lr_cyc,'b','LineWidth',1)
+    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lz_cyc,'r','LineWidth',1)
     end
     
     if handles.params.righteye_flag == 1
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.CurrData.VOMA_data.Fs,rl_cyc,'g','LineWidth',1)
+    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rl_cyc,'g','LineWidth',1)
     hold on
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.CurrData.VOMA_data.Fs,rr_cyc,'color' ,[64,224,208]/255,'LineWidth',1)
-    plot(handles.main_plot,[1:length(ll_cyc)]/handles.CurrData.VOMA_data.Fs,rz_cyc,'color' ,[255,0,255]/255,'LineWidth',1)
+    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rr_cyc,'color' ,[64,224,208]/255,'LineWidth',1)
+    plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rz_cyc,'color' ,[255,0,255]/255,'LineWidth',1)
     end
     
-    plot(handles.main_plot,[1:length(stim)]/handles.CurrData.VOMA_data.Fs,handles.params.stim_plot_mult*stim,'color' ,'k','LineWidth',1)
+    plot(handles.main_plot,[1:length(stim)]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim,'color' ,'k','LineWidth',1)
 
     
     drawnow
@@ -1056,7 +1151,7 @@ end
 if handles.params.plot_sinefit_flag == 1
     
     
-    t = handles.H(1):1/handles.CurrData.VOMA_data.Fs:handles.H(2);
+    t = handles.H(1):1/handles.Final_Data.Fs:handles.H(2);
     
     F = handles.Results.SineFit.Freq;
     
@@ -1126,8 +1221,8 @@ button_state = get(hObject,'Value');
 if button_state == get(hObject,'Max')
     
     % Extract the cycle indices
-    stim_ind = handles.CurrData.VOMA_data.stim_ind;
-    eye_stim_ind = handles.CurrData.VOMA_data.eye_stim_ind;
+    stim_ind = handles.Final_Data.stim_ind;
+    eye_stim_ind = handles.Final_Data.eye_stim_ind;
     
     % Extract the current list of stimuli the user wants to analyze
     cyc2plot = get(handles.stim_table,'Data');
@@ -1149,17 +1244,17 @@ if button_state == get(hObject,'Max')
     
     % Extract data
     for k=[cyc2plot']
-        ll_cyc = [ll_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        lr_cyc = [lr_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        lz_cyc = [lz_cyc ; handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        ll_cyc = [ll_cyc ; handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        lr_cyc = [lr_cyc ; handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        lz_cyc = [lz_cyc ; handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
-        rl_cyc = [rl_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        rr_cyc = [rr_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
-        rz_cyc = [rz_cyc ; handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rl_cyc = [rl_cyc ; handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
     end
     
     % Make a time vector
-    tt = [1:length(ll_cyc)]/handles.CurrData.VOMA_data.Fs;
+    tt = [1:length(ll_cyc)]/handles.Final_Data.Fs;
     % Stimulus FRequency
     freq = handles.CurrData.VOMA_data.Parameters.Stim_Info.Freq{1};
     
@@ -1322,7 +1417,7 @@ RootData = handles.RootData;
 % 
 % RootData(handles.CurrData.curr_file).cyc2plot = get(handles.stim_table,'Data');
 % 
-% RootData(handles.CurrData.curr_file).CED.stim_ind = handles.CurrData.VOMA_data.stim_ind;
+% RootData(handles.CurrData.curr_file).CED.stim_ind = handles.Final_Data.stim_ind;
 
 
 RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
@@ -1357,7 +1452,7 @@ function all_on_Callback(hObject, eventdata, handles)
 % hObject    handle to all_on (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.stim_list = true(1,length(handles.CurrData.VOMA_data.stim_ind));
+handles.stim_list = true(1,length(handles.Final_Data.stim_ind));
 
 set(handles.keep_cycle,'Value',1);
 
@@ -1376,7 +1471,7 @@ function all_off_Callback(hObject, eventdata, handles)
 % hObject    handle to all_off (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.stim_list = false(1,length(handles.CurrData.VOMA_data.stim_ind));
+handles.stim_list = false(1,length(handles.Final_Data.stim_ind));
 
 set(handles.keep_cycle,'Value',0);
 
@@ -1423,7 +1518,7 @@ function over_ride_max_vel_Callback(hObject, eventdata, handles)
 % hObject    handle to over_ride_max_vel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.RootData(handles.CurrData.curr_file).Coils.Stim_Info.Max_Vel  = {max(abs(handles.CurrData.VOMA_data.Stim_Trace))};
+handles.RootData(handles.CurrData.curr_file).Coils.Stim_Info.Max_Vel  = {max(abs(handles.Final_Data.Stim_Trace))};
 set(handles.max_vel,'String',handles.RootData(handles.CurrData.curr_file).Coils.Stim_Info.Max_Vel{1});
 
 
@@ -1493,5 +1588,12 @@ guidata(hObject,handles)
 % --- Executes during object creation, after setting all properties.
 function update_cycle_list_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to update_cycle_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function Fs_txt_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Fs_txt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
