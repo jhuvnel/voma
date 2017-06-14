@@ -30,11 +30,11 @@ function varargout = voma__seg_data(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @voma__seg_data_OpeningFcn, ...
-                   'gui_OutputFcn',  @voma__seg_data_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @voma__seg_data_OpeningFcn, ...
+    'gui_OutputFcn',  @voma__seg_data_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -101,7 +101,7 @@ guidata(hObject, handles);
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = voma__seg_data_OutputFcn(hObject, eventdata, handles) 
+function varargout = voma__seg_data_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -130,22 +130,30 @@ if user_seg_flag
     [x2,y2] = ginput(1);
     time_cutout_s = [x1 ; x2];
     
-    [a1,i_start_eye] = min(abs(handles.Data.Time_Eye - time_cutout_s(1,1)));
-    [a2,i_end_eye] = min(abs(handles.Data.Time_Eye - time_cutout_s(2,1)));
+    [a1,i_start_eye] = min(abs(handles.Segment.Time_Eye - time_cutout_s(1,1)));
+    [a2,i_end_eye] = min(abs(handles.Segment.Time_Eye - time_cutout_s(2,1)));
     
-    if isvector(handles.Data.Time_Stim)
+    if isvector(handles.Segment.Time_Stim)
         
-        [b1,i_start_stim] = min(abs(handles.Data.Time_Stim - time_cutout_s(1,1)));
-        [b2,i_end_stim] = min(abs(handles.Data.Time_Stim - time_cutout_s(2,1)));
+        [b1,i_start_stim] = min(abs(handles.Segment.Time_Stim - time_cutout_s(1,1)));
+        [b2,i_end_stim] = min(abs(handles.Segment.Time_Stim - time_cutout_s(2,1)));
         
     else
         
         
-        [b1,i_start_stim] = min(abs(handles.Data.Time_Stim(1,:) - time_cutout_s(1,1)));
-        [b2,i_end_stim] = min(abs(handles.Data.Time_Stim(1,:) - time_cutout_s(2,1)));
+        [b1,i_start_stim] = min(abs(handles.Segment.Time_Stim(1,:) - time_cutout_s(1,1)));
+        [b2,i_end_stim] = min(abs(handles.Segment.Time_Stim(1,:) - time_cutout_s(2,1)));
         
         
     end
+    
+    handles.i_start_eye = i_start_eye;
+    handles.i_end_eye = i_end_eye;
+    handles.i_start_stim = i_start_stim;
+    handles.i_end_stim = i_end_stim;
+    
+    handles.Segment.start_t = time_cutout_s(1);
+    handles.Segment.end_t = time_cutout_s(2);
 else
     i_start_eye = handles.i_start_eye;
     i_end_eye = handles.i_end_eye;
@@ -158,61 +166,59 @@ end
 %
 
 
-% Time_Eye = handles.Data.Time_Eye(i_start_eye:i_end_eye);
-
 Segment.segment_code_version = mfilename;
-Segment.raw_filename = handles.Data.raw_filename;
+Segment.raw_filename = handles.Segment.raw_filename;
 Segment.start_t = time_cutout_s(1);
 Segment.end_t = time_cutout_s(2);
-Segment.LE_Position_X = handles.Data.LE_Position_X(i_start_eye:i_end_eye);
-Segment.LE_Position_Y = handles.Data.LE_Position_Y(i_start_eye:i_end_eye);
-Segment.LE_Position_Z = handles.Data.LE_Position_Z(i_start_eye:i_end_eye);
+Segment.LE_Position_X = handles.Segment.LE_Position_X(i_start_eye:i_end_eye);
+Segment.LE_Position_Y = handles.Segment.LE_Position_Y(i_start_eye:i_end_eye);
+Segment.LE_Position_Z = handles.Segment.LE_Position_Z(i_start_eye:i_end_eye);
 
-Segment.RE_Position_X = handles.Data.RE_Position_X(i_start_eye:i_end_eye);
-Segment.RE_Position_Y = handles.Data.RE_Position_Y(i_start_eye:i_end_eye);
-Segment.RE_Position_Z = handles.Data.RE_Position_Z(i_start_eye:i_end_eye);
+Segment.RE_Position_X = handles.Segment.RE_Position_X(i_start_eye:i_end_eye);
+Segment.RE_Position_Y = handles.Segment.RE_Position_Y(i_start_eye:i_end_eye);
+Segment.RE_Position_Z = handles.Segment.RE_Position_Z(i_start_eye:i_end_eye);
 
-Segment.LE_Velocity_X = handles.Data.LE_Velocity_X(i_start_eye:i_end_eye);
-Segment.LE_Velocity_Y = handles.Data.LE_Velocity_Y(i_start_eye:i_end_eye);
-Segment.LE_Velocity_LARP = handles.Data.LE_Velocity_LARP(i_start_eye:i_end_eye);
-Segment.LE_Velocity_RALP = handles.Data.LE_Velocity_RALP(i_start_eye:i_end_eye);
-Segment.LE_Velocity_Z = handles.Data.LE_Velocity_Z(i_start_eye:i_end_eye);
+Segment.LE_Velocity_X = handles.Segment.LE_Velocity_X(i_start_eye:i_end_eye);
+Segment.LE_Velocity_Y = handles.Segment.LE_Velocity_Y(i_start_eye:i_end_eye);
+Segment.LE_Velocity_LARP = handles.Segment.LE_Velocity_LARP(i_start_eye:i_end_eye);
+Segment.LE_Velocity_RALP = handles.Segment.LE_Velocity_RALP(i_start_eye:i_end_eye);
+Segment.LE_Velocity_Z = handles.Segment.LE_Velocity_Z(i_start_eye:i_end_eye);
 
-Segment.RE_Velocity_X = handles.Data.RE_Velocity_X(i_start_eye:i_end_eye);
-Segment.RE_Velocity_Y = handles.Data.RE_Velocity_Y(i_start_eye:i_end_eye);
-Segment.RE_Velocity_LARP = handles.Data.RE_Velocity_LARP(i_start_eye:i_end_eye);
-Segment.RE_Velocity_RALP = handles.Data.RE_Velocity_RALP(i_start_eye:i_end_eye);
-Segment.RE_Velocity_Z = handles.Data.RE_Velocity_Z(i_start_eye:i_end_eye);
+Segment.RE_Velocity_X = handles.Segment.RE_Velocity_X(i_start_eye:i_end_eye);
+Segment.RE_Velocity_Y = handles.Segment.RE_Velocity_Y(i_start_eye:i_end_eye);
+Segment.RE_Velocity_LARP = handles.Segment.RE_Velocity_LARP(i_start_eye:i_end_eye);
+Segment.RE_Velocity_RALP = handles.Segment.RE_Velocity_RALP(i_start_eye:i_end_eye);
+Segment.RE_Velocity_Z = handles.Segment.RE_Velocity_Z(i_start_eye:i_end_eye);
 
-Segment.Fs = handles.Data.Fs;
+Segment.Fs = handles.Segment.Fs;
 
-Segment.Time_Eye = handles.Data.Time_Eye(i_start_eye:i_end_eye);
-if isvector(handles.Data.Time_Stim) % This is kludge to process either MVI LD VOG files, or PJB Lasker system elec. stime data. This needs to be rewritten
-    Segment.Time_Stim = handles.Data.Time_Stim(i_start_stim:i_end_stim);
+Segment.Time_Eye = handles.Segment.Time_Eye(i_start_eye:i_end_eye);
+if isvector(handles.Segment.Time_Stim) % This is kludge to process either MVI LD VOG files, or PJB Lasker system elec. stime data. This needs to be rewritten
+    Segment.Time_Stim = handles.Segment.Time_Stim(i_start_stim:i_end_stim);
 else
-    Segment.Time_Stim = handles.Data.Time_Stim(:,i_start_stim:i_end_stim);
+    Segment.Time_Stim = handles.Segment.Time_Stim(:,i_start_stim:i_end_stim);
 end
 
 
 switch handles.params.system_code
     case 1
-        Segment.Stim_Trig = handles.Data.Stim_Trig(i_start_eye:i_end_eye);
+        Segment.Stim_Trig = handles.Segment.Stim_Trig(i_start_eye:i_end_eye);
     case 2
         
-        if isempty(handles.Data.Stim_Trig)
+        if isempty(handles.Segment.Stim_Trig)
             Segment.Stim_Trig = [];
         else
-            Segment.Stim_Trig = handles.Data.Stim_Trig(i_start_stim:i_end_stim);
+            Segment.Stim_Trig = handles.Segment.Stim_Trig(i_start_stim:i_end_stim);
         end
 end
 
-Segment.HeadMPUVel_X = handles.Data.HeadMPUVel_X(i_start_stim:i_end_stim);
-Segment.HeadMPUVel_Y = handles.Data.HeadMPUVel_Y(i_start_stim:i_end_stim);
-Segment.HeadMPUVel_Z = handles.Data.HeadMPUVel_Z(i_start_stim:i_end_stim);
+Segment.HeadMPUVel_X = handles.Segment.HeadMPUVel_X(i_start_stim:i_end_stim);
+Segment.HeadMPUVel_Y = handles.Segment.HeadMPUVel_Y(i_start_stim:i_end_stim);
+Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z(i_start_stim:i_end_stim);
 
-Segment.HeadMPUAccel_X = handles.Data.HeadMPUAccel_X(i_start_stim:i_end_stim);
-Segment.HeadMPUAccel_Y = handles.Data.HeadMPUAccel_Y(i_start_stim:i_end_stim);
-Segment.HeadMPUAccel_Z = handles.Data.HeadMPUAccel_Z(i_start_stim:i_end_stim);
+Segment.HeadMPUAccel_X = handles.Segment.HeadMPUAccel_X(i_start_stim:i_end_stim);
+Segment.HeadMPUAccel_Y = handles.Segment.HeadMPUAccel_Y(i_start_stim:i_end_stim);
+Segment.HeadMPUAccel_Z = handles.Segment.HeadMPUAccel_Z(i_start_stim:i_end_stim);
 
 
 
@@ -250,7 +256,7 @@ if handles.params.plot_MVIGPIO == 1
         case 2
             
             if isempty(handles.Segment.Stim_Trig)
-%                 Stim = [];
+                %                 Stim = [];
             else
                 Stim = handles.Segment.Time_Stim(1,:);
                 plot(handles.data_plot,Stim,ones(1,length(Stim))*handles.params.gpio_mult,'color','k','Marker','*','DisplayName','Stim - Trig')
@@ -290,10 +296,10 @@ Data = handles.Segment;
 % Note, there is an error in matlab if the first character of a file name
 % is: '-'.
 % This can happen if the user decides not to inlcude an input for the
-% 'SubjectID' filename input. 
+% 'SubjectID' filename input.
 if strcmp(handles.params.segment_filename(1),'-')
     uiwait(msgbox('You have attempted to save a file segment which has a filename leading with a ''-'' character. This will cause an error saving the file, so we are adding a ''_'' character infront of the filename.','Segment Eye Movement Data'));
-
+    
     handles.params.segment_filename = ['_' handles.params.segment_filename];
     set(handles.seg_filename,'String',handles.params.segment_filename);
 else
@@ -340,7 +346,7 @@ switch handles.params.system_code
             PathName = handles.raw_PathName;
             handles.params.reloadflag = 0;
         end
- 
+        
         switch handles.params.vog_data_acq_version
             
             case {1,2}
@@ -411,9 +417,9 @@ switch handles.params.system_code
         
         % Generate the time vector for the MPU9250 Data
         Head_Sensor_Latency = 0.047; % From Mehdi Rahman bench tests, the data acquisition of the MPU9250 leads the LD VOG Goggles by 47ms
-
+        
         Time_Stim = Time_Eye - Head_Sensor_Latency;
-
+        
         
         % Load raw eye position data in Fick coordinates [degrees]
         Horizontal_LE_Position = data(:,HLeftIndex);
@@ -470,7 +476,7 @@ switch handles.params.system_code
             
             case {1}
                 accelscale = 1;
-        
+                
             case {2,3}
                 accelscale = 16384;
         end
@@ -495,13 +501,13 @@ switch handles.params.system_code
                 YvelHeadOffset = -0.5595;
                 ZvelHeadOffset = 0.7228;
                 
-
+                
             case {2}
                 XvelHeadOffset = 2.3185;
                 YvelHeadOffset = -1.5181;
                 ZvelHeadOffset = -1.0424;
                 
-
+                
             case {3}
                 XvelHeadOffset = 1.9796;
                 YvelHeadOffset = 0.1524;
@@ -511,20 +517,20 @@ switch handles.params.system_code
                 XvelHeadOffset = 0;
                 YvelHeadOffset = 0;
                 ZvelHeadOffset = 0;
-
+                
         end
         
         set(handles.Xoffset_txt,'String',num2str(XvelHeadOffset))
         set(handles.Yoffset_txt,'String',num2str(YvelHeadOffset))
         set(handles.Zoffset_txt,'String',num2str(ZvelHeadOffset))
-               
+        
         XvelHeadRaw = data(1:length(Time_Eye),XvelHeadIndex)*gyroscale + XvelHeadOffset;
         YvelHeadRaw = data(1:length(Time_Eye),YvelHeadIndex)*gyroscale + YvelHeadOffset;
         ZvelHeadRaw = data(1:length(Time_Eye),ZvelHeadIndex)*gyroscale + ZvelHeadOffset;
         
-%         XvelHead = data(1:length(Time_Eye),30)*accelscale - XvelHeadOffset;
-%         YvelHead = data(1:length(Time_Eye),29)*accelscale - YvelHeadOffset;
-%         ZvelHead = data(1:length(Time_Eye),28)*accelscale - ZvelHeadOffset;
+        %         XvelHead = data(1:length(Time_Eye),30)*accelscale - XvelHeadOffset;
+        %         YvelHead = data(1:length(Time_Eye),29)*accelscale - YvelHeadOffset;
+        %         ZvelHead = data(1:length(Time_Eye),28)*accelscale - ZvelHeadOffset;
         
         XaccelHeadRaw = data(1:length(Time_Eye),XaccelHeadIndex)*accelscale;
         YaccelHeadRaw = data(1:length(Time_Eye),YaccelHeadIndex)*accelscale;
@@ -545,19 +551,19 @@ switch handles.params.system_code
         ZAxisAccelHead = B(3,:);
         
         
-
+        
         
         Data.segment_code_version = mfilename;
         Data.raw_filename = handles.raw_FileName;
         Data.LE_Position_X = Torsion_LE_Position;
         Data.LE_Position_Y = Vertical_LE_Position;
         Data.LE_Position_Z = Horizontal_LE_Position;
-
+        
         Data.RE_Position_X = Torsion_RE_Position;
         Data.RE_Position_Y = Vertical_RE_Position;
         Data.RE_Position_Z = Horizontal_RE_Position;
-
-               
+        
+        
         Data.LE_Velocity_X = EyeVel.LE_Vel_X;
         Data.LE_Velocity_Y = EyeVel.LE_Vel_Y;
         Data.LE_Velocity_LARP = EyeVel.LE_Vel_LARP;
@@ -587,8 +593,8 @@ switch handles.params.system_code
         Data.Stim_Trig = Stim;
         
         
-
-
+        
+        
     case 2 % Lasker System CED
         
         % Check if the user requested to start segmenting a new file, or a
@@ -620,8 +626,8 @@ switch handles.params.system_code
             handles.params.reloadflag = 0;
         end
         
-%         % Import the data from the .smr file
-%         [d]=ImportSMR_PJBv2(FileName,PathName);
+        %         % Import the data from the .smr file
+        %         [d]=ImportSMR_PJBv2(FileName,PathName);
         
         
         
@@ -648,7 +654,7 @@ switch handles.params.system_code
         % Don't put a smapling rate param. in, we will extract it from the
         % CED file.
         Fs = [];
-        % Mark the 'system_code' 
+        % Mark the 'system_code'
         switch handles.params.Lasker_param2
             case 1 % Head is upright, but we still need to correct the coil signals into proper X, Y, Z coordinates
                 system_code = 2;
@@ -660,7 +666,7 @@ switch handles.params.system_code
         end
         % Indicate the DAQ code
         DAQ_code = 3; % Lasker System as recorded by a CED 1401 device
-                
+        
         
         [RawData] = voma__processeyemovements(PathName,FileName,FieldGains,coilzeros,ref,system_code,DAQ_code);
         
@@ -671,11 +677,11 @@ switch handles.params.system_code
         Data.LE_Position_X = RawData.LE_Pos_X;
         Data.LE_Position_Y = RawData.LE_Pos_Y;
         Data.LE_Position_Z = RawData.LE_Pos_Z;
-
+        
         Data.RE_Position_X = RawData.RE_Pos_X;
         Data.RE_Position_Y = RawData.RE_Pos_Y;
         Data.RE_Position_Z = RawData.RE_Pos_Z;
-
+        
         Data.LE_Velocity_X = RawData.LE_Vel_X;
         Data.LE_Velocity_Y = RawData.LE_Vel_Y;
         Data.LE_Velocity_LARP = RawData.LE_Vel_LARP;
@@ -690,14 +696,14 @@ switch handles.params.system_code
         
         Data.Fs = RawData.Fs;
         
-             
+        
         
         
         Data.Time_Eye = [0:length(RawData.LE_Vel_LARP)-1]/Data.Fs;
         Data.Time_Stim = RawData.ElecStimTrig';
         
         if isempty(RawData.ElecStimTrig)
-        
+            
             Data.Stim_Trig = [];
             Data.Time_Stim = Data.Time_Eye;
         else
@@ -730,12 +736,23 @@ switch handles.params.system_code
         
 end
 
+
+
 % Save the whole data trace in the GUI handles.
 handles.Data = Data;
 % Then save the whole data trace as the 'segment' variable in the handles.
 % This if a user decides they want to process the whole data trace, they
 % can just export the data.
 handles.Segment = Data;
+
+handles.i_start_eye = 1;
+handles.i_end_eye = length(Data.Time_Eye);
+handles.i_start_stim = 1;
+handles.i_end_stim = length(Data.Time_Stim);
+
+handles.Segment.start_t = Data.Time_Eye(1);
+handles.Segment.end_t = Data.Time_Eye(end);
+
 % Update the GUI plot
 plot_segment_data(hObject, eventdata, handles)
 
@@ -761,9 +778,9 @@ switch handles.params.system_code
     case 1 % Labyrinth Devices VOG Goggles
         
         set(handles.LabDevVOG,'Visible','On')
-
+        
         set(handles.LaskerSystPanel,'Visible','Off')
-
+        
         set(handles.mpuoffsetpanel,'Visible','On')
         
     case 2 % Labyrinth Devices VOG Goggles
@@ -777,7 +794,7 @@ switch handles.params.system_code
         set(handles.LaskerSystPanel,'Visible','Off')
         set(handles.mpuoffsetpanel,'Visible','Off')
 end
-    
+
 guidata(hObject,handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns eye_mov_system contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from eye_mov_system
@@ -981,9 +998,9 @@ function plot_MPUData_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.plot_MPUData = 1;
+    handles.params.plot_MPUData = 1;
 else
-	handles.params.plot_MPUData = 0;
+    handles.params.plot_MPUData = 0;
 end
 
 % Update plots!
@@ -999,9 +1016,9 @@ function plot_MVIGPIO_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.plot_MVIGPIO = 1;
+    handles.params.plot_MVIGPIO = 1;
 else
-	handles.params.plot_MVIGPIO = 0;
+    handles.params.plot_MVIGPIO = 0;
 end
 
 % Update plots!
@@ -1017,9 +1034,9 @@ function plot_LEData_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.plot_LEData = 1;
+    handles.params.plot_LEData = 1;
 else
-	handles.params.plot_LEData = 0;
+    handles.params.plot_LEData = 0;
 end
 
 % Update plots!
@@ -1035,9 +1052,9 @@ function plot_REData_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.plot_REData = 1;
+    handles.params.plot_REData = 1;
 else
-	handles.params.plot_REData = 0;
+    handles.params.plot_REData = 0;
 end
 
 % Update plots!
@@ -1425,7 +1442,12 @@ switch choice.stim
         
         stim_interval_endpoints = [off_samp(diff(off_samp) > trig_level) ];
         
-        seg_times = [on_samp(1)-(choice.ISI/2)*(handles.Segment.Fs/1000) round((stim_interval_startpoints(1)-stim_interval_endpoints(1))/2+stim_interval_endpoints(1))];
+        % Create a 'start_val' variable that is either on_samp(1) - half of
+        % the inter-stimulus-interval, or one (i.e., the first time inde)
+        % if that value is negative.
+        start_val = max(on_samp(1)-(choice.ISI/2)*(handles.Segment.Fs/1000),1);
+        
+        seg_times = [start_val round((stim_interval_startpoints(1)-stim_interval_endpoints(1))/2+stim_interval_endpoints(1))];
         for k=1:length(stim_interval_startpoints)
             
             if k==length(stim_interval_startpoints)
@@ -1441,9 +1463,9 @@ switch choice.stim
         
         seg_times(seg_times(:,2)>length(inds),2) = length(inds)*ones(size(seg_times(seg_times(:,2)>length(inds),2),2),1);
         
-        stem(handles.Segment.Time_Eye(seg_times(:,1)),1.5*ones(length(seg_times(:,1)),1))
+        stem(handles.Segment.Time_Eye(seg_times(:,1)),handles.params.gpio_mult*ones(length(seg_times(:,1)),1))
         
-        stem(handles.Segment.Time_Eye(seg_times(:,2)),0.75*ones(length(seg_times(:,1)),1))
+        stem(handles.Segment.Time_Eye(seg_times(:,2)),handles.params.gpio_mult*0.75*ones(length(seg_times(:,1)),1))
         
         % Now that we have our segmentation times, lets load the
         % user-generated excel sheet containing the file names, and begin
@@ -1453,6 +1475,14 @@ switch choice.stim
             uigetfile('*.xlsx','Please load an Excel spreadsheet containing the segmented filenames in the first row of the first sheet.');
         
         [num,txt,raw] = xlsread([pathname filename]);
+        
+        pre_auto_i_start_eye =  handles.i_start_eye;
+        pre_auto_i_end_eye =  handles.i_end_eye;
+        pre_auto_i_start_stim =  handles.i_start_stim;
+        pre_auto_i_end_stim =  handles.i_end_stim;
+        
+        pre_auto_Seg_start_t = handles.Segment.start_t;
+        pre_auto_Seg_end_t = handles.Segment.end_t;
         
         for k=1:size(seg_times,1)
             
@@ -1473,7 +1503,22 @@ switch choice.stim
             
             save_segment_Callback(hObject, eventdata, handles);
             
+            
+            
+            
             [handles] = reload_raw_Callback(hObject, eventdata, handles);
+            
+            handles.i_start_eye = pre_auto_i_start_eye;
+            handles.i_end_eye = pre_auto_i_end_eye;
+            handles.i_start_stim = pre_auto_i_start_stim;
+            handles.i_end_stim = pre_auto_i_end_stim;
+            
+            
+            handles.Segment.start_t =  pre_auto_Seg_start_t;
+            handles.Segment.end_t = pre_auto_Seg_end_t;
+            
+            [handles] = new_segment_Callback(hObject, eventdata, handles,false);
+            
         end
         
 end
@@ -1548,10 +1593,10 @@ switch choice
         options.stim = 1;
     case 'Electric Only Sinusoid'
         % If the user is processing an electrical-only sinusoid,
-                % they need to input the stimulus parameters
-                
-%                 [sine_options]=sine_param_dialog(hObject, eventdata, handles);
-%                 options.sin = sine_options;
+        % they need to input the stimulus parameters
+        
+        %                 [sine_options]=sine_param_dialog(hObject, eventdata, handles);
+        %                 options.sin = sine_options;
     case 'Mechanical Sinusoid'
         
         
