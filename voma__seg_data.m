@@ -237,9 +237,12 @@ cla reset
 hold on
 
 if handles.params.plot_MPUData == 1
-    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-X')
-    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-Y')
-    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-Z')
+    %plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-X')
+    %plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-Y')
+    %plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-Z')
+    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUAccel_X,'color',[1 0.65 0],'LineStyle','--','DisplayName','MPU-X')
+    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUAccel_Y,'color',[0.55 0.27 0.07],'LineStyle','--','DisplayName','MPU-Y')
+    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUAccel_Z,'color','r','LineStyle','--','DisplayName','MPU-Z')
 end
 
 if handles.params.plot_MVIGPIO == 1

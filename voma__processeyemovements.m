@@ -170,7 +170,7 @@ if exist('Data_In','var') && ~isempty(Data_In)
             rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
             rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
             
-        case 6 % LD VOG Goggles - MVI Trial
+        case 6 % Digital Coil System - Moog
             Fs = Data_In.Fs;
             
             if (isrow(Data_In.Data_LE_Pos_X))
@@ -192,9 +192,29 @@ if exist('Data_In','var') && ~isempty(Data_In)
                 Data_In.Data_RE_Pos_Z=Data_In.Data_RE_Pos_Z';
             end
             
-            rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
-            rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
+            % NOTE: These are FICK ANGLES NOT ROTATION VECTORS, SO SAVE AS
+            % HVT (Horiz, Vert, Torsion)
+            rawData_L = [ Data_In.Data_LE_Pos_Z  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_X ];
+            rawData_R = [ Data_In.Data_RE_Pos_Z  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_X ];
+            
+            zeros_L = [0 0 0 0 0 0 0 0 0 0 0 0];
+            gains_L = [0 0 0 0 0 0 0 0 0 0 0 0];
+            
+            zeros_R = [0 0 0 0 0 0 0 0 0 0 0 0];
+            gains_R = [0 0 0 0 0 0 0 0 0 0 0 0];
             % Here need to calculate velocity now.
+%             rotR=fick2rot(rawData_R);
+%             rotL=fick2rot(rawData_L);
+            
+%             velR = rot2angvel(rotR)*180*1000/pi;
+%             velL = rot2angvel(rotL)*180*1000/pi;
+%             
+%             newFrameinFrame = fick2rot([45 0 0]);
+%             rotrotR = rot2rot(newFrameinFrame,rotR);
+%             LRZR = rot2angvel(rotrotR)/pi*180*1000;
+%             
+%             rotrotL = rot2rot(newFrameinFrame,rotL);
+%             LRZL = rot2angvel(rotrotL)/pi*180*1000;
             
     end
     
@@ -388,6 +408,16 @@ else % i.e., the user did NOT provide any angular position data into the routine
                 fclose(f2);
             end
             
+            % Extracting the LE coil data
+            %rawData_L = d(:,1:6);
+            zeros_L = coilzeros(1:6);
+            gains_L = FieldGains(1:6);
+            
+            % Extracting the RE coil data
+            %rawData_R = d(:,7:12);
+            zeros_R = coilzeros(7:12);
+            gains_R = FieldGains(7:12);
+            
             mpuFilename = filename(1:length(filename)-5);
             mpuFilename = strcat(mpuFilename,'_MPUdata.txt');
             f2=fopen(char(strcat(filepath,'\',mpuFilename)));
@@ -401,32 +431,32 @@ else % i.e., the user did NOT provide any angular position data into the routine
             
             
             if isempty(mpu) || isempty(coils)
-                fickR = [];
+                rawData_R = [];
             else
-                [fickR, fickL, rotR, rotL, velR, velL, LRZR, LRZL,mpuAligned] = voma__analyzeMoogCoils(mpu, coils, ref, FieldGains,coilzeros);
+                [rawData_R, rawData_L, rotR, rotL, velR, velL, LRZR, LRZL,mpuAligned] = voma__analyzeMoogCoils(mpu, coils, ref, FieldGains,coilzeros);
             end
-            if isempty(fickR)
+            if isempty(rawData_R)
                 mpuFilename
             else
-                Data.LE_Pos_X = fickL(:,3);
-                Data.LE_Pos_Y = fickL(:,2);
-                Data.LE_Pos_Z = fickL(:,1);
+                Data.LE_Pos_X = rawData_L(:,3);
+                Data.LE_Pos_Y = rawData_L(:,2);
+                Data.LE_Pos_Z = rawData_L(:,1);
                 
-                Data.RE_Pos_X = fickR(:,3);
-                Data.RE_Pos_Y = fickR(:,2);
-                Data.RE_Pos_Z = fickR(:,1);
+                Data.RE_Pos_X = rawData_R(:,3);
+                Data.RE_Pos_Y = rawData_R(:,2);
+                Data.RE_Pos_Z = rawData_R(:,1);
                 
-                Data.LE_Vel_X = velL(:,1);
-                Data.LE_Vel_Y = velL(:,2);
-                Data.LE_Vel_Z = velL(:,3);
-                Data.LE_Vel_LARP = LRZL(:,1);
-                Data.LE_Vel_RALP = LRZL(:,2);
-                
-                Data.RE_Vel_X = velR(:,1);
-                Data.RE_Vel_Y = velR(:,2);
-                Data.RE_Vel_Z = velR(:,3);
-                Data.RE_Vel_LARP = LRZR(:,1);
-                Data.RE_Vel_RALP = LRZR(:,2);
+%                 Data.LE_Vel_X = velL(:,1);
+%                 Data.LE_Vel_Y = velL(:,2);
+%                 Data.LE_Vel_Z = velL(:,3);
+%                 Data.LE_Vel_LARP = LRZL(:,1);
+%                 Data.LE_Vel_RALP = LRZL(:,2);
+%                 
+%                 Data.RE_Vel_X = velR(:,1);
+%                 Data.RE_Vel_Y = velR(:,2);
+%                 Data.RE_Vel_Z = velR(:,3);
+%                 Data.RE_Vel_LARP = LRZR(:,1);
+%                 Data.RE_Vel_RALP = LRZR(:,2);
                 Data.MPU = mpuAligned;
             end
     end
@@ -441,7 +471,7 @@ for j=1:2
     
     switch DAQ_code
         
-        case {1,2,3} % Raw Coil Signals to Rotation Vectors
+        case {1,2,3,6} % Raw Coil Signals to Rotation Vectors
             
             
             
@@ -457,13 +487,14 @@ for j=1:2
                     gains = gains_R;
             end
             
-            if Data_In_flag
+            if DAQ_code == 6
+                rot = fick2rot(rawData);
+            elseif Data_In_flag
                 % If the user is recalculating angular velocity for coil
                 % data, we will reload the ROTATION VECTORS and not the raw
                 % coil signals, so we can skip the 'raw2rot' section.
                 
                 rot = rawData;
-                
             else
                 
                 % Converting raw data to rotation vectors
@@ -507,7 +538,7 @@ for j=1:2
             
         case 4 % McGill Coil System
             
-        case 5 % Lab. Dev. VOG Goggles
+        case {5} % Lab. Dev. VOG Goggles
             
             switch j
                 
@@ -541,9 +572,20 @@ for j=1:2
             
     end
     
-    switch DAQ_code
-        case 6
-        otherwise
+    %switch DAQ_code
+%     %{    case 6
+%             Data.LE_Vel_X = velL(:,1);
+%             Data.LE_Vel_Y = velL(:,2);
+%             Data.LE_Vel_Z = velL(:,3);
+%             Data.LE_Vel_LARP = LRZL(:,1);
+%             Data.LE_Vel_RALP = LRZL(:,2);
+%             
+%             Data.RE_Vel_X = velR(:,1);
+%             Data.RE_Vel_Y = velR(:,2);
+%             Data.RE_Vel_Z = velR(:,3);
+%             Data.RE_Vel_LARP = LRZR(:,1);
+%             Data.RE_Vel_RALP = LRZR(:,2);
+        %otherwise
             switch j
                 
                 case 1
@@ -562,7 +604,7 @@ for j=1:2
                     Data.RE_Vel_LARP = angvel_dps_c(:,1);
                     Data.RE_Vel_RALP = angvel_dps_c(:,2);
             end
-    end
+   % end
     
     
     
@@ -606,3 +648,89 @@ switch DAQ_code
         Data.RE_Pos_Y = rawData_R(:,2);
         Data.RE_Pos_Z = rawData_R(:,3);
 end
+
+function ang=rot2angvel(rot)
+dr = diff(rot,1,1);
+r = rot(1:(end-1),:) + dr./2;
+denom = (1 + dot(r,r,2) - dot(dr,dr,2));
+ang = 2*(dr + cross(r,dr,2)) ./ denom(:,[1 1 1]);
+
+function rot=fick2rot(fick)
+
+% rot = fick2rot(fick)
+%
+%  Generate nx3 rotation vectors from the given nx3 horizontal, vertical
+% and torsional Fick angles in degrees.  +h left, +v down, +t clockwise.
+
+% Get the tangents of half of the angles.
+fick = tan(fick.*(pi/180/2));
+
+% We make rotation vectors in the same way we would make rotation matricies,
+% by simply applying the three Fick rotations (Euler "gimbal" angles) in the
+% proper order.  The "straight ahead" rotation vector is just [0 0 0], and
+% for a rotation about a single axis you just put the tan of half the angle
+% of rotation in the X, Y, or Z component of the rotation vector.  So we
+% create these three simple, single rotations, and combine them.
+
+% We need a vector of zeros with the same number of rows as our input.
+zr = zeros(size(fick,1),1);
+
+% The X (torsion) rotation is the first and innermost rotation.
+% The Y (vertical) is the middle rotation.
+% The Z (horizontal) is the last and outermost rotation.
+rot = rot2rot([zr zr fick(:,1)], rot2rot([zr fick(:,2) zr], [fick(:,3) zr zr]));
+
+function nrot = rot2rot(rot1, rot2)
+
+%ROT2ROT.M
+%Order for creating eye in head = -head in space (tiltrot) o eye in space (rot)
+%DSt
+%
+%Purpose
+%Rotates rotation vectors by a constant rotation
+%
+%Call
+%nrot = rot2rot(rot1, rot2);
+%
+%Arguments
+%nrot: rotated rotation vectors
+%rot1: input rotation vector or constant (single row) vector
+%rot2: input rotation vector or constant (single row) vector
+%
+%  The rotation may be applied in either order, so one argument
+% is the data vector (many rows) and the other is the constant
+% rotation to be applied (single row).
+%
+%  DCR 7/22/97 Both arguments may now be many rows (# rows must
+%              be equal in both args).  So it can, for instance,
+%              be used to calculate eye in head from head in
+%              space and eye in space.
+if nargin ~= 2
+  disp('Must have two arguments!')
+  return
+end;
+
+[rr cc] = size(rot1);
+if cc ~= 3
+   disp('First arg must have 3 columns');
+   return;
+end;
+
+[rr cc] = size(rot2);
+if cc ~= 3
+   disp('Second arg must have 3 columns');
+   return
+end
+
+% Whichever argument is just a single row, expand it to the
+% same number of rows as the other argument.
+
+if size(rot1,1) == 1
+  rot1 = ones(size(rot2,1),1) * rot1;
+elseif size(rot2,1) == 1
+  rot2 = ones(size(rot1,1),1) * rot2;
+end
+
+cr = cross(rot1',rot2')';
+ir = dot(rot1', rot2')' * [1 1 1];
+nrot = (rot1+rot2+cr)./(1-ir);
