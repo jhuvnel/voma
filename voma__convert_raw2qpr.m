@@ -1137,16 +1137,16 @@ switch handles.params.file_format
                         Fs{n-1} = {Data.Fs};
                         
                         Eye_t{n-1} = {[0:length(Data.LE_Vel_Z)-1]/Fs{n-1}{1}};
-                        Stim_t{n-1} = {Eye_t{n-1}};
+                        Stim_t{n-1} = {Eye_t{n-1}{1}};
                         stim_ind{n-1} ={[]};
                         
-                        Data_LE_Pos_X{n-1} = {Data.LE_Pos_X(1:length(Data.LE_Pos_X)-1)};
-                        Data_LE_Pos_Y{n-1} = {Data.LE_Pos_Y(1:length(Data.LE_Pos_Y)-1)};
-                        Data_LE_Pos_Z{n-1} = {Data.LE_Pos_Z(1:length(Data.LE_Pos_Z)-1)};
+                        Data_LE_Pos_X{n-1} = {Data.LE_Pos_X(1:length(Data.LE_Pos_X))};
+                        Data_LE_Pos_Y{n-1} = {Data.LE_Pos_Y(1:length(Data.LE_Pos_Y))};
+                        Data_LE_Pos_Z{n-1} = {Data.LE_Pos_Z(1:length(Data.LE_Pos_Z))};
                         
-                        Data_RE_Pos_X{n-1} = {Data.RE_Pos_X(1:length(Data.RE_Pos_X)-1)};
-                        Data_RE_Pos_Y{n-1} = {Data.RE_Pos_Y(1:length(Data.RE_Pos_Y)-1)};
-                        Data_RE_Pos_Z{n-1} = {Data.RE_Pos_Z(1:length(Data.RE_Pos_Z)-1)};
+                        Data_RE_Pos_X{n-1} = {Data.RE_Pos_X(1:length(Data.RE_Pos_X))};
+                        Data_RE_Pos_Y{n-1} = {Data.RE_Pos_Y(1:length(Data.RE_Pos_Y))};
+                        Data_RE_Pos_Z{n-1} = {Data.RE_Pos_Z(1:length(Data.RE_Pos_Z))};
                         
                         Data_LE_Vel_X{n-1} = {Data.LE_Vel_X};
                         Data_LE_Vel_Y{n-1} = {Data.LE_Vel_Y};
@@ -1188,6 +1188,9 @@ switch handles.params.file_format
                             if strcmp(direction,'ObliqueAngleHorizontal') || isempty(phi)
                                 phi = 0;
                             end
+                            if theta > 180
+                                theta = mod(theta,180);
+                            end
                             addedvec = -mpuAligned(1:length(Data.LE_Vel_Z),4).*cosd(theta).*sind(phi) + mpuAligned(1:length(Data.LE_Vel_Z),3).*sind(theta).*sind(phi)+mpuAligned(1:length(Data.LE_Vel_Z),5).*cosd(phi);
                             Stimulus{n-1}={atand((filtfilt(ones(1,Nf)/Nf,1,addedvec)/65536*9.8*8)/9.8)};
                             
@@ -1203,9 +1206,9 @@ switch handles.params.file_format
    
                         elseif (strcmp(direction,'Lateral'))||strcmp(direction,'Surge')||strcmp(direction,'Heave')
                             if (strcmp(direction,'Lateral'))
-                                sensorColumn=3;
-                            elseif (strcmp(direction,'Surge'))
                                 sensorColumn=4;
+                            elseif (strcmp(direction,'Surge'))
+                                sensorColumn=3;
                             else %Heave
                                 sensorColumn=5;
                             end
@@ -1934,3 +1937,31 @@ handles.params.zeros_path = PathName;
 set(handles.zerosText,'String',FileName);
 
 guidata(hObject,handles)
+
+
+%% returns the rotation matrix given rotations in roll, pitch, and yaw
+function R = rpyToMat(r,p,y)
+R = zeros(3,3);
+
+sy = sin(y);
+cy = cos(y);
+
+sp = sin(p);
+cp = cos(p);
+
+sr = sin(r);
+cr = cos(r);
+
+Ryaw = [cy -sy 0;
+      sy  cy 0;
+      0    0 1];
+
+Rpitch = [cp 0 sp;
+           0 1  0;
+          -sp 0 cp];
+      
+Rroll = [1 0 0;
+         0 cr -sr;
+         0 sr  cr];
+     
+R = Ryaw*Rpitch*Rroll;

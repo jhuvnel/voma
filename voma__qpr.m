@@ -25,7 +25,7 @@ function varargout = voma__qpr(varargin)
 
 % Edit the above text to modify the response to help voma__qpr
 
-% Last Modified by GUIDE v2.5 06-Apr-2017 22:59:50
+% Last Modified by GUIDE v2.5 14-Jun-2017 11:17:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -144,10 +144,14 @@ handles.params.min_spv_fit_time = str2double(get(handles.min_spv_fit_time,'Strin
 handles.params.R_1 = 1;
 handles.params.R_2 = 1;
 handles.params.R_3 = 1;
+handles.params.R_4 = 1;
+handles.params.R_5 = 1;
 
 handles.params.L_1 = 1;
 handles.params.L_2 = 1;
 handles.params.L_3 = 1;
+handles.params.L_4 = 1;
+handles.params.L_5 = 1;
 
 % Set the processing flag to: ANGULAR VELOCITY
 set(handles.angvel_angpos_toggle,'String','ANGULAR VELOCITY')
@@ -159,14 +163,14 @@ set(handles.APAQPR_panel,'Visible','off')
 
 
 % Save color codes for plotting
-handles.colors.l_x = [255 140 0]/255;
-handles.colors.l_y = [128 0 128]/255;
+handles.colors.l_x = [237,150,33]/255;
+handles.colors.l_y = [125,46,143]/255;
 handles.colors.l_z = [1 0 0];
 handles.colors.l_l = [0,128,0]/255;
 handles.colors.l_r = [0 0 1];
 
-handles.colors.r_x = [238 238 0]/255;
-handles.colors.r_y = [138 43 226]/255;
+handles.colors.r_x = [237,204,33]/255;
+handles.colors.r_y = [125,46,230]/255;
 handles.colors.r_z = [255,0,255]/255;
 handles.colors.r_l = [0 1 0];
 handles.colors.r_r = [64,224,208]/255;
@@ -197,7 +201,11 @@ filt_param_data = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'
     {'LE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''}; ...
     {'RE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''}; ...
     {'RE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''}; ...
-    {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''}];
+    {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''};...
+    {'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''}; ...
+    {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''}; ...
+    {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''}; ...
+    {'RE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''}];
 set(handles.filt_params,'Data',filt_param_data);
 
 
@@ -305,7 +313,11 @@ if (~isfield(handles.CurrData,'QPparams')) || (isempty(handles.CurrData.QPparams
         {'LE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
         {'RE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
         {'RE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}];
+        {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'};...
+        {'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
+        {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
+        {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
+        {'RE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}];
     set(handles.filt_params,'Data',filt_param_data);
     
     
@@ -320,9 +332,13 @@ if (~isfield(handles.CurrData,'QPparams')) || (isempty(handles.CurrData.QPparams
     
     handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
     handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
+    handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+    handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
     handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
     handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP;
     handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP;
+    handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+    handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
     handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
     
     % Set the 'smooth_flag' to false
@@ -514,18 +530,26 @@ end
 
 handles.filter_noQPR.LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
 handles.filter_noQPR.LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
+handles.filter_noQPR.LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+handles.filter_noQPR.LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
 handles.filter_noQPR.LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
 
 handles.filter_noQPR.RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP;
 handles.filter_noQPR.RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP;
+handles.filter_noQPR.RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+handles.filter_noQPR.RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
 handles.filter_noQPR.RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
 
 handles.vel_deriv.LE_LARP = diff(handles.CurrData.VOMA_data.Data_LE_Vel_LARP);
 handles.vel_deriv.LE_RALP = diff(handles.CurrData.VOMA_data.Data_LE_Vel_RALP);
+handles.vel_deriv.LE_X = diff(handles.CurrData.VOMA_data.Data_LE_Vel_X);
+handles.vel_deriv.LE_Y = diff(handles.CurrData.VOMA_data.Data_LE_Vel_Y);
 handles.vel_deriv.LE_Z = diff(handles.CurrData.VOMA_data.Data_LE_Vel_Z);
 
 handles.vel_deriv.RE_LARP = diff(handles.CurrData.VOMA_data.Data_RE_Vel_LARP);
 handles.vel_deriv.RE_RALP = diff(handles.CurrData.VOMA_data.Data_RE_Vel_RALP);
+handles.vel_deriv.RE_X = diff(handles.CurrData.VOMA_data.Data_RE_Vel_X);
+handles.vel_deriv.RE_Y = diff(handles.CurrData.VOMA_data.Data_RE_Vel_Y);
 handles.vel_deriv.RE_Z = diff(handles.CurrData.VOMA_data.Data_RE_Vel_Z);
 
 handles.t_0 = handles.CurrData.VOMA_data.Eye_t(1);
@@ -880,37 +904,53 @@ switch handles.CurrData.QPparams.qpr_routine
                         desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                         desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
                         desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
                         
-                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
-                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
                         
                     case {'LP','RALP-Axis','RALP'}
                         desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                         desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
                         desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
                         
-                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
-                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
                         
                     case {'LH','LHRH-Axis','LHRH'}
                         desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                         desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
                         desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
                         
-                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
-                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
                         
                     otherwise
                         desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                         desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                         desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                         
-                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                         
                 end
                 
@@ -919,67 +959,121 @@ switch handles.CurrData.QPparams.qpr_routine
                 desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                 desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                 desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                 
-                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+
                 
-                
-            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components
+            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components %or X component first
                 desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                 desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
                 desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade1.QP_range);
                 
-                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade4.QP_range);
-                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade4.QP_range);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                
             case 4 % Spline the RALP component first, then use the QPs detected to spline the other components
                 desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
                 desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
                 desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade2.QP_range);
                 
-                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade5.QP_range);
-                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade5.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade7.QP_range);
                 
             case 5 % Spline the LHRH component first, then use the QPs detected to spline the other components
-                
                 desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[]);
                 desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
                 desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade3.QP_range);
                 
-                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
-                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
-                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade6.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade8.QP_range);
+                
+            case 6 % Spline the X component first, then use the QPs detected to spline the other components
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade4.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade4.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade4.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade4.QP_range);
+                
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade9.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade9.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade9.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade9.QP_range);
+                
+            case 7 % Spline the Y component first, then use the QPs detected to spline the other components
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[]);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade5.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade5.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade5.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade5.QP_range);
+                
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade10.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade10.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade10.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,1,[],desaccade10.QP_range);
+                
         end
         
         % Save the data after QP removal
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = desaccade1.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = desaccade2.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = desaccade3.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = desaccade4.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = desaccade5.results;
         
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade4.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade5.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade7.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade8.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = desaccade9.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = desaccade10.results;
         
         
         % Save the 'spline-only' data seperately for plotting purposes.
         handles.filter_noQPR.LE_Vel_LARP = desaccade1.smooth;
         handles.filter_noQPR.LE_Vel_RALP = desaccade2.smooth;
         handles.filter_noQPR.LE_Vel_Z = desaccade3.smooth;
+        handles.filter_noQPR.LE_Vel_X = desaccade4.smooth;
+        handles.filter_noQPR.LE_Vel_Y = desaccade5.smooth;
         
-        handles.filter_noQPR.RE_Vel_LARP = desaccade4.smooth;
-        handles.filter_noQPR.RE_Vel_RALP = desaccade5.smooth;
-        handles.filter_noQPR.RE_Vel_Z = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_LARP = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_RALP = desaccade7.smooth;
+        handles.filter_noQPR.RE_Vel_Z = desaccade8.smooth;
+        handles.filter_noQPR.RE_Vel_X = desaccade9.smooth;
+        handles.filter_noQPR.RE_Vel_Y = desaccade10.smooth;
         
         handles.vel_deriv.LE_LARP = desaccade1.deriv;
         handles.vel_deriv.LE_RALP = desaccade2.deriv;
         handles.vel_deriv.LE_Z = desaccade3.deriv;
+        handles.vel_deriv.LE_X = desaccade4.deriv;
+        handles.vel_deriv.LE_Y = desaccade5.deriv;
         
-        handles.vel_deriv.RE_LARP = desaccade4.deriv;
-        handles.vel_deriv.RE_RALP = desaccade5.deriv;
-        handles.vel_deriv.RE_Z = desaccade6.deriv;
-        
+        handles.vel_deriv.RE_LARP = desaccade6.deriv;
+        handles.vel_deriv.RE_RALP = desaccade7.deriv;
+        handles.vel_deriv.RE_Z = desaccade8.deriv;
+        handles.vel_deriv.RE_X = desaccade9.deriv;
+        handles.vel_deriv.RE_Y = desaccade10.deriv;
         
     case 2 % Simple, zero-phase moving average filter
         
@@ -1000,6 +1094,10 @@ switch handles.CurrData.QPparams.qpr_routine
         LE_Vel_LARP = [LE_Vel_LARP(gd+1:end) ; ones(gd,1)];
         LE_Vel_RALP = filter(b,a,handles.CurrData.VOMA_data.Data_LE_Vel_RALP);
         LE_Vel_RALP = [LE_Vel_RALP(gd+1:end) ; ones(gd,1)];
+        LE_Vel_X = filter(b,a,handles.CurrData.VOMA_data.Data_LE_Vel_X);
+        LE_Vel_X = [LE_Vel_X(gd+1:end) ; ones(gd,1)];
+        LE_Vel_Y = filter(b,a,handles.CurrData.VOMA_data.Data_LE_Vel_Y);
+        LE_Vel_Y = [LE_Vel_Y(gd+1:end) ; ones(gd,1)];
         LE_Vel_Z = filter(b,a,handles.CurrData.VOMA_data.Data_LE_Vel_Z);
         LE_Vel_Z = [LE_Vel_Z(gd+1:end) ; ones(gd,1)];
         
@@ -1008,6 +1106,10 @@ switch handles.CurrData.QPparams.qpr_routine
         RE_Vel_LARP = [RE_Vel_LARP(gd+1:end) ; ones(gd,1)];
         RE_Vel_RALP = filter(b,a,handles.CurrData.VOMA_data.Data_RE_Vel_RALP);
         RE_Vel_RALP = [RE_Vel_RALP(gd+1:end) ; ones(gd,1)];
+        RE_Vel_X = filter(b,a,handles.CurrData.VOMA_data.Data_RE_Vel_X);
+        RE_Vel_X = [RE_Vel_X(gd+1:end) ; ones(gd,1)];
+        RE_Vel_Y = filter(b,a,handles.CurrData.VOMA_data.Data_RE_Vel_Y);
+        RE_Vel_Y = [RE_Vel_Y(gd+1:end) ; ones(gd,1)];
         RE_Vel_Z = filter(b,a,handles.CurrData.VOMA_data.Data_RE_Vel_Z);
         RE_Vel_Z = [RE_Vel_Z(gd+1:end) ; ones(gd,1)];
         
@@ -1015,243 +1117,381 @@ switch handles.CurrData.QPparams.qpr_routine
         % apply any additional filtering to the input data.
         
         switch handles.params.spline_sep_flag
-            
             case 1 % Detect splining options from the file being processed
                 switch handles.CurrData.VOMA_data.Parameters.Stim_Info.ModCanal{1}
                     
                     case {'LA','LARP-Axis','LARP'}
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
                         
-                        
-                        
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
                         
                     case {'LP','RALP-Axis','RALP'}
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
                         
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
                         
                     case {'LH','LHRH-Axis','LHRH'}
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
                         
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
                         
                     otherwise
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                         
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                         
                 end
                 
             case 2 % Spline each 3D component seperately
                 
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                 
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                 
                 
-            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components %or X component first
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
                 
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                
             case 4 % Spline the RALP component first, then use the QPs detected to spline the other components
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
                 
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
                 
             case 5 % Spline the LHRH component first, then use the QPs detected to spline the other components
-                %                 Ord = 1;
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
                 
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
                 
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+            case 6 % Spline the X component first, then use the QPs detected to spline the other components
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                
+            case 7 % Spline the Y component first, then use the QPs detected to spline the other components
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                
         end
         
         % Save the data after QP removal
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = desaccade1.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = desaccade2.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = desaccade3.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = desaccade4.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = desaccade5.results;
         
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade4.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade5.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade7.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade8.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = desaccade9.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = desaccade10.results;
         
         
         % Save the 'spline-only' data seperately for plotting purposes.
         handles.filter_noQPR.LE_Vel_LARP = desaccade1.smooth;
         handles.filter_noQPR.LE_Vel_RALP = desaccade2.smooth;
         handles.filter_noQPR.LE_Vel_Z = desaccade3.smooth;
+        handles.filter_noQPR.LE_Vel_X = desaccade4.smooth;
+        handles.filter_noQPR.LE_Vel_Y = desaccade5.smooth;
         
-        handles.filter_noQPR.RE_Vel_LARP = desaccade4.smooth;
-        handles.filter_noQPR.RE_Vel_RALP = desaccade5.smooth;
-        handles.filter_noQPR.RE_Vel_Z = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_LARP = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_RALP = desaccade7.smooth;
+        handles.filter_noQPR.RE_Vel_Z = desaccade8.smooth;
+        handles.filter_noQPR.RE_Vel_X = desaccade9.smooth;
+        handles.filter_noQPR.RE_Vel_Y = desaccade10.smooth;
         
         handles.vel_deriv.LE_LARP = desaccade1.deriv;
         handles.vel_deriv.LE_RALP = desaccade2.deriv;
         handles.vel_deriv.LE_Z = desaccade3.deriv;
+        handles.vel_deriv.LE_X = desaccade4.deriv;
+        handles.vel_deriv.LE_Y = desaccade5.deriv;
         
-        handles.vel_deriv.RE_LARP = desaccade4.deriv;
-        handles.vel_deriv.RE_RALP = desaccade5.deriv;
-        handles.vel_deriv.RE_Z = desaccade6.deriv;
-        
+        handles.vel_deriv.RE_LARP = desaccade6.deriv;
+        handles.vel_deriv.RE_RALP = desaccade7.deriv;
+        handles.vel_deriv.RE_Z = desaccade8.deriv;
+        handles.vel_deriv.RE_X = desaccade9.deriv;
+        handles.vel_deriv.RE_Y = desaccade10.deriv;
+            
         
     case 3 %S.G. Filter
         
         
         LE_Vel_LARP = sgolayfilt(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.params.e_vel_param6,handles.params.e_vel_param4);
         LE_Vel_RALP = sgolayfilt(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.params.e_vel_param6,handles.params.e_vel_param4);
+        LE_Vel_X = sgolayfilt(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.params.e_vel_param6,handles.params.e_vel_param4);
+        LE_Vel_Y = sgolayfilt(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.params.e_vel_param6,handles.params.e_vel_param4);
         LE_Vel_Z = sgolayfilt(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.params.e_vel_param6,handles.params.e_vel_param4);
         
         RE_Vel_LARP = sgolayfilt(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.params.e_vel_param6,handles.params.e_vel_param4);
         RE_Vel_RALP = sgolayfilt(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.params.e_vel_param6,handles.params.e_vel_param4);
+        RE_Vel_X = sgolayfilt(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.params.e_vel_param6,handles.params.e_vel_param4);
+        RE_Vel_Y = sgolayfilt(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.params.e_vel_param6,handles.params.e_vel_param4);
         RE_Vel_Z = sgolayfilt(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.params.e_vel_param6,handles.params.e_vel_param4);
         
         E = 0; % This code instructs the 'desaccadedata' routine to NOT
         % apply any additional filtering to the input data.
         
         switch handles.params.spline_sep_flag
-            
             case 1 % Detect splining options from the file being processed
                 switch handles.CurrData.VOMA_data.Parameters.Stim_Info.ModCanal{1}
                     
                     case {'LA','LARP-Axis','LARP'}
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
                         
-                        
-                        
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
                         
                     case {'LP','RALP-Axis','RALP'}
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
                         
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
                         
                     case {'LH','LHRH-Axis','LHRH'}
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
                         
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
                         
                     otherwise
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                         
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                         
                 end
                 
             case 2 % Spline each 3D component seperately
                 
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                 
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                 
                 
-            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components %or X component first
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
                 
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                
             case 4 % Spline the RALP component first, then use the QPs detected to spline the other components
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
                 
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
                 
             case 5 % Spline the LHRH component first, then use the QPs detected to spline the other components
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
                 
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                
+            case 6 % Spline the X component first, then use the QPs detected to spline the other components
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                
+            case 7 % Spline the Y component first, then use the QPs detected to spline the other components
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                
         end
         
         % Save the data after QP removal
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = desaccade1.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = desaccade2.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = desaccade3.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = desaccade4.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = desaccade5.results;
         
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade4.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade5.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade7.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade8.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = desaccade9.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = desaccade10.results;
         
         
         % Save the 'spline-only' data seperately for plotting purposes.
         handles.filter_noQPR.LE_Vel_LARP = desaccade1.smooth;
         handles.filter_noQPR.LE_Vel_RALP = desaccade2.smooth;
         handles.filter_noQPR.LE_Vel_Z = desaccade3.smooth;
+        handles.filter_noQPR.LE_Vel_X = desaccade4.smooth;
+        handles.filter_noQPR.LE_Vel_Y = desaccade5.smooth;
         
-        handles.filter_noQPR.RE_Vel_LARP = desaccade4.smooth;
-        handles.filter_noQPR.RE_Vel_RALP = desaccade5.smooth;
-        handles.filter_noQPR.RE_Vel_Z = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_LARP = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_RALP = desaccade7.smooth;
+        handles.filter_noQPR.RE_Vel_Z = desaccade8.smooth;
+        handles.filter_noQPR.RE_Vel_X = desaccade9.smooth;
+        handles.filter_noQPR.RE_Vel_Y = desaccade10.smooth;
         
         handles.vel_deriv.LE_LARP = desaccade1.deriv;
         handles.vel_deriv.LE_RALP = desaccade2.deriv;
         handles.vel_deriv.LE_Z = desaccade3.deriv;
+        handles.vel_deriv.LE_X = desaccade4.deriv;
+        handles.vel_deriv.LE_Y = desaccade5.deriv;
         
-        handles.vel_deriv.RE_LARP = desaccade4.deriv;
-        handles.vel_deriv.RE_RALP = desaccade5.deriv;
-        handles.vel_deriv.RE_Z = desaccade6.deriv;
+        handles.vel_deriv.RE_LARP = desaccade6.deriv;
+        handles.vel_deriv.RE_RALP = desaccade7.deriv;
+        handles.vel_deriv.RE_Z = desaccade8.deriv;
+        handles.vel_deriv.RE_X = desaccade9.deriv;
+        handles.vel_deriv.RE_Y = desaccade10.deriv;
         
     case 4 % irlssmooth
         LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
@@ -1279,6 +1519,32 @@ switch handles.CurrData.QPparams.qpr_routine
             LE_Vel_RALP(non_nan(end)+1:end) = LE_Vel_RALP(non_nan(end));
         end
         LE_Vel_RALP = voma__irlssmooth(LE_Vel_RALP,handles.params.e_vel_param4);
+        
+        LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+        inds = [1:length(LE_Vel_X)];
+        LE_Vel_X(isnan(LE_Vel_X)) = interp1(inds(~isnan(LE_Vel_X)),LE_Vel_LARP(~isnan(LE_Vel_X)),inds(isnan(LE_Vel_X)));
+        if isnan(LE_Vel_X(1))
+            non_nan = inds(~isnan(LE_Vel_X));
+            LE_Vel_X(1:non_nan(1)-1) = LE_Vel_X(non_nan(1));
+        end
+        if isnan(LE_Vel_X(end))
+            non_nan = inds(~isnan(LE_Vel_X));
+            LE_Vel_X(non_nan(end)+1:end) = LE_Vel_X(non_nan(end));
+        end
+        LE_Vel_X = voma__irlssmooth(LE_Vel_X,handles.params.e_vel_param4);
+        
+        LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
+        inds = [1:length(LE_Vel_Y)];
+        LE_Vel_Y(isnan(LE_Vel_Y)) = interp1(inds(~isnan(LE_Vel_Y)),LE_Vel_Y(~isnan(LE_Vel_Y)),inds(isnan(LE_Vel_Y)));
+        if isnan(LE_Vel_Y(1))
+            non_nan = inds(~isnan(LE_Vel_Y));
+            LE_Vel_Y(1:non_nan(1)-1) = LE_Vel_Y(non_nan(1));
+        end
+        if isnan(LE_Vel_Y(end))
+            non_nan = inds(~isnan(LE_Vel_Y));
+            LE_Vel_Y(non_nan(end)+1:end) = LE_Vel_Y(non_nan(end));
+        end
+        LE_Vel_Y = voma__irlssmooth(LE_Vel_Y,handles.params.e_vel_param4);
         
         LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
         inds = [1:length(LE_Vel_Z)];
@@ -1319,6 +1585,32 @@ switch handles.CurrData.QPparams.qpr_routine
         end
         RE_Vel_RALP = voma__irlssmooth(RE_Vel_RALP,handles.params.e_vel_param4);
         
+        RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+        inds = [1:length(RE_Vel_X)];
+        RE_Vel_X(isnan(RE_Vel_X)) = interp1(inds(~isnan(RE_Vel_X)),RE_Vel_X(~isnan(RE_Vel_X)),inds(isnan(RE_Vel_X)));
+        if isnan(RE_Vel_X(1))
+            non_nan = inds(~isnan(RE_Vel_X));
+            RE_Vel_X(1:non_nan(1)-1) = RE_Vel_X(non_nan(1));
+        end
+        if isnan(RE_Vel_X(end))
+            non_nan = inds(~isnan(RE_Vel_X));
+            RE_Vel_X(non_nan(end)+1:end) = RE_Vel_X(non_nan(end));
+        end
+        RE_Vel_X = voma__irlssmooth(RE_Vel_X,handles.params.e_vel_param4);
+        
+        RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
+        inds = [1:length(RE_Vel_Y)];
+        RE_Vel_Y(isnan(RE_Vel_Y)) = interp1(inds(~isnan(RE_Vel_Y)),RE_Vel_Y(~isnan(RE_Vel_Y)),inds(isnan(RE_Vel_Y)));
+        if isnan(RE_Vel_Y(1))
+            non_nan = inds(~isnan(RE_Vel_Y));
+            RE_Vel_Y(1:non_nan(1)-1) = RE_Vel_Y(non_nan(1));
+        end
+        if isnan(RE_Vel_Y(end))
+            non_nan = inds(~isnan(RE_Vel_Y));
+            RE_Vel_Y(non_nan(end)+1:end) = RE_Vel_Y(non_nan(end));
+        end
+        RE_Vel_Y = voma__irlssmooth(RE_Vel_Y,handles.params.e_vel_param4);
+        
         RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
         inds = [1:length(RE_Vel_Z)];
         RE_Vel_Z(isnan(RE_Vel_Z)) = interp1(inds(~isnan(RE_Vel_Z)),RE_Vel_Z(~isnan(RE_Vel_Z)),inds(isnan(RE_Vel_Z)));
@@ -1337,116 +1629,184 @@ switch handles.CurrData.QPparams.qpr_routine
         E = 0; % This code instructs the 'desaccadedata' routine to NOT
         % apply any additional filtering to the input data.
         
-        switch handles.params.spline_sep_flag
-            
+         switch handles.params.spline_sep_flag
             case 1 % Detect splining options from the file being processed
                 switch handles.CurrData.VOMA_data.Parameters.Stim_Info.ModCanal{1}
                     
                     case {'LA','LARP-Axis','LARP'}
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
                         
-                        
-                        
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
                         
                     case {'LP','RALP-Axis','RALP'}
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
                         
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
                         
                     case {'LH','LHRH-Axis','LHRH'}
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
                         
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
                         
                     otherwise
-                        desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                         
-                        desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                        desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                        desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                         
                 end
                 
             case 2 % Spline each 3D component seperately
                 
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                 
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
                 
                 
-            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+            case 3 % Spline the LARP component first, then use the QPs detected to spline the other components %or X component first
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade1.QP_range);
                 
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                
             case 4 % Spline the RALP component first, then use the QPs detected to spline the other components
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade2.QP_range);
                 
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade7.QP_range);
                 
             case 5 % Spline the LHRH component first, then use the QPs detected to spline the other components
-                desaccade3 = voma__desaccadedata(LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade1 = voma__desaccadedata(LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
-                desaccade2 = voma__desaccadedata(LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade3.QP_range);
                 
-                desaccade6 = voma__desaccadedata(RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
-                desaccade4 = voma__desaccadedata(RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
-                desaccade5 = voma__desaccadedata(RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade6.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade8.QP_range);
+                
+            case 6 % Spline the X component first, then use the QPs detected to spline the other components
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade4.QP_range);
+                
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade9.QP_range);
+                
+            case 7 % Spline the Y component first, then use the QPs detected to spline the other components
+                desaccade5 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[]);
+                desaccade1 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade2 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade4 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                desaccade3 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade5.QP_range);
+                
+                desaccade10 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E);
+                desaccade6 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade7 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade9 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                desaccade8 = voma__desaccadedata(handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Fs,handles.params.e_vel_param3,handles.params.e_vel_param5,handles.params.e_vel_param2,handles.params.e_vel_param1,handles.params.e_vel_param4,E,[],desaccade10.QP_range);
+                
         end
         
         % Save the data after QP removal
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = desaccade1.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = desaccade2.results;
         handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = desaccade3.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = desaccade4.results;
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = desaccade5.results;
         
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade4.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade5.results;
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = desaccade6.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = desaccade7.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = desaccade8.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = desaccade9.results;
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = desaccade10.results;
         
         
         % Save the 'spline-only' data seperately for plotting purposes.
         handles.filter_noQPR.LE_Vel_LARP = desaccade1.smooth;
         handles.filter_noQPR.LE_Vel_RALP = desaccade2.smooth;
         handles.filter_noQPR.LE_Vel_Z = desaccade3.smooth;
+        handles.filter_noQPR.LE_Vel_X = desaccade4.smooth;
+        handles.filter_noQPR.LE_Vel_Y = desaccade5.smooth;
         
-        handles.filter_noQPR.RE_Vel_LARP = desaccade4.smooth;
-        handles.filter_noQPR.RE_Vel_RALP = desaccade5.smooth;
-        handles.filter_noQPR.RE_Vel_Z = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_LARP = desaccade6.smooth;
+        handles.filter_noQPR.RE_Vel_RALP = desaccade7.smooth;
+        handles.filter_noQPR.RE_Vel_Z = desaccade8.smooth;
+        handles.filter_noQPR.RE_Vel_X = desaccade9.smooth;
+        handles.filter_noQPR.RE_Vel_Y = desaccade10.smooth;
         
         handles.vel_deriv.LE_LARP = desaccade1.deriv;
         handles.vel_deriv.LE_RALP = desaccade2.deriv;
         handles.vel_deriv.LE_Z = desaccade3.deriv;
+        handles.vel_deriv.LE_X = desaccade4.deriv;
+        handles.vel_deriv.LE_Y = desaccade5.deriv;
         
-        handles.vel_deriv.RE_LARP = desaccade4.deriv;
-        handles.vel_deriv.RE_RALP = desaccade5.deriv;
-        handles.vel_deriv.RE_Z = desaccade6.deriv;
+        handles.vel_deriv.RE_LARP = desaccade6.deriv;
+        handles.vel_deriv.RE_RALP = desaccade7.deriv;
+        handles.vel_deriv.RE_Z = desaccade8.deriv;
+        handles.vel_deriv.RE_X = desaccade9.deriv;
+        handles.vel_deriv.RE_Y = desaccade10.deriv;
         
         
         
@@ -1470,6 +1830,12 @@ end
 if handles.params.L_3==1
     plot(handles.CurrData.VOMA_data.Eye_t(2:end),abs(handles.vel_deriv.LE_Z),'Color',handles.colors.l_z)
 end
+if handles.params.L_4==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),abs(handles.vel_deriv.LE_X),'Color',handles.colors.l_x)
+end
+if handles.params.L_5==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),abs(handles.vel_deriv.LE_Y),'Color',handles.colors.l_y)
+end
 
 if handles.params.R_1==1
     plot(handles.CurrData.VOMA_data.Eye_t(2:end),abs(handles.vel_deriv.RE_LARP),'Color',handles.colors.r_l)
@@ -1479,6 +1845,12 @@ if handles.params.R_2==1
 end
 if handles.params.R_3==1
     plot(handles.CurrData.VOMA_data.Eye_t(2:end),abs(handles.vel_deriv.RE_Z),'Color',handles.colors.r_z)
+end
+if handles.params.R_4==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),abs(handles.vel_deriv.RE_X),'Color',handles.colors.r_x)
+end
+if handles.params.R_5==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),abs(handles.vel_deriv.RE_Y),'Color',handles.colors.r_y)
 end
 plot(handles.CurrData.VOMA_data.Eye_t(2:end),handles.params.e_vel_param3*ones(1,length(handles.CurrData.VOMA_data.Eye_t)-1),'k-')
 xlabel('Time [s]')
@@ -1491,17 +1863,18 @@ handles.params.smooth_flag = 1;
 [handles] = update_eye_vel(hObject, eventdata, handles, 1);
 
 % Update the 'filter parameter spreadsheet'
-filt_params = get(handles.filt_params,'Data');
-filt_params(8:13,2) = {handles.params.qpr_routine_string}; % Ang. Vel. Filter Type
-filt_params(8:13,3) = {handles.params.e_vel_param1};
-filt_params(8:13,4) = {handles.params.e_vel_param2};
-filt_params(8:13,5) = {handles.params.e_vel_param3};
-filt_params(8:13,6) = {handles.params.e_vel_param4};
-filt_params(8:13,7) = {handles.params.e_vel_param5};
-filt_params(8:13,8) = {handles.params.e_vel_param6};
-filt_params(8:13,9) = {handles.params.spline_sep_flag};
 
-filt_params(8:13,10) = {'N/A'};
+filt_params = get(handles.filt_params,'Data');
+filt_params(8:17,2) = {handles.params.qpr_routine_string}; % Ang. Vel. Filter Type
+filt_params(8:17,3) = {handles.params.e_vel_param1};
+filt_params(8:17,4) = {handles.params.e_vel_param2};
+filt_params(8:17,5) = {handles.params.e_vel_param3};
+filt_params(8:17,6) = {handles.params.e_vel_param4};
+filt_params(8:17,7) = {handles.params.e_vel_param5};
+filt_params(8:17,8) = {handles.params.e_vel_param6};
+filt_params(8:17,9) = {handles.params.spline_sep_flag};
+
+filt_params(8:17,10) = {'N/A'};
 
 set(handles.filt_params,'Data',filt_params);
 
@@ -1590,6 +1963,12 @@ switch handles.params.plot_toggle_flag
             if handles.params.L_3==1
                 patchline(handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_LE_Pos_Z,'edgecolor',handles.colors.l_z,'LineWidth',0.05,'edgealpha',0.5);
             end
+            if handles.params.L_4==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_LE_Pos_X,'edgecolor',handles.colors.l_x,'LineWidth',0.05,'edgealpha',0.5);
+            end
+            if handles.params.L_5==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_LE_Pos_Y,'edgecolor',handles.colors.l_y,'LineWidth',0.05,'edgealpha',0.5);
+            end
             
             if handles.params.R_1==1
                 patchline(handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_RE_Pos_X,'edgecolor',handles.colors.r_x,'LineWidth',0.05,'edgealpha',0.5);
@@ -1600,6 +1979,12 @@ switch handles.params.plot_toggle_flag
             end
             if handles.params.R_3==1
                 patchline(handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_RE_Pos_Z,'edgecolor',handles.colors.r_z,'LineWidth',0.05,'edgealpha',0.5);
+            end
+            if handles.params.R_4==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_RE_Pos_X,'edgecolor',handles.colors.r_x,'LineWidth',0.05,'edgealpha',0.5);
+            end
+            if handles.params.R_5==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_RE_Pos_Y,'edgecolor',handles.colors.r_y,'LineWidth',0.05,'edgealpha',0.5);
             end
             
             xlabel(handles.vor_plot,'Time [s]');
@@ -1615,6 +2000,12 @@ switch handles.params.plot_toggle_flag
             if handles.params.L_3==1
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_LE_Pos_Z,'r','LineWidth',1)
             end
+            if handles.params.L_4==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_LE_Pos_X,'Color',[237,150,33]/255,'LineWidth',1)
+            end
+            if handles.params.L_5==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_LE_Pos_Y,'Color',[125,46,143]/255,'LineWidth',1)
+            end
             
             
             if handles.params.R_1==1
@@ -1627,6 +2018,12 @@ switch handles.params.plot_toggle_flag
             if handles.params.R_3==1
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_RE_Pos_Z,'Color',[255,0,255]/255,'LineWidth',1)
             end
+            if handles.params.R_4==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_RE_Pos_X,'Color',[237,204,33]/255,'LineWidth',1)
+            end
+            if handles.params.R_5==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,pos_scale*handles.CurrData.VOMA_data.Data_RE_Pos_Y,'Color',[125,46,230]/255,'LineWidth',1)
+            end
             xlabel(handles.vor_plot,'Time [s]')
             ylabel(handles.vor_plot,'Ang. Eye Position [\circ]')
         end
@@ -1634,7 +2031,6 @@ switch handles.params.plot_toggle_flag
         plot_angpos_deriv(hObject,eventdata,handles)
         
     case 2
-        
         try
             if handles.params.L_1==1
                 patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_LARP,'edgecolor',[0,128,0]/255,'LineWidth',0.05,'edgealpha',0.5);
@@ -1646,6 +2042,12 @@ switch handles.params.plot_toggle_flag
             if handles.params.L_3==1
                 patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_Z,'edgecolor','r','LineWidth',0.05,'edgealpha',0.5);
             end
+            if handles.params.L_4==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_X,'edgecolor',[237,150,33],'LineWidth',0.05,'edgealpha',0.5);
+            end
+            if handles.params.L_5==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_Y,'edgecolor',[125,46,143],'LineWidth',0.05,'edgealpha',0.5);
+            end
             
             if handles.params.R_1==1
                 patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_RE_Vel_LARP,'edgecolor','g','LineWidth',0.05,'edgealpha',0.5);
@@ -1656,6 +2058,12 @@ switch handles.params.plot_toggle_flag
             end
             if handles.params.R_3==1
                 patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_RE_Vel_Z,'edgecolor', [255,0,255]/255,'LineWidth',0.05,'edgealpha',0.5);
+            end
+            if handles.params.R_4==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_RE_Vel_RALP,'edgecolor',[237,204,33]/255,'LineWidth',0.05,'edgealpha',0.5);
+            end
+            if handles.params.R_5==1
+                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_RE_Vel_Z,'edgecolor', [125,46,230]/255,'LineWidth',0.05,'edgealpha',0.5);
             end
             
             xlabel(handles.vor_plot,'Time [s]');
@@ -1672,6 +2080,12 @@ switch handles.params.plot_toggle_flag
             if handles.params.L_3==1
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_Z,'r','LineWidth',1)
             end
+            if handles.params.L_4==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_X,'Color',[237,150,33]/255,'LineWidth',1)
+            end
+            if handles.params.L_5==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_Y,'Color',[125,46,143]/255,'LineWidth',1)
+            end
             
             
             if handles.params.R_1==1
@@ -1683,6 +2097,12 @@ switch handles.params.plot_toggle_flag
             end
             if handles.params.R_3==1
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_RE_Vel_Z,'Color',[255,0,255]/255,'LineWidth',1)
+            end
+            if handles.params.R_4==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_RE_Vel_X,'Color',[237,204,33]/255,'LineWidth',1)
+            end
+            if handles.params.R_5==1
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_RE_Vel_Y,'Color',[125,46,230]/255,'LineWidth',1)
             end
             xlabel(handles.vor_plot,'Time [s]')
             ylabel(handles.vor_plot,'Ang. Eye Velocity [\circ/s]')
@@ -1696,7 +2116,7 @@ switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
         
         switch handles.CurrData.VOMA_data.Parameters.DAQ
             case 'Lasker_CED'
-                plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_Trace(1,:),handles.params.stim_plot_mult*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(1,:))),'Marker','*','color','k','LineWidth',0.5)
+                plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_Trace(1,:),handles.params.stim_plot_mult*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(1,:))),'Marker','*','Color','k','LineWidth',0.5)
                 
             otherwise
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace,'k','LineWidth',0.5)
@@ -1733,6 +2153,12 @@ end
 if handles.params.L_3==1
     plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z),'Color',handles.colors.l_z)
 end
+if handles.params.L_4==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X),'Color',handles.colors.l_x)
+end
+if handles.params.L_5==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y),'Color',handles.colors.l_y)
+end
 
 if handles.params.R_1==1
     plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X),'Color',handles.colors.r_x)
@@ -1742,6 +2168,12 @@ if handles.params.R_2==1
 end
 if handles.params.R_3==1
     plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z),'Color',handles.colors.r_z)
+end
+if handles.params.R_4==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X),'Color',handles.colors.r_x)
+end
+if handles.params.R_5==1
+    plot(handles.CurrData.VOMA_data.Eye_t(2:end),diff(handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y),'Color',handles.colors.r_y)
 end
 
 if handles.params.abs_APAQOR_thresh_flag
@@ -1833,6 +2265,42 @@ switch handles.params.plot_toggle_flag
             end
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t, pos_scale*handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z,'Color',handles.colors.l_z,'LineWidth',1)
         end
+        if handles.params.L_4==1
+            % Check if there are saved QPs from the APAQPR routine. If QP
+            % indices exist, box the data in a transparent PATCH
+            if handles.CurrData.QPparams.APAQPR.Flag.LE_X
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+                
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                
+                x_temp = temp(repmat([1:size(temp,1)],2,1),:);
+                
+                y_temp = repmat([-90 ; 90 ; 90 ; -90],1,size(x_temp,2));
+                axes(handles.vor_plot)
+                patch('XData',x_temp,'YData',y_temp,'FaceColor','none','LineStyle',':','EdgeColor',handles.colors.l_x)
+                
+            end
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t, pos_scale*handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X,'Color',handles.colors.l_x,'LineWidth',1)
+        end
+        hold on
+        if handles.params.L_5==1
+            % Check if there are saved QPs from the APAQPR routine. If QP
+            % indices exist, box the data in a transparent PATCH
+            if handles.CurrData.QPparams.APAQPR.Flag.LE_Y
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+                
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                
+                x_temp = temp(repmat([1:size(temp,1)],2,1),:);
+                
+                y_temp = repmat([-90 ; 90 ; 90 ; -90],1,size(x_temp,2));
+                axes(handles.vor_plot)
+                patch('XData',x_temp,'YData',y_temp,'FaceColor','none','LineStyle',':','EdgeColor',handles.colors.l_y)
+                
+            end
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t, pos_scale*handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y,'Color',handles.colors.l_y,'LineWidth',1)
+        end
         
         if handles.params.R_1==1
             % Check if there are saved QPs from the APAQPR routine. If QP
@@ -1886,6 +2354,42 @@ switch handles.params.plot_toggle_flag
             end
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t, pos_scale*handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z,'Color',handles.colors.r_z,'LineWidth',1)
         end
+        if handles.params.R_4==1
+            % Check if there are saved QPs from the APAQPR routine. If QP
+            % indices exist, box the data in a transparent PATCH
+            if handles.CurrData.QPparams.APAQPR.Flag.RE_X
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+                
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                
+                x_temp = temp(repmat([1:size(temp,1)],2,1),:);
+                
+                y_temp = repmat([-90 ; 90 ; 90 ; -90],1,size(x_temp,2));
+                axes(handles.vor_plot)
+                patch('XData',x_temp,'YData',y_temp,'FaceColor','none','LineStyle',':','EdgeColor',handles.colors.r_x)
+                
+            end
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t, pos_scale*handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X,'Color',handles.colors.r_x,'LineWidth',1)
+        end
+        hold on
+        if handles.params.R_5==1
+            % Check if there are saved QPs from the APAQPR routine. If QP
+            % indices exist, box the data in a transparent PATCH
+            if handles.CurrData.QPparams.APAQPR.Flag.RE_Y
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+                
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                
+                x_temp = temp(repmat([1:size(temp,1)],2,1),:);
+                
+                y_temp = repmat([-90 ; 90 ; 90 ; -90],1,size(x_temp,2));
+                axes(handles.vor_plot)
+                patch('XData',x_temp,'YData',y_temp,'FaceColor','none','LineStyle',':','EdgeColor',handles.colors.r_y)
+                
+            end
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t, pos_scale*handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y,'Color',handles.colors.r_y,'LineWidth',1)
+        end
+        
         
         xlabel(handles.vor_plot,'Time [s]')
         ylabel(handles.vor_plot,'Angular Eye Position [deg]')
@@ -1897,8 +2401,6 @@ switch handles.params.plot_toggle_flag
         
         
     case 2
-        
-        
         if handles.params.L_1==1
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP,'Color',[0,128,0]/255,'LineWidth',1)
         end
@@ -1908,6 +2410,12 @@ switch handles.params.plot_toggle_flag
         end
         if handles.params.L_3==1
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z,'r','LineWidth',1)
+        end
+        if handles.params.L_4==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X,'Color',[237,150,33]/255,'LineWidth',1)
+        end
+        if handles.params.L_5==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y,'Color',[125,46,143]/255,'LineWidth',1)
         end
         
         if handles.params.R_1==1
@@ -1920,6 +2428,13 @@ switch handles.params.plot_toggle_flag
         if handles.params.R_3==1
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z,'Color',[255,0,255]/255,'LineWidth',1)
         end
+        if handles.params.R_4==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X,'Color',[237,204,33]/255,'LineWidth',1)
+        end
+        if handles.params.R_5==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y,'Color',[125,46,230]/255,'LineWidth',1)
+        end
+        
         
         xlabel(handles.vor_plot,'Time [s]')
         ylabel(handles.vor_plot,'Eye Velocity [dps]')
@@ -1932,6 +2447,12 @@ switch handles.params.plot_toggle_flag
         if handles.params.L_3==1
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(handles.CurrData.QPparams.UGQPRarray),'ko','LineWidth',3);
         end
+        if handles.params.L_4==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X(handles.CurrData.QPparams.UGQPRarray),'ko','LineWidth',3);
+        end
+        if handles.params.L_5==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y(handles.CurrData.QPparams.UGQPRarray),'ko','LineWidth',3);
+        end
         
         if handles.params.R_1==1
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(handles.CurrData.QPparams.UGQPRarray),'ko','LineWidth',3);
@@ -1941,6 +2462,12 @@ switch handles.params.plot_toggle_flag
         end
         if handles.params.R_3==1
             plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(handles.CurrData.QPparams.UGQPRarray),'ko','LineWidth',3);
+        end
+        if handles.params.R_4==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X(handles.CurrData.QPparams.UGQPRarray),'ko','LineWidth',3);
+        end
+        if handles.params.R_5==1
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y(handles.CurrData.QPparams.UGQPRarray),'ko','LineWidth',3);
         end
         
 end
@@ -2075,9 +2602,15 @@ try
     if handles.params.L_3==1
         patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.LE_Vel_Z,'edgecolor','r','LineWidth',0.05,'edgealpha',0.5);
     end
+    if handles.params.L_2==1
+        patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.LE_Vel_X,'edgecolor','b','LineWidth',0.05,'edgealpha',0.5);
+    end
+    if handles.params.L_3==1
+        patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.LE_Vel_Y,'edgecolor',[237,150,33]/255,'LineWidth',0.05,'edgealpha',0.5);
+    end
     
     if handles.params.R_1==1
-        patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_LARP,'edgecolor','g','LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_LARP,'edgecolor',[125,46,143]/255,'LineWidth',0.05,'edgealpha',0.5);
     end
     hold on
     if handles.params.R_2==1
@@ -2086,9 +2619,14 @@ try
     if handles.params.R_3==1
         patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_Z,'edgecolor',[255,0,255]/255,'LineWidth',0.05,'edgealpha',0.5);
     end
+    if handles.params.R_4==1
+        patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_X,'edgecolor',[237,204,33]/255,'LineWidth',0.05,'edgealpha',0.5);
+    end
+    if handles.params.R_5==1
+        patchline(handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_Y,'edgecolor',[125,46,230]/255,'LineWidth',0.05,'edgealpha',0.5);
+    end
     xlabel(handles.vor_plot,'Time [s]');
     ylabel(handles.vor_plot,'Eye Velocity [dps]');
-    
 catch
     if handles.params.L_1==1
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.LE_Vel_LARP,'Color',[0,128,0]/255,'LineWidth',1)
@@ -2099,6 +2637,12 @@ catch
     end
     if handles.params.L_3==1
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.LE_Vel_Z,'r','LineWidth',1)
+    end
+    if handles.params.L_4==1
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.LE_Vel_X,'Color',[237,150,33]/255,'LineWidth',1)
+    end
+    if handles.params.L_5==1
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.LE_Vel_Y,'Color',[125,46,143]/255,'LineWidth',1)
     end
     
     if handles.params.R_1==1
@@ -2111,9 +2655,14 @@ catch
     if handles.params.R_3==1
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_Z,'Color',[255,0,255]/255,'LineWidth',1)
     end
+    if handles.params.R_4==1
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_RALP,'Color',[237,204,33]/255,'LineWidth',1)
+    end
+    if handles.params.R_5==1
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,handles.filter_noQPR.RE_Vel_Z,'Color',[125,46,230]/255,'LineWidth',1)
+    end
     xlabel(handles.vor_plot,'Time [s]')
     ylabel(handles.vor_plot,'Eye Velocity [dps]')
-    
 end
 switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
     case 'Current Fitting'
@@ -2418,13 +2967,19 @@ switch h
         set(handles.UGQPR_table,'Data',handles.CurrData.VOMA_data.Stim_t(handles.CurrData.QPparams.UGQPRarray))
         
         
+        
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(i1),'ko','LineWidth',3);
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(i1),'ko','LineWidth',3);
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(i1),'ko','LineWidth',3);
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X(i1),'ko','LineWidth',3);
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y(i1),'ko','LineWidth',3);
         
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(i1),'ko','LineWidth',3);
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(i1),'ko','LineWidth',3);
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(i1),'ko','LineWidth',3);
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X(i1),'ko','LineWidth',3);
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y(i1),'ko','LineWidth',3);
+        
         
     case 'Nevermind'
         
@@ -2448,10 +3003,14 @@ for n=1:size(handles.CurrData.QPparams.UGQPRarray,1)
     handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(k1) handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(k2) 0], k1:k2);
     handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(k1) handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(k2) 0], k1:k2);
     handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(k1) handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(k2) 0], k1:k2);
+    handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X(k1) handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X(k2) 0], k1:k2);
+    handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y(k1) handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y(k2) 0], k1:k2);
     
     handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(k1) handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(k2) 0], k1:k2);
     handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(k1) handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(k2) 0], k1:k2);
     handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(k1) handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(k2) 0], k1:k2);
+    handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X(k1) handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X(k2) 0], k1:k2);
+    handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y(k1:k2)=spline([k1 k2],[0 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y(k1) handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y(k2) 0], k1:k2);
     
 end
 
@@ -2720,6 +3279,7 @@ elseif button_state == get(hObject,'Min')
     plot_raw_data(hObject,eventdata,handles)
     
     % Change plot legend
+
     set(handles.L_1,'String','LARP')
     set(handles.L_2,'String','RALP')
     set(handles.L_3,'String','LHRH')
@@ -2877,7 +3437,7 @@ end
 guidata(hObject,handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns angpos_filt_trace_select contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from angpos_filt_trace_select
+%        contents{get(hObject,'Value')} returns selected item from_filt_trace_select
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -3105,9 +3665,13 @@ handles.CurrData.VOMA_data.Data_RE_Vel_Z = New_Ang_Vel.RE_Vel_Z;
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
+handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
+handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
+handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
 
 guidata(hObject,handles)
 end
@@ -3442,7 +4006,9 @@ handles.params.post_qpr_filt_param1;
 % Update the 'filter parameter spreadsheet'
 filt_params = get(handles.filt_params,'Data');
 filt_params(1,10) = {'Post-QPR Spline Param.'};
-filt_params(8:13,10) = {handles.params.post_qpr_filt_param1};
+
+filt_params(8:17,10) = {handles.params.post_qpr_filt_param1};
+
 
 set(handles.filt_params,'Data',filt_params);
 
@@ -3450,11 +4016,14 @@ set(handles.filt_params,'Data',filt_params);
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP)]',handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP)]');
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP)]',handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP)]');
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z)]',handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z)]');
-
+handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X)]',handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X)]');
+handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y)]',handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y)]');
 
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP)]',handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP)]');
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP)]',handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP)]');
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z)]',handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z)]');
+handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X)]',handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X)]');
+handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y=voma__smooth([1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y)]',handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y,handles.params.post_qpr_filt_param1,[1:length(handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y)]');
 
 axes(handles.vor_plot)
 cla
@@ -3539,7 +4108,13 @@ switch choice
                 
             case 4
                 
-            case 5 % Electrical Only Sinusoids
+            case 5
+                
+            case 6
+                
+            case 7
+                
+            case 8 % Electrical Only Sinusoids
                 
                 % If the user is processing an electrical-only sinusoid,
                 % they need to input the stimulus parameters
@@ -3904,11 +4479,11 @@ switch options.vogver
     case {1,2}
         switch options.stim
             
-            case {1,2,3,4,5} % The user has chosen to use the hardware trigger from the MVI PCU
+            case {1,2,3,4,5,6,7,8} % The user has chosen to use the hardware trigger from the MVI PCU
                 
                 StimIndex = 35;
                 
-            case 6 % The user has chosen to use the software trigger from the MVI fitting software (toggled by the operator
+            case 9 % The user has chosen to use the software trigger from the MVI fitting software (toggled by the operator
                 
                 
                 StimIndex = 46;
@@ -4024,7 +4599,26 @@ switch options.stim
         stim_ind{1} = {[]};
         Stimulus{1} = {stim_temp};
         
-    case 4 % Electrical Pulse Train
+    case 4 % Stim = Z Accel Trace
+        stim_temp = interp1(Time_Stim,XAxisAccelHead*10,Time_Eye);
+        
+        stim_ind{1} = {[]};
+        Stimulus{1} = {stim_temp};
+        
+    case 5 % Stim - X Accel Trace
+        stim_temp = interp1(Time_Stim,YAxisAccelHead*10,Time_Eye);
+        
+        stim_ind{1} = {[]};
+        Stimulus{1} = {stim_temp};
+        
+    case 6 % Stim - Y Accel Trace
+        stim_temp = interp1(Time_Stim,ZAxisAccelHead*10,Time_Eye);
+        
+        stim_ind{1} = {[]};
+        Stimulus{1} = {stim_temp};
+        
+        
+    case 7 % Electrical Pulse Train
         
         Stimulus{1} = {Stim};
         
@@ -4034,7 +4628,7 @@ switch options.stim
         
         stim_ind{1} = {inds(trig_inds > 0)'};
         
-    case 5 % Electrical-Only Sinusoid
+    case 8 % Electrical-Only Sinusoid
         Transitions = abs(diff(Stim));
         inds = [1:length(Stim)];
         transition_inds = inds(Transitions==1);
@@ -4051,7 +4645,7 @@ switch options.stim
         VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Stim)-(transition_inds(end)+floor(mean_period*Fs_temp)))];
         Stimulus{1} = {VirtSine};
         
-    case 6
+    case 9
         
         Stimulus{1} = {Stim};
         
@@ -4248,7 +4842,7 @@ txt4 = uicontrol('Parent',d,...
 in4 = uicontrol('Parent',d,...
     'Style','popup',...
     'Position',[75 65 225 25],...
-    'String',{'LHRH-Axis MPU Angular Velocity';'LARP-Axis MPU Angular Velocity';'RALP-Axis MPU Angular Velocity';'Pulse Train';'Electric-Only Sinusoid';'MVI Fitting Software Toggle Button'},...
+    'String',{'LHRH-Axis MPU Angular Velocity';'LARP-Axis MPU Angular Velocity';'RALP-Axis MPU Angular Velocity';'X-Axis MPU Linear Acceleration';'Y-Axis MPU Linear Acceleration';'Z-Axis MPU Linear Acceleration';'Pulse Train';'Electric-Only Sinusoid';'MVI Fitting Software Toggle Button'},...
     'Callback',@raw_stimtrace_callback);
 %             'Callback',{@popup_callback,hObject, eventdata, handles});
 
@@ -5068,8 +5662,8 @@ handles.params.min_spv_fit_time = str2double(input);
 
 
 guidata(hObject,handles)
-
 end
+
 % Hints: get(hObject,'String') returns contents of min_spv_fit_time as text
 %        str2double(get(hObject,'String')) returns contents of min_spv_fit_time as a double
 
@@ -5085,4 +5679,101 @@ function min_spv_fit_time_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+end
+
+% --- Executes on button press in export_pos_traces.
+function export_pos_traces_Callback(hObject, eventdata, handles)
+% hObject    handle to export_pos_traces (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[file,path] = uiputfile('*.mat','Save data file name',handles.filename);
+if file
+    leposx =handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X;
+    leposy = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y;
+    leposz = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z;
+    reposx = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X;
+    reposy =handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y;
+    reposz = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z;
+    levelx =handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
+    levely = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+    levelz = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
+    revelx = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
+    revely =handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
+    revelz = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
+    stimulus = handles.CurrData.VOMA_data.Stim_Trace;
+    save(strcat(path,file),'leposx','leposy','leposz','reposx','reposy','reposz','levelx','levely','levelz','revelx','revely','revelz','stimulus');
+end
+end
+
+% --- Executes on button press in rpyAxesBox.
+function rpyAxesBox_Callback(hObject, eventdata, handles)
+% hObject    handle to rpyAxesBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of rpyAxesBox
+% if get(hObject, 'Value')
+%     set(handles.R_1, 'String', 'Roll');
+%     set(handles.R_2,'String','Pitch');
+%     set(handles.L_1,'String','Roll');
+%     set(handles.L_2,'String','Pitch');
+%     text{1} ='Detect From File';
+%     text{2}='Smooth Seperately';
+%     text{3}='X';
+%     text{4}='Y';
+%     text{5}='LHRH';
+% else
+%     set(handles.R_1, 'String', 'LARP');
+%     set(handles.R_2,'String','RALP');
+%     set(handles.L_1,'String','LARP');
+%     set(handles.L_2,'String','RALP');
+%     text{1} ='Detect From File';
+%     text{2}='Smooth Seperately';
+%     text{3}='LARP';
+%     text{4}='RALP';
+%     text{5}='LHRH';
+% end
+% set(handles.spline_sep_flag,'String',text);
+guidata(hObject,handles)
+end
+
+% --- Executes on button press in R_4.
+function R_4_Callback(hObject, eventdata, handles)
+% hObject    handle to R_4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.params.R_4 = get(hObject,'Value');
+guidata(hObject,handles)
+
+% Hint: get(hObject,'Value') returns toggle state of R_4
+end
+
+% --- Executes on button press in R_5.
+function R_5_Callback(hObject, eventdata, handles)
+% hObject    handle to R_5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.params.R_5 = get(hObject,'Value');
+guidata(hObject,handles)
+% Hint: get(hObject,'Value') returns toggle state of R_5
+end
+
+% --- Executes on button press in L_4.
+function L_4_Callback(hObject, eventdata, handles)
+% hObject    handle to L_4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.params.L_4 = get(hObject,'Value');
+guidata(hObject,handles)
+% Hint: get(hObject,'Value') returns toggle state of L_4
+end
+
+% --- Executes on button press in L_5.
+function L_5_Callback(hObject, eventdata, handles)
+% hObject    handle to L_5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.params.L_5 = get(hObject,'Value');
+guidata(hObject,handles)
+% Hint: get(hObject,'Value') returns toggle state of L_5
 end
