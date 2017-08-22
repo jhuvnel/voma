@@ -259,7 +259,7 @@ if handles.reload_flag == 0
     % Since we loaded a new file, the 'smooth_flag' should be false
     handles.params.smooth_flag = 0;
     
-    
+   % Brian this is a test. 
     
 elseif handles.reload_flag == 1
     % This 'reload_flag' is true when the user is 'recalling' this qpr gui
