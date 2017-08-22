@@ -1,4 +1,4 @@
-function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzeros,ref,data_rot,DAQ_code,Data_In)
+function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzeros,ref,data_rot,DAQ_code,OutputFormat,Data_In)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %  Version Control
@@ -8,7 +8,7 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %       v3: Added 'system_code' to process dual coil data from two eyes. The system_code
 %           will assume the LEFT eye dual coil data is located in Ch1 and Ch2,
 %           while the RIGHT eye dual coil data is in Ch3 and Ch4.
-%       v4: Added 'DAQ_code' input flag and support for CED/Spike2 .smr file extraction 
+%       v4: Added 'DAQ_code' input flag and support for CED/Spike2 .smr file extraction
 %       v5: Added code for processing Labyrinth Devices VOG data
 %       v6: Added an option to provide a data set as an input argument.
 %       v7: In addition to sending the raw-extracted data out, I will also
@@ -20,6 +20,9 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %           indicate what coordinate system transformation needs to be
 %           applied for the specific data acquisition system.
 %       v8: Meg is adding digital coil processing info
+%       v9: Fixed bug that incorrectly applied the ordering of the
+%           Frame-to-Head and Coil-to-Eye coordinate system changes.
+%           Added option to choose the output format.
 %
 %   data_rot:
 %       1: Apply no coordinate system transformations to raw data
@@ -30,17 +33,20 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %   DAQ_code:
 %       1: Lasker Coil System data acquired using ONLY the 'VORDAQ'
 %          software
-%       2: Lasker COil System data acquired by BOTH the VORDAQ software 
-%          (for eye coil signals and ACUTROL variables) and the CED 1401 
-%          DAQ (for MPU data and Pulse arrival times acquired  with Event 
-%          Channels). 
+%       2: Lasker COil System data acquired by BOTH the VORDAQ software
+%          (for eye coil signals and ACUTROL variables) and the CED 1401
+%          DAQ (for MPU data and Pulse arrival times acquired  with Event
+%          Channels).
 %       3: Lasker Coil System data acquired using ONLY a CED and Spike 2
 %          software
 %       4: McGill Coil System [2D]
 %       5: Labyrinth Devices VOG Goggle data files
 %       6: Digital Coil Moog System
 %
-%
+%   OutputFormat:
+%       1: Fick coord.
+%       2: Rotation Vectors
+%       3: Quaternions
 %
 %
 %
@@ -48,49 +54,90 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Here, we are setting up the rotation needed to convert eye movement data
+% presented in a COIL FRAME coordinate system, into a HEAD coordinate
+% system. In particular for oculomotor data collected using a search coil
+% system, in general the data computed from the raw coil signals provides
+% data representing the rotations of the COILS on the eye in a COIL FRAME
+% coordinate system.
+% In square bracket rotation vector notation, we can say the system
+% provides:
+% [Coil_in_Frame].
+% Typically, we care more about how the EYES are moving in a HEAD
+% coordinate frame (i.e., [Eye_in_Head]. We will need to apply some coordinate system changes
+% (also termed 'passive' rotations) to get there.
 
 switch data_rot
     
     case 1
-        % Do not apply any coordinate system changes to the raw eye
-        % movement data
+        % In cases where the coil system uses a HEAD FIXED coil frame, we often
+        % assume that the HEAD coordinate system is identical to the FRAME
+        % coordinate system. (Thus, we apply NO additional coordinate system
+        % changes to the [Coil_in_Frame] data.
         
         radH = 0;
         radV = 0;
         radT = 0;
         
     case 2
+        % Some cases in VNEL where this is NOT true:
+        
         % In Ross710, the coil frame cardinal axes are defined as +X =
         % Left +Y = Occipital, +Z = Up convention (which we will refer to as
-        % 'FrameA')
+        % 'Frame')
         % We would like to use the standard coordinate system of +X = Nasal,
-        % +Y = Left, +Z = Up (which we will refer to as 'FrameB')
+        % +Y = Left, +Z = Up (which we will refer to as 'Head')
         %
-        % Thus, FrameA (the coil frame coordinate system in Ross 710) is achieved
-        % by a +pi/2 Z-axis rotation of FrameB. We can thus express Ross710 data in
-        % FrameB (the standard X-Y-Z convention) by applying a -pi/2 Z-axis rotation
+        % Thus, we can thus express Ross710 data in
+        % 'Head' (the standard X-Y-Z convention) coordiantes by applying a -pi/2 Z-axis rotation
         %
-        % To make this correction, we will convert the Eye-in-FrameA rotation
-        % vectors we get from the raw coil system voltages into Eye-in-FrameB
-        % rotation vectors by applying a rotation vector describing
-        % FrameB-in-FrameA (described below in Fick angles)
+        % To make this correction, we will convert the Coil-in-Frame rotation
+        % vectors we get from the raw coil system voltages into Coil-in-Head
+        % rotation vectors by applying a rotation describing
+        % Head-in-Frame (described below in Fick angles)
         radH = -pi/2;
         radV = 0;
         radT = 0;
     case 3
-        
+        % When providing LARP or RALP mechanical rotations for a monkey in
+        % the Ross710 Monkey Chamber, we must re-orient the monkey to be on
+        % its SIDE (or its BACK, depending on how you seat the monkey in
+        % the chair) and then physically apply a +pi/4 yaw rotation in HEAD
+        % coordinates (so rotate the monkey's headcap within the 'ring'
+        % headcap holder). For this system, our new [Head_in_Frame]
+        % conversion is a -pi/4 yaw re-orientation to align the coordinate
+        % systems.
+        % NOTE: The correct head reorientation needed CHANGES if the monkey
+        % is seated with its LEFT EAR to the chamber door, or if the BACK
+        % OF THE HEAD is to the chamber door.
+        % This case is used for:
+        % Left Ear to Door: RALP rotation
+        % Back of Head to Door: LARP rotation
         radH = -pi/4;
         radV = 0;
         radT = 0;
     case 4
-        
+        % When providing LARP or RALP mechanical rotations for a monkey in
+        % the Ross710 Monkey Chamber, we must re-orient the monkey to be on
+        % its SIDE (or its BACK, depending on how you seat the monkey in
+        % the chair) and then physically apply a -pi/4 yaw rotation in HEAD
+        % coordinates (so rotate the monkey's headcap within the 'ring'
+        % headcap holder). For this system, our new [Head_in_Frame]
+        % conversion is a -3pi/4 yaw re-orientation to align the coordinate
+        % systems.
+        % NOTE: The correct head reorientation needed CHANGES if the monkey
+        % is seated with its LEFT EAR to the chamber door, or if the BACK
+        % OF THE HEAD is to the chamber door.
+        % This case is used for:
+        % Left Ear to Door: LARP rotation
+        % Back of Head to Door: RALP rotation
         radH = -3*pi/4;
         radV = 0;
         radT = 0;
         
 end
 
-FBinFAfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H V T] convention
+HinFfick = [(radH*180/pi) (radV*180/pi) (radT*180/pi)]; % Fick angle in [H V T] convention
 
 
 %% Extract and process the raw coil data
@@ -203,18 +250,18 @@ if exist('Data_In','var') && ~isempty(Data_In)
             zeros_R = [0 0 0 0 0 0 0 0 0 0 0 0];
             gains_R = [0 0 0 0 0 0 0 0 0 0 0 0];
             % Here need to calculate velocity now.
-%             rotR=fick2rot(rawData_R);
-%             rotL=fick2rot(rawData_L);
+            %             rotR=fick2rot(rawData_R);
+            %             rotL=fick2rot(rawData_L);
             
-%             velR = rot2angvel(rotR)*180*1000/pi;
-%             velL = rot2angvel(rotL)*180*1000/pi;
-%             
-%             newFrameinFrame = fick2rot([45 0 0]);
-%             rotrotR = rot2rot(newFrameinFrame,rotR);
-%             LRZR = rot2angvel(rotrotR)/pi*180*1000;
-%             
-%             rotrotL = rot2rot(newFrameinFrame,rotL);
-%             LRZL = rot2angvel(rotrotL)/pi*180*1000;
+            %             velR = rot2angvel(rotR)*180*1000/pi;
+            %             velL = rot2angvel(rotL)*180*1000/pi;
+            %
+            %             newFrameinFrame = fick2rot([45 0 0]);
+            %             rotrotR = rot2rot(newFrameinFrame,rotR);
+            %             LRZR = rot2angvel(rotrotR)/pi*180*1000;
+            %
+            %             rotrotL = rot2rot(newFrameinFrame,rotL);
+            %             LRZL = rot2angvel(rotrotL)/pi*180*1000;
             
     end
     
@@ -263,7 +310,7 @@ else % i.e., the user did NOT provide any angular position data into the routine
             % Extract stimulus signals
             Var_x081 = d(:,13)*ADCconv*AcutrolAngPosCalib;
             Var_x083 = d(:,14)*ADCconv*AcutrolAngVelCalib;
-
+            
             
             % Extracting the LE coil data
             rawData_L = d(:,1:6);
@@ -446,21 +493,21 @@ else % i.e., the user did NOT provide any angular position data into the routine
                 Data.RE_Pos_Y = rawData_R(:,2);
                 Data.RE_Pos_Z = rawData_R(:,1);
                 
-%                 Data.LE_Vel_X = velL(:,1);
-%                 Data.LE_Vel_Y = velL(:,2);
-%                 Data.LE_Vel_Z = velL(:,3);
-%                 Data.LE_Vel_LARP = LRZL(:,1);
-%                 Data.LE_Vel_RALP = LRZL(:,2);
-%                 
-%                 Data.RE_Vel_X = velR(:,1);
-%                 Data.RE_Vel_Y = velR(:,2);
-%                 Data.RE_Vel_Z = velR(:,3);
-%                 Data.RE_Vel_LARP = LRZR(:,1);
-%                 Data.RE_Vel_RALP = LRZR(:,2);
+                %                 Data.LE_Vel_X = velL(:,1);
+                %                 Data.LE_Vel_Y = velL(:,2);
+                %                 Data.LE_Vel_Z = velL(:,3);
+                %                 Data.LE_Vel_LARP = LRZL(:,1);
+                %                 Data.LE_Vel_RALP = LRZL(:,2);
+                %
+                %                 Data.RE_Vel_X = velR(:,1);
+                %                 Data.RE_Vel_Y = velR(:,2);
+                %                 Data.RE_Vel_Z = velR(:,3);
+                %                 Data.RE_Vel_LARP = LRZR(:,1);
+                %                 Data.RE_Vel_RALP = LRZR(:,2);
                 Data.MPU = mpuAligned;
             end
     end
-  
+    
     
     
     
@@ -499,31 +546,51 @@ for j=1:2
                 
                 % Converting raw data to rotation vectors
                 % Note that the output of the raw2rot routine is a time series of
-                % Eye-in-FrameA rotation vectors
-                rot = raw2rot(rawData - repmat(coilzeros,length(rawData),1), gains, ref);
+                % Eye-in-Frame rotation vectors
+                options = 0;
+                % Here we are converting the Eye-in-Frame rotation vectors into the
+                % 'correct' Eye-in-Head by doing [Head-in-Frame]^T[Eye-in-Frame] = [Eye-in-Head]
+                % From the coil system, we can compute a time series of
+                % rotation vectors describing the rotation of the COIL in
+                % the system FRAME [Coil_in_Frame]. To convert this into
+                % [Coil_in_Head] (necessary to later compute
+                % [Eye_in_Head]), we need to know the rotation vector
+                % necessary to convert the two cooordinate systems.
+                HinF = fick2rot(HinFfick);
+                rot_corr = raw2rot(rawData - repmat(coilzeros,length(rawData),1), gains, ref,options,HinF);
             end
             
-            % Here we are converting the Eye-in-FrameA rotation vectors into the
-            % 'correct' Eye-in-FrameB by doing [FrameB-in-FrameA]^T[Eye-in-FrameA] = [Eye-in-FrameB]
-            FBinFA = fick2rot(FBinFAfick);
-            rot_corr = rot2rot(-FBinFA,rot); % Rotate the time-series rotation vector data by the correction factor to put the data in proper XYZ notation
+            Fick_Data = rot2fick(rot_corr);
+            %             rot_corr = rot2rot(-FBinFA,rot); % Rotate the time-series rotation vector data by the correction factor to put the data in proper XYZ notation
             
             % Next, we want to rotate our position data by -pi/4 to put the data in
-            % the [+LARP +RALP +Z] coordinate system (i.e., FrameC)
-            FCinFBfick = [-45 0 0];
-            FCinFB = fick2rot(FCinFBfick);
-            rot_lr = rot2rot(-FCinFB,rot_corr);
+            % the [+LARP +RALP +Z] coordinate system
+            % Thinking about this in the [Frame] nomenclature used above,
+            % we now have:
+            % [Eye_in_Head]
+            % We want:
+            % [Eye_in_LarpRalpLhrh]
+            % We can describe the rotation necessary to describe the LRZ
+            % Coord. system in Head coordinates via a -pi/4 yaw axis
+            % rotation, or:
+            % [LRZ_in_Head] = [0 0 -0.4142] (as a rotation vector)
+            % We can then compute [Eye_in_LRZ] via:
+            % [Eye_in_LRZ] = [LRZ_in_Head]^T[Eye_in_Head]
+            LRZinHfick = [-45 0 0];
+            LRZinH = fick2rot(LRZinHfick);
+            rot_lr = rot2rot(-LRZinH,rot_corr);
             
             switch j
                 
                 case 1 % Left Eye
                     rot_L = rot_corr;
-                    
+                    Fick_Data_L = Fick_Data;
                 case 2 % Right Eye
                     rot_R = rot_corr;
+                    Fick_Data_R = Fick_Data;
             end
             
-            % The data_rot below calculates the angular velocity using Haslwanter, 1995 eq.
+            % The code below calculates the angular velocity using Haslwanter, 1995 eq.
             % 29 using the 2nd order central difference approximation of dr/dt
             % X,Y,Z
             [dcolb,drb] = gradient(rot_corr);
@@ -568,43 +635,43 @@ for j=1:2
             % their inverses are equivalent to their transpose. -PJB
             angvel_dps_c = [rotZ3deg(-45)'*angvel_dps_b']';
             
-
+            
             
     end
     
     %switch DAQ_code
-%     %{    case 6
-%             Data.LE_Vel_X = velL(:,1);
-%             Data.LE_Vel_Y = velL(:,2);
-%             Data.LE_Vel_Z = velL(:,3);
-%             Data.LE_Vel_LARP = LRZL(:,1);
-%             Data.LE_Vel_RALP = LRZL(:,2);
-%             
-%             Data.RE_Vel_X = velR(:,1);
-%             Data.RE_Vel_Y = velR(:,2);
-%             Data.RE_Vel_Z = velR(:,3);
-%             Data.RE_Vel_LARP = LRZR(:,1);
-%             Data.RE_Vel_RALP = LRZR(:,2);
-        %otherwise
-            switch j
-                
-                case 1
-                    % Store Data
-                    Data.LE_Vel_X = angvel_dps_b(:,1);
-                    Data.LE_Vel_Y = angvel_dps_b(:,2);
-                    Data.LE_Vel_Z = angvel_dps_b(:,3);
-                    Data.LE_Vel_LARP = angvel_dps_c(:,1);
-                    Data.LE_Vel_RALP = angvel_dps_c(:,2);
-                    
-                case 2
-                    % Store Data
-                    Data.RE_Vel_X = angvel_dps_b(:,1);
-                    Data.RE_Vel_Y = angvel_dps_b(:,2);
-                    Data.RE_Vel_Z = angvel_dps_b(:,3);
-                    Data.RE_Vel_LARP = angvel_dps_c(:,1);
-                    Data.RE_Vel_RALP = angvel_dps_c(:,2);
-            end
-   % end
+    %     %{    case 6
+    %             Data.LE_Vel_X = velL(:,1);
+    %             Data.LE_Vel_Y = velL(:,2);
+    %             Data.LE_Vel_Z = velL(:,3);
+    %             Data.LE_Vel_LARP = LRZL(:,1);
+    %             Data.LE_Vel_RALP = LRZL(:,2);
+    %
+    %             Data.RE_Vel_X = velR(:,1);
+    %             Data.RE_Vel_Y = velR(:,2);
+    %             Data.RE_Vel_Z = velR(:,3);
+    %             Data.RE_Vel_LARP = LRZR(:,1);
+    %             Data.RE_Vel_RALP = LRZR(:,2);
+    %otherwise
+    switch j
+        
+        case 1
+            % Store Data
+            Data.LE_Vel_X = angvel_dps_b(:,1);
+            Data.LE_Vel_Y = angvel_dps_b(:,2);
+            Data.LE_Vel_Z = angvel_dps_b(:,3);
+            Data.LE_Vel_LARP = angvel_dps_c(:,1);
+            Data.LE_Vel_RALP = angvel_dps_c(:,2);
+            
+        case 2
+            % Store Data
+            Data.RE_Vel_X = angvel_dps_b(:,1);
+            Data.RE_Vel_Y = angvel_dps_b(:,2);
+            Data.RE_Vel_Z = angvel_dps_b(:,3);
+            Data.RE_Vel_LARP = angvel_dps_c(:,1);
+            Data.RE_Vel_RALP = angvel_dps_c(:,2);
+    end
+    % end
     
     
     
@@ -627,16 +694,29 @@ Data.Fs = Fs;
 % Saving both POSITION and RAW data traces
 switch DAQ_code
     case {1,2,3}
-        Data.LE_Pos_X = rot_L(:,1);
-        Data.LE_Pos_Y = rot_L(:,2);
-        Data.LE_Pos_Z = rot_L(:,3);
-        
-        Data.RE_Pos_X = rot_R(:,1);
-        Data.RE_Pos_Y = rot_R(:,2);
-        Data.RE_Pos_Z = rot_R(:,3);
-        % Raw coil data
-        Data.RawData_L = rawData_L;
-        Data.RawData_R = rawData_R;
+        switch OutputFormat
+            
+            case 1
+                Data.LE_Pos_X = Fick_Data_L(:,3);
+                Data.LE_Pos_Y = Fick_Data_L(:,2);
+                Data.LE_Pos_Z = Fick_Data_L(:,1);
+                
+                Data.RE_Pos_X = Fick_Data_R(:,3);
+                Data.RE_Pos_Y = Fick_Data_R(:,2);
+                Data.RE_Pos_Z = Fick_Data_R(:,1);
+            otherwise
+                
+                Data.LE_Pos_X = rot_L(:,1);
+                Data.LE_Pos_Y = rot_L(:,2);
+                Data.LE_Pos_Z = rot_L(:,3);
+                
+                Data.RE_Pos_X = rot_R(:,1);
+                Data.RE_Pos_Y = rot_R(:,2);
+                Data.RE_Pos_Z = rot_R(:,3);
+                % Raw coil data
+                Data.RawData_L = rawData_L;
+                Data.RawData_R = rawData_R;
+        end
     case {4}
     case {5}
         
@@ -680,6 +760,200 @@ zr = zeros(size(fick,1),1);
 % The Z (horizontal) is the last and outermost rotation.
 rot = rot2rot([zr zr fick(:,1)], rot2rot([zr fick(:,2) zr], [fick(:,3) zr zr]));
 
+
+
+function EinH = raw2rot(data, gains, ref, option, HinF)
+
+%RAW2ROT.M
+%100896 version
+%Purpose	Produces rotations vectors from digitized data.
+%
+%PJB 2017-06-15
+%I am adding code to correctly process coil signals acquired where the HEAD
+%and FRAME coordinate systems are not equivalent. In VNEL, the Lasker
+%system head frame has been setup with a non-traditional coordinate system:
+%+X = Coming out of the LEFT ear
+%+Y = Coming out the BACK of the subject's head
+%+Z = Coming out the TOP of the subject's head
+%Thus, we will need to perform the following operations:
+%
+% Assumptions:
+% - From the coil system, we get [Coil_in_Frame]
+% - [Head] |= [Frame] (i.e, the head is NOT aligned with the frame
+% coordinate system
+% - [Head_in_Frame] = [0 0 -1]
+% - [Coil_in_Eye] = [Coil_in_Head]_@t=0 (i.e., we are assuming the subject
+% is looking forward at t=0)
+%
+% [Coil_in_Head] = [Head_in_Frame]^T[Coil_in_Frame]
+% [Eye_in_Head] = [Coil_in_Head][Coil_in_Eye]^T (i.e., 'taking a reference
+% position')
+% If the user does not input a 'HinF'
+%
+%Description	Remark
+%		The below description uses the right-hand rule with
+%		the following Cartesian coordinate system:
+%		x: about nasooccipital pointing forward
+%		y: horizontal (interaural) pointing leftward
+%		z: perpendicular to x and y pointing upward
+%
+%		Data format
+%		Matrix with 6 cols:
+%		(1) torsional field direction coil (x)
+%		(2) vertical field direction coil (y)
+%		(3) horizontal (interaural) field direction coil (z)
+%		(4) torsional field torsion coil (x)
+%		(5) vertical field torsion coil (y)
+%		(6) horizontal (interaural) field torsion coil (z)
+%
+%		Data is A/D converted by a 12-bit converter. Numbers range
+%		from 0 to 4096. Therefore 2048 have to be subtracted from
+%		each data channel.
+%
+%		Gains format
+%		Vector with 6 elements.
+%		During in-vitro calibrations the signals are inverted such
+%		that positive signals appear leftward, upward, and with
+%		positive torsion (extorsion of the right eye, intorsion of
+%		the left eye).
+%		(1) Maximal signal with direction coil sensitivity vector
+%		along x
+%		(2) along y
+%		(3) along z
+%		(4) Maximal signal with torsion coil sensitivity vector
+%		along x
+%		(5) along y
+%		(6) along z
+%
+%Input		data
+%		gains
+%		ref: reference position = 6 element vector or 0 (= first sample taken)
+%		option (optional): 0 = default (compute, rotate, and plot), 1 = compute only.
+%
+%Output		rot:	rotation vectors (see Haustein 1989): 3 cols (x, y, z - components).
+%		reg:	4 col vector (yslope, zslope, offset, stdev).
+%
+%Call		r = raw2rot(data, gains, option, ref_option)
+%
+
+('Checking arguments...');
+if nargin < 2
+    gains = [1 1 1 1 1 1];
+    %  disp('  Bad argument number.');
+    %  return;
+end;
+
+if nargin < 3
+    option = 0;
+    ref = 0;
+    HinF = 0;
+end;
+
+if nargin < 4
+    option = 0;
+    HinF = 0;
+end;
+
+if nargin < 5
+    HinF = 0;
+end;
+
+%disp('Checking input formats...');
+[dr dc] = size(data);
+if dc ~= 6
+    disp('  Data matrix must have 6 cols.');
+    return;
+end;
+
+[gr gc] = size(gains);
+if (gr~= 1)
+    gains = gains';
+end;
+
+[gr gc] = size(gains);
+if (gc ~= 6) & (gr ~= 1)
+    disp('  Gains vector must have 6 elements...');
+    return;
+end;
+
+%disp('Constructing reference sample');
+if (length(ref) == 6)
+    data = [ref; data];
+end;
+
+%disp('Dividing all data channels with gains (sign correction included)...');
+
+dxv = (data(:,1)) ./ gains(1);
+dyv = (data(:,2)) ./ gains(2);
+dzv = (data(:,3)) ./ gains(3);
+
+txv = (data(:,4)) ./ gains(4);
+tyv = (data(:,5)) ./ gains(5);
+tzv = (data(:,6)) ./ gains(6);
+
+clear data;
+
+%Length of coil vectors
+dlv = sqrt(dxv.^2 + dyv.^2 + dzv.^2);
+%tlv = sqrt(txv.^2 + tyv.^2 + tzv.^2);
+
+%Inproduct of both coil vectors
+inpv = dxv.*txv + dyv.*tyv + dzv.*tzv;
+
+%Orthogonalize torsional vector
+toxv = txv - ((inpv .* dxv) ./ (dlv.^2));
+clear txv;
+toyv = tyv - ((inpv .* dyv) ./ (dlv.^2));
+clear tyv;
+tozv = tzv - ((inpv .* dzv) ./ (dlv.^2));
+clear tzv inpv;
+
+%Length of orthogonalized torsional vector
+tolv = sqrt(toxv.^2 + toyv.^2 + tozv.^2);
+
+%Construct instantaneous new orthogonal coordinate system of coils
+f11 = dxv ./ dlv; clear dxv;
+f12 = dyv ./ dlv; clear dyv;
+f13 = dzv ./ dlv; clear dzv dlv;
+f21 = toxv ./ tolv; clear toxv;
+f22 = toyv ./ tolv; clear toyv;
+f23 = tozv ./ tolv; clear tozv tolv;
+f31 = [f12.*f23-f13.*f22];
+f32 = [f13.*f21-f11.*f23];
+f33 = [f11.*f22-f12.*f21];
+
+% Create rotation vectors from rotation matrix.
+denom = 1+f11+f22+f33;
+rot = [(f23-f32) (f31-f13) (f12-f21)] ./ denom(:,[1 1 1]);
+
+% NOTE: At this point, we have constructed our time series of rotation
+% vectors for the COIL in the FRAME, or [Coil_in_Frame]
+CinF = rot;
+
+if length(HinF) == 3
+    % If the user sent a [3x1] rotation vector describing [Head_in_Frame],
+    % apply that rotation.
+    CinH = rot2rot(-HinF,CinF);
+else
+    % Used in cases where the user is assuming the [Frame] coordinate
+    % system is identical to the [Head] coordinate system.
+    CinH = CinF;
+end
+
+% Apply reference position (taken from first sample).
+% i.e., Compute [Eye_in_Head] from [Coil_in_Head][Coil_in_Eye]^T
+%
+% Where:
+% - [Coil_in_Eye] = [Coil_in_Head]_@t=0 (i.e., we are assuming the subject
+% is looking forward at t=0)
+CinE = CinH(1,:);
+EinH = rot2rot(CinH,-CinE);
+
+if (length(ref) == 6)
+    EinH = EinH(2:length(EinH),:);
+end;
+
+
 function nrot = rot2rot(rot1, rot2)
 
 %ROT2ROT.M
@@ -705,32 +979,89 @@ function nrot = rot2rot(rot1, rot2)
 %              be equal in both args).  So it can, for instance,
 %              be used to calculate eye in head from head in
 %              space and eye in space.
+
 if nargin ~= 2
-  disp('Must have two arguments!')
-  return
+    disp('Must have two arguments!')
+    return
 end;
 
 [rr cc] = size(rot1);
 if cc ~= 3
-   disp('First arg must have 3 columns');
-   return;
+    disp('First arg must have 3 columns');
+    return;
 end;
 
 [rr cc] = size(rot2);
 if cc ~= 3
-   disp('Second arg must have 3 columns');
-   return
+    disp('Second arg must have 3 columns');
+    return
 end
 
 % Whichever argument is just a single row, expand it to the
 % same number of rows as the other argument.
 
 if size(rot1,1) == 1
-  rot1 = ones(size(rot2,1),1) * rot1;
+    rot1 = ones(size(rot2,1),1) * rot1;
 elseif size(rot2,1) == 1
-  rot2 = ones(size(rot1,1),1) * rot2;
+    rot2 = ones(size(rot1,1),1) * rot2;
 end
 
 cr = cross(rot1',rot2')';
 ir = dot(rot1', rot2')' * [1 1 1];
 nrot = (rot1+rot2+cr)./(1-ir);
+
+
+
+
+
+function fick = rot2fick(rot)
+%Purpose Converts rotation vectors into Fick angles
+%Algorithm from a C-program written by Th. Haslwanter in 1990.
+% Essentially does rot2mat() then mat2fick(), but we only
+% compute the 3 elements of the mat that we need for Fick.
+
+
+x = rot(:,1);
+y = rot(:,2);
+z = rot(:,3);
+clear rot;
+
+scalar = sqrt(x.*x + y.*y + z.*z);
+alpha = 2*atan(scalar);
+
+% Avoid divide-by-zero errors.
+zr = scalar == 0;
+scalar(zr) = 1;
+
+nx = x ./ scalar; %normalize
+ny = y ./ scalar;
+nz = z ./ scalar;
+clear x y z
+
+sn = sin(alpha);
+cs = cos(alpha);
+clear alpha
+
+%nx2 = nx.*nx;
+%ny2 = ny.*ny;
+%nz2 = nz.*nz;
+%f11 = nx2 + cs .* (ny2 + nz2);
+%f22 = ny2 + cs .* (nz2 + nx2);
+%f33 = nz2 + cs .* (nx2 + ny2);
+
+%f12 = nx .* ny .* (1-cs) - nz .* sn;
+%f23 = ny .* nz .* (1-cs) - nx .* sn;
+f31 = nz .* nx .* (1-cs) - ny .* sn;
+
+%f13 = nx .* nz .* (1-cs) + ny .* sn;
+f21 = ny .* nx .* (1-cs) + nz .* sn;
+f32 = nz .* ny .* (1-cs) + nx .* sn;
+
+clear sn cs
+clear nx ny nz
+
+vert = asin(f31);
+horz = asin(f21 ./ cos(vert));
+tors = asin(f32 ./ cos(vert));
+
+fick = [horz -vert tors] .* 180 / pi;

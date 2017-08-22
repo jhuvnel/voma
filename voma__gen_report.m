@@ -629,6 +629,8 @@ fill(rpt);
 
 rptview(reportname,'pdf');
 
+save([reportname '.mat'],'file_params');
+
 % Update handles structure
 guidata(hObject, handles);
 

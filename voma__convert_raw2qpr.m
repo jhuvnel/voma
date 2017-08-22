@@ -25,7 +25,7 @@ function varargout = voma__convert_raw2qpr(varargin)
 
 % Edit the above text to modify the response to help voma__convert_Raw2qpr
 
-% Last Modified by GUIDE v2.5 06-Feb-2017 17:03:31
+% Last Modified by GUIDE v2.5 03-Jul-2017 23:10:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -179,6 +179,23 @@ switch index_selected
         set(handles.rawfile_opt2,'Visible','Off')
         set(handles.rawfile_opt3,'Visible','Off')
         set(handles.lasker_panel,'Visible','Off')
+        set(handles.labdev_panel,'Visible','Off')
+        set(handles.coil_sys_gen_panel,'Visible','On')
+
+        set(handles.rawfile_opt1,'Value',1)
+        handles.params.file_format = 1;
+        
+    case 5 % This is a case used for FIck angle data. Currently this is a kludge to analyze my Lasker System data
+        % UPDATE %
+        set(handles.lasker_stim_chan,'Visible','On')
+        
+        set(handles.rawfile_opt1,'Visible','On')
+        set(handles.rawfile_opt1,'String','VORDAQ-Only Files ')
+        set(handles.rawfile_opt2,'Visible','On')
+        set(handles.rawfile_opt2,'String','VORDAQ + CED Files')
+        set(handles.rawfile_opt3,'Visible','On')
+        set(handles.rawfile_opt3,'String','CED-Only Files')
+        set(handles.lasker_panel,'Visible','On')
         set(handles.labdev_panel,'Visible','Off')
         set(handles.coil_sys_gen_panel,'Visible','On')
 
@@ -389,6 +406,7 @@ switch handles.params.file_format
                                     % axes of the coils system to the 
                                     % '[+X,+Y,+Z}' of the subject's head.
                                     % details)
+                                    data_rot = 3;
                                 case 2 % Ross 710, Lasker Coil System, with the animal
                                     % oriented in 'starting position #2'. The term 'starting position'
                                     % refers to the 'zero' position as defined by the Acutrol
@@ -1360,9 +1378,14 @@ switch handles.params.file_format
             Parameters(n-1).SoftwareVer.SegSoftware = Data.segment_code_version;
             Parameters(n-1).SoftwareVer.QPRconvGUI = mfilename;
             
+            if isfield('Data','start_t')
+                Results.raw_start_t = Data.start_t;
+                Results.raw_end_t = Data.end_t;
+            end
+            
             switch handles.params.system_config
                 
-                case 1
+                case {1,5}
                     switch handles.params.file_format
                         case 1
                             Parameters(n-1).DAQ = 'Lasker_VORDAQ';
@@ -1373,6 +1396,10 @@ switch handles.params.file_format
                         case 3
                             Parameters(n-1).DAQ = 'Lasker_CED';
                             Parameters(n-1).DAQ_code = 3;
+                            
+                        case 4
+                            Parameters(n-1).DAQ = 'Fick Angles';
+                            Parameters(n-1).DAQ_code = 5; % KLUDGE lets just mark this as a MVI file so it can be processed using fick angles.
                             
                     end
                     
@@ -1390,18 +1417,27 @@ switch handles.params.file_format
                     headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
                     
                     headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
-                    
-                    switch raw{n,10}
-                        case {'LARP-Axis','LA','LARP','RP'}
-                            Stimulus{n-1} = {headmpu_lrz(:,1)};
-                        case {'RALP-Axis','LP','RALP','RA'}
-                            Stimulus{n-1} = {headmpu_lrz(:,2)};
+                    switch raw{n,9}
+                        
+                        case 'Electrical Only'
+                            Stimulus{n-1} = {Data.Stim_Trig};
+                            Stim_t{n-1} = {Data.Time_Stim(:,1)};
                             
-                        case {'LHRH-Axis','LH','LHRH','RH'}
-                            Stimulus{n-1} = {headmpu_lrz(:,3)};
-                            
+                            stim_ind{n-1} ={[]};
+                        otherwise
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,1)};
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,2)};
+                                    
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,3)};
+                                    
+                            end
+                            stim_ind{n-1} = {[]};
                     end
-                    stim_ind{n-1} = {[]};
+                    
                 case 2
                     Parameters(n-1).DAQ = 'McGill';
                     Parameters(n-1).DAQ_code = 4;
@@ -1466,7 +1502,7 @@ switch handles.params.file_format
                             % vector w/ the VOG time vector.
                             Stim_t{n-1} = {Data.Time_Eye};
                         
-                        case 'Activation'
+                        case {'Activation','Adaptation'}
                             
                             Stimulus{n-1} = {Data.Stim_Trig};
                             Stim_t{n-1} = {Data.Time_Eye};
@@ -1965,3 +2001,12 @@ Rroll = [1 0 0;
          0 sr  cr];
      
 R = Ryaw*Rpitch*Rroll;
+
+
+% --- Executes on button press in mat_file_format.
+function mat_file_format_Callback(hObject, eventdata, handles)
+% hObject    handle to mat_file_format (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mat_file_format

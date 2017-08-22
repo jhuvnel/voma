@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 06-Mar-2017 15:54:19
+% Last Modified by GUIDE v2.5 14-Jun-2017 17:20:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,14 +67,16 @@ handles.params.stim_intensity = '';
 
 handles.params.system_code = 1;
 
-handles.params.plot_MPUData = 1;
-handles.params.plot_MVIGPIO = 1;
+handles.params.plot_MPUGyroData = 1;
+handles.params.plot_MPUAccelData = 1;
+handles.params.plot_IPR_flag = 1;
+handles.params.plot_TrigLine = 1;
 handles.params.plot_LEData = 1;
 handles.params.plot_REData = 1;
 
 handles.params.reloadflag = 0;
 
-handles.params.gpio_mult = 1;
+handles.params.trig_mult = 1;
 
 handles.params.goggleID = 1;
 
@@ -90,7 +92,8 @@ handles.params.gpio_trig_opt = 1;
 set(handles.LaskerSystPanel,'Visible','Off')
 
 set(handles.mpuoffsetpanel,'Visible','On')
-
+handles.params.upper_trigLev = str2double(get(handles.upper_trigLev,'String'));
+handles.params.lower_trigLev = str2double(get(handles.lower_trigLev,'String'));
 [handles] = update_seg_filename(hObject, eventdata, handles);
 
 % Update handles structure
@@ -141,8 +144,8 @@ if user_seg_flag
     else
         
         
-        [b1,i_start_stim] = min(abs(handles.Segment.Time_Stim(1,:) - time_cutout_s(1,1)));
-        [b2,i_end_stim] = min(abs(handles.Segment.Time_Stim(1,:) - time_cutout_s(2,1)));
+        [b1,i_start_stim] = min(abs(handles.Segment.Time_Stim(:,1) - time_cutout_s(1,1)));
+        [b2,i_end_stim] = min(abs(handles.Segment.Time_Stim(:,1) - time_cutout_s(2,1)));
         
         
     end
@@ -196,7 +199,7 @@ Segment.Time_Eye = handles.Segment.Time_Eye(i_start_eye:i_end_eye);
 if isvector(handles.Segment.Time_Stim) % This is kludge to process either MVI LD VOG files, or PJB Lasker system elec. stime data. This needs to be rewritten
     Segment.Time_Stim = handles.Segment.Time_Stim(i_start_stim:i_end_stim);
 else
-    Segment.Time_Stim = handles.Segment.Time_Stim(:,i_start_stim:i_end_stim);
+    Segment.Time_Stim = handles.Segment.Time_Stim(i_start_stim:i_end_stim,:);
 end
 
 
@@ -226,44 +229,74 @@ Segment.HeadMPUAccel_Z = handles.Segment.HeadMPUAccel_Z(i_start_stim:i_end_stim)
 handles.Segment = Segment;
 
 % Update plots!
-plot_segment_data(hObject, eventdata, handles)
+keep_plot_limit = false; % We do not want to keep the same plot limits
+
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 
 guidata(hObject,handles)
 end
 
 
-function plot_segment_data(hObject, eventdata, handles)
+function plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
+
+if keep_plot_limit
+    xLimits = get(gca,'XLim');  %# Get the range of the x axis
+    yLimits = get(gca,'YLim');  %# Get the range of the y axis
+end
 
 
 % Reset and plot segment
 axes(handles.data_plot)
+
 cla reset
 
 hold on
 
-if handles.params.plot_MPUData == 1
-    %plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-X')
-    %plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-Y')
-    %plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-Z')
-    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUAccel_X,'color',[1 0.65 0],'LineStyle','--','DisplayName','MPU-X')
-    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUAccel_Y,'color',[0.55 0.27 0.07],'LineStyle','--','DisplayName','MPU-Y')
-    plot(handles.data_plot,handles.Segment.Time_Stim,handles.Segment.HeadMPUAccel_Z,'color','r','LineStyle','--','DisplayName','MPU-Z')
+
+if handles.params.plot_MPUGyroData == 1
+    try
+        plot(handles.data_plot,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X')
+        plot(handles.data_plot,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y')
+        plot(handles.data_plot,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-GYRO-Z')
+        
+    catch
+        
+        plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X')
+        plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y')
+        plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-GYRO-Z')
+    end
 end
 
-if handles.params.plot_MVIGPIO == 1
+if handles.params.plot_MPUAccelData == 1
+    try
+        plot(handles.data_plot,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUAccel_X,'color',[1 0.65 0],'LineStyle','--','DisplayName','MPU-ACCEL-X')
+        plot(handles.data_plot,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUAccel_Y,'color',[0.55 0.27 0.07],'LineStyle','--','DisplayName','MPU-ACCEL-Y')
+        plot(handles.data_plot,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUAccel_Z,'color','r','LineStyle','--','DisplayName','MPU-ACCEL-Z')
+    catch
+        plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.HeadMPUAccel_X,'color',[1 0.65 0],'LineStyle','--','DisplayName','MPU-ACCEL-X')
+        plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.HeadMPUAccel_Y,'color',[0.55 0.27 0.07],'LineStyle','--','DisplayName','MPU-ACCEL-Y')
+        plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.HeadMPUAccel_Z,'color','r','LineStyle','--','DisplayName','MPU-ACCEL-Z')
+    end
+end
+
+if handles.params.plot_TrigLine == 1
     switch handles.params.system_code
         
         case 1 %NOTE: For the LD VOG system, we plot the GPIO line as a function of the EYE time stamps, since the GPIO line is sampled with the eye data
-            plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.Stim_Trig*handles.params.gpio_mult,'color','k','DisplayName','Stim - Trig')
+            plot(handles.data_plot,handles.Segment.Time_Eye,handles.Segment.Stim_Trig*handles.params.trig_mult,'color','k','DisplayName','Stim - Trig')
         case 2
             
             if isempty(handles.Segment.Stim_Trig)
                 %                 Stim = [];
             else
-                Stim = handles.Segment.Time_Stim(1,:);
-                plot(handles.data_plot,Stim,ones(1,length(Stim))*handles.params.gpio_mult,'color','k','Marker','*','DisplayName','Stim - Trig')
                 
+                if handles.params.plot_IPR_flag == 1
+                    plot(handles.data_plot,handles.Segment.Time_Stim(:,1),handles.Segment.Stim_Trig,'color','k','Marker','*','DisplayName','Stim - Trig')
+                else
+                    Stim = handles.Segment.Time_Stim(:,1);
+                    plot(handles.data_plot,Stim,ones(1,length(Stim))*handles.params.trig_mult,'color','k','Marker','*','DisplayName','Stim - Trig')
+                end
             end
     end
 end
@@ -284,6 +317,12 @@ xlabel('Time [s]')
 ylabel('Stimulus Amplitude')
 
 legend('show')
+
+if keep_plot_limit
+    set(gca,'XLim',xLimits);
+    set(gca,'YLim',yLimits);
+end
+
 end
 
 % --- Executes on button press in save_segment.
@@ -291,7 +330,12 @@ function save_segment_Callback(hObject, eventdata, handles)
 % hObject    handle to save_segment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
 folder_name = uigetdir('','Select Directory to Save the Segmented Data');
+
+% folder_name = handles.folder_name;
 
 cd(folder_name)
 Data = handles.Segment;
@@ -671,7 +715,7 @@ switch handles.params.system_code
         DAQ_code = 3; % Lasker System as recorded by a CED 1401 device
         
         
-        [RawData] = voma__processeyemovements(PathName,FileName,FieldGains,coilzeros,ref,system_code,DAQ_code);
+        [RawData] = voma__processeyemovements(PathName,FileName,FieldGains,coilzeros,ref,system_code,DAQ_code,1);
         
         % Attempt to
         
@@ -725,13 +769,13 @@ switch handles.params.system_code
         end
         
         % Kludge for now!
-        Data.HeadMPUVel_X = zeros(length(Data.Time_Stim),1);
-        Data.HeadMPUVel_Y = zeros(length(Data.Time_Stim),1);
+        Data.HeadMPUVel_X = zeros(length(Data.Time_Eye),1);
+        Data.HeadMPUVel_Y = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUVel_Z = RawData.Var_x083;
         
-        Data.HeadMPUAccel_X = zeros(length(Data.Time_Stim),1);
-        Data.HeadMPUAccel_Y = zeros(length(Data.Time_Stim),1);
-        Data.HeadMPUAccel_Z = zeros(length(Data.Time_Stim),1);
+        Data.HeadMPUAccel_X = zeros(length(Data.Time_Eye),1);
+        Data.HeadMPUAccel_Y = zeros(length(Data.Time_Eye),1);
+        Data.HeadMPUAccel_Z = zeros(length(Data.Time_Eye),1);
         
     otherwise
         
@@ -739,6 +783,89 @@ switch handles.params.system_code
         
 end
 
+% Check all saved data variables and make sure they are COLUMN vectors
+if isrow(Data.LE_Position_X)
+    Data.LE_Position_X = Data.LE_Position_X';
+end
+if isrow(Data.LE_Position_Y)
+    Data.LE_Position_Y = Data.LE_Position_Y';
+end
+if isrow(Data.LE_Position_Z)
+    Data.LE_Position_Z = Data.LE_Position_Z';
+end
+if isrow(Data.RE_Position_X)
+    Data.RE_Position_X = Data.RE_Position_X';
+end
+if isrow(Data.RE_Position_Y)
+    Data.RE_Position_Y = Data.RE_Position_Y';
+end
+if isrow(Data.RE_Position_Z)
+    Data.RE_Position_Z = Data.RE_Position_Z';
+end
+if isrow(Data.LE_Velocity_X)
+    Data.LE_Velocity_X = Data.LE_Velocity_X';
+end
+if isrow(Data.LE_Velocity_Y)
+    Data.LE_Velocity_Y = Data.LE_Velocity_Y';
+end
+if isrow(Data.LE_Velocity_Z)
+    Data.LE_Velocity_Z = Data.LE_Velocity_Z';
+end
+if isrow(Data.LE_Velocity_LARP)
+    Data.LE_Velocity_LARP = Data.LE_Velocity_LARP';
+end
+if isrow(Data.LE_Velocity_RALP)
+    Data.LE_Velocity_RALP = Data.LE_Velocity_RALP';
+end
+if isrow(Data.RE_Velocity_X)
+    Data.RE_Velocity_X = Data.RE_Velocity_X';
+end
+if isrow(Data.RE_Velocity_Y)
+    Data.RE_Velocity_Y = Data.RE_Velocity_Y';
+end
+if isrow(Data.RE_Velocity_Z)
+    Data.RE_Velocity_Z = Data.RE_Velocity_Z';
+end
+if isrow(Data.RE_Velocity_LARP)
+    Data.RE_Velocity_LARP = Data.RE_Velocity_LARP';
+end
+if isrow(Data.RE_Velocity_RALP)
+    Data.RE_Velocity_RALP = Data.RE_Velocity_RALP';
+end
+if isrow(Data.HeadMPUVel_X)
+    Data.HeadMPUVel_X = Data.HeadMPUVel_X';
+end
+if isrow(Data.HeadMPUVel_Y)
+    Data.HeadMPUVel_Y = Data.HeadMPUVel_Y';
+end
+if isrow(Data.HeadMPUVel_Z)
+    Data.HeadMPUVel_Z = Data.HeadMPUVel_Z';
+end
+if isrow(Data.HeadMPUAccel_X)
+    Data.HeadMPUAccel_X = Data.HeadMPUAccel_X';
+end
+if isrow(Data.HeadMPUAccel_Y)
+    Data.HeadMPUAccel_Y = Data.HeadMPUAccel_Y';
+end
+if isrow(Data.HeadMPUAccel_Z)
+    Data.HeadMPUAccel_Z = Data.HeadMPUAccel_Z';
+end
+if isrow(Data.Time_Eye)
+    Data.Time_Eye = Data.Time_Eye';
+end
+if ismatrix(Data.Time_Stim) % i.e., we are dealing with a stimulus timestamp that records an ONSET and OFFSET time (for example, if a pulsatile trigger is sent to an event channel on a CED that records the rising and falling edge of a pulse)
+    a = size(Data.Time_Stim);
+    if a(2) > a(1)
+        Data.Time_Stim = Data.Time_Stim';
+    end
+else
+    if isrow(Data.Time_Stim)
+        Data.Time_Stim = Data.Time_Stim';
+    end
+end
+if isrow(Data.Stim_Trig )
+    Data.Stim_Trig  = Data.Stim_Trig';
+end
 
 
 % Save the whole data trace in the GUI handles.
@@ -757,7 +884,8 @@ handles.Segment.start_t = Data.Time_Eye(1);
 handles.Segment.end_t = Data.Time_Eye(end);
 
 % Update the GUI plot
-plot_segment_data(hObject, eventdata, handles)
+keep_plot_limit = false; % Don't keep the plot limits, we are loading a new file
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 
 guidata(hObject,handles)
@@ -995,40 +1123,42 @@ function Untitled_1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 end
 
-% --- Executes on button press in plot_MPUData.
-function plot_MPUData_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_MPUData (see GCBO)
+% --- Executes on button press in plot_MPUGyroData.
+function plot_MPUGyroData_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_MPUGyroData (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-    handles.params.plot_MPUData = 1;
+    handles.params.plot_MPUGyroData = 1;
 else
-    handles.params.plot_MPUData = 0;
+    handles.params.plot_MPUGyroData = 0;
 end
 
 % Update plots!
-plot_segment_data(hObject, eventdata, handles)
+keep_plot_limit = true; % We want to keep the same plot limits
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 guidata(hObject,handles)
-% Hint: get(hObject,'Value') returns toggle state of plot_MPUData
+% Hint: get(hObject,'Value') returns toggle state of plot_MPUGyroData
 end
 
-% --- Executes on button press in plot_MVIGPIO.
-function plot_MVIGPIO_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_MVIGPIO (see GCBO)
+% --- Executes on button press in plot_TrigLine.
+function plot_TrigLine_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_TrigLine (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-    handles.params.plot_MVIGPIO = 1;
+    handles.params.plot_TrigLine = 1;
 else
-    handles.params.plot_MVIGPIO = 0;
+    handles.params.plot_TrigLine = 0;
 end
 
 % Update plots!
-plot_segment_data(hObject, eventdata, handles)
+keep_plot_limit = true; % We want to keep the same plot limits
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 guidata(hObject,handles)
-% Hint: get(hObject,'Value') returns toggle state of plot_MVIGPIO
+% Hint: get(hObject,'Value') returns toggle state of plot_TrigLine
 end
 
 % --- Executes on button press in plot_LEData.
@@ -1043,7 +1173,9 @@ else
 end
 
 % Update plots!
-plot_segment_data(hObject, eventdata, handles)
+keep_plot_limit = true; % We want to keep the same plot limits
+
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of plot_LEData
@@ -1061,30 +1193,33 @@ else
 end
 
 % Update plots!
-plot_segment_data(hObject, eventdata, handles)
+keep_plot_limit = true; % We want to keep the same plot limits
+
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 guidata(hObject,handles)
 % Hint: get(hObject,'Value') returns toggle state of plot_REData
 end
 
 
-function gpio_mult_Callback(hObject, eventdata, handles)
-% hObject    handle to gpio_mult (see GCBO)
+function trig_mult_Callback(hObject, eventdata, handles)
+% hObject    handle to trig_mult_text (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 input = str2double(get(hObject,'String'));
-handles.params.gpio_mult = input;
+handles.params.trig_mult = input;
+keep_plot_limit = true; % We want to keep the same plot limits
 
-plot_segment_data(hObject, eventdata, handles)
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 guidata(hObject,handles)
-% Hints: get(hObject,'String') returns contents of gpio_mult as text
-%        str2double(get(hObject,'String')) returns contents of gpio_mult as a double
+% Hints: get(hObject,'String') returns contents of trig_mult_text as text
+%        str2double(get(hObject,'String')) returns contents of trig_mult_text as a double
 end
 
 % --- Executes during object creation, after setting all properties.
-function gpio_mult_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to gpio_mult (see GCBO)
+function trig_mult_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to trig_mult_text (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1380,8 +1515,9 @@ handles.Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z - Z_off;
 set(handles.Xoffset_txt,'String',num2str(X_off))
 set(handles.Yoffset_txt,'String',num2str(Y_off))
 set(handles.Zoffset_txt,'String',num2str(Z_off))
+keep_plot_limit = true; % We want to keep the same plot limits
 
-plot_segment_data(hObject, eventdata, handles)
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
 
 guidata(hObject,handles)
 end
@@ -1414,12 +1550,17 @@ end
 end
 
 % --- Executes on button press in auto_segment.
-function auto_segment_Callback(hObject, eventdata, handles)
+function auto_segment_Callback(hObject, eventdata, handles,upper_trigLev,lower_trigLev)
 % hObject    handle to auto_segment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
+if ~exist('upper_trigLev','var')
+    upper_trigLev = 0;
+end
+if ~exist('lower_trigLev','var')
+    lower_trigLev = 0;
+end
 [choice] = auto_seg_dialog(hObject, eventdata, handles);
 
 switch choice.stim
@@ -1428,8 +1569,8 @@ switch choice.stim
         
         % Let's detect the ON/OFF times based on the GPIO trigger line.
         inds = [1:length(handles.Segment.Stim_Trig)];
-        on_samp = inds([false ; (diff(handles.Segment.Stim_Trig) > 0)]);
-        off_samp = inds([false ; (diff(handles.Segment.Stim_Trig) < 0)]);
+        on_samp = inds([false ; (diff(handles.Segment.Stim_Trig) > upper_trigLev)]);
+        off_samp = inds([false ; (diff(handles.Segment.Stim_Trig) < lower_trigLev)]);
         
         % NOTE: I should check if there are unequal numbers of detected ON and
         % OFF triggers
@@ -1466,9 +1607,9 @@ switch choice.stim
         
         seg_times(seg_times(:,2)>length(inds),2) = length(inds)*ones(size(seg_times(seg_times(:,2)>length(inds),2),2),1);
         
-        stem(handles.Segment.Time_Eye(seg_times(:,1)),handles.params.gpio_mult*ones(length(seg_times(:,1)),1))
+        stem(handles.Segment.Time_Eye(seg_times(:,1)),handles.params.trig_mult*ones(length(seg_times(:,1)),1))
         
-        stem(handles.Segment.Time_Eye(seg_times(:,2)),handles.params.gpio_mult*0.75*ones(length(seg_times(:,1)),1))
+        stem(handles.Segment.Time_Eye(seg_times(:,2)),handles.params.trig_mult*0.75*ones(length(seg_times(:,1)),1))
         
         % Now that we have our segmentation times, lets load the
         % user-generated excel sheet containing the file names, and begin
@@ -1486,6 +1627,9 @@ switch choice.stim
         
         pre_auto_Seg_start_t = handles.Segment.start_t;
         pre_auto_Seg_end_t = handles.Segment.end_t;
+        
+%         handles.folder_name = uigetdir('','Select Directory to Save the Segmented Data');
+
         
         for k=1:size(seg_times,1)
             
@@ -1522,6 +1666,145 @@ switch choice.stim
             
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
             
+        end
+        
+    case 2 % Electrical only Sinusoids
+        Time = handles.Segment.Time_Stim(:,1);
+        
+        % Let's detect the ON/OFF times based on the GPIO trigger line.
+        inds = [1:length(handles.Segment.Stim_Trig)];
+        on_samp = inds([(handles.Segment.Stim_Trig > upper_trigLev)])';
+        off_samp = inds([(handles.Segment.Stim_Trig < lower_trigLev)])';
+        
+        % NOTE: I should check if there are unequal numbers of detected ON and
+        % OFF triggers
+        
+        % Let's create a trigger level to determine the PAUSES between
+        % stimuli levels. We will set this level to half of the interstimulus interval.
+        % We will relaize this by adding half of the ISI to the ON+OFF
+        % times.
+%         trig_level = ((choice.ontime + choice.offtime) + choice.ISI/2)*(handles.Segment.Fs/1000);
+        trig_level = ((choice.ontime + choice.offtime) + choice.ISI/2)/1000; %For CED trigger times, the data is time-stamped on arrival and NOT synchronously sampled.
+        
+        stim_interval_startpoints = [ on_samp([false  ;(diff(Time(on_samp)) > trig_level)])];
+        
+        
+        stim_interval_endpoints = [off_samp([(diff(Time(off_samp)) > trig_level) ; false])];
+        
+        preposttime = choice.preposttime/1000;
+        % Create a 'start_val' variable that is either on_samp(1) - half of
+        % the inter-stimulus-interval, or one (i.e., the first time inde)
+        % if that value is negative.
+%         start_val = max(on_samp(1)-(choice.ISI/2)*(handles.Segment.Fs/1000),1);
+        start_val = max(Time(on_samp(1))-(preposttime),Time(1));
+        end_val = min(Time(off_samp(end))+(preposttime),Time(end));
+%                 timedif = Time - start_val;
+%                 timedif(timedif<0) = nan(length(timedif(timedif<0)),1);
+%                 [a1,a2] = min(timedif);
+%         seg_times = [start_val round((stim_interval_startpoints(1)-stim_interval_endpoints(1))/2+stim_interval_endpoints(1))];
+        seg_times_a = [start_val ; Time(stim_interval_startpoints) - preposttime];
+        seg_times_b = [Time(stim_interval_endpoints) + preposttime ; end_val];
+        
+        seg_times = [seg_times_a seg_times_b];
+%         for k=1:length(stim_interval_startpoints)
+%             
+%             if k==length(stim_interval_startpoints)
+%                 seg_times = [seg_times ; round((stim_interval_startpoints(end)-stim_interval_endpoints(end))/2+stim_interval_endpoints(end)) on_samp(end)+(choice.ISI/2)*(handles.Segment.Fs/1000)];
+%                 
+%             else
+%                 seg_times = [seg_times ; seg_times(k,1)-preposttime seg_times(k,2)+preposttime];
+%                 
+%                 %                 seg_times = [seg_times ; round((stim_interval_startpoints(k-1)-stim_interval_endpoints(k-1))/2+stim_interval_endpoints(k-1)) round((stim_interval_startpoints(k)-stim_interval_endpoints(k))/2+stim_interval_endpoints(k))];
+%             end
+%             
+%         end
+        
+%         seg_times(seg_times(:,2)>length(inds),2) = length(inds)*ones(size(seg_times(seg_times(:,2)>length(inds),2),2),1);
+%         seg_times = round(seg_times);
+        stem(seg_times(:,1),handles.params.trig_mult*ones(length(seg_times(:,1)),1))
+        
+        stem(seg_times(:,2),handles.params.trig_mult*0.75*ones(length(seg_times(:,1)),1))
+        
+        % Now that we have our segmentation times, lets load the
+        % user-generated excel sheet containing the file names, and begin
+        % segmenting!
+        
+        [filename, pathname] = ...
+            uigetfile('*.xlsx','Please load an Excel spreadsheet containing the segmented filenames in the first row of the first sheet.');
+        
+        [num,txt,raw] = xlsread([pathname filename]);
+        
+        pre_auto_i_start_eye =  handles.i_start_eye;
+        pre_auto_i_end_eye =  handles.i_end_eye;
+        pre_auto_i_start_stim =  handles.i_start_stim;
+        pre_auto_i_end_stim =  handles.i_end_stim;
+        
+        pre_auto_Seg_start_t = handles.Segment.start_t;
+        pre_auto_Seg_end_t = handles.Segment.end_t;
+        
+        
+        % Find Stim start times
+        timedif1 = repmat(handles.Segment.Time_Eye(:,1),1,length(seg_times(:,1)')) - repmat(seg_times(:,1)',length(handles.Segment.Time_Eye(:,1)),1);
+        timedif1(timedif1<0) = nan;
+        [a1,a2] = min(timedif1);
+        eye_startinds = a2;
+        
+        timedif2 = repmat(handles.Segment.Time_Eye(:,1),1,length(seg_times(:,2)')) - repmat(seg_times(:,2)',length(handles.Segment.Time_Eye(:,1)),1);
+        timedif2(timedif2<0) = nan;
+        [a1,a2] = min(timedif2);
+        eye_endinds = a2;
+        
+        % Find Stim start times
+        timedif3 = repmat(handles.Segment.Time_Stim(:,1),1,length(seg_times(:,1)')) - repmat(seg_times(:,1)',length(handles.Segment.Time_Stim(:,1)),1);
+        timedif3(timedif3<0) = nan;
+        [a1,a2] = min(timedif3);
+        stim_startinds = a2;
+        
+        timedif4 = repmat(handles.Segment.Time_Stim(:,1),1,length(seg_times(:,2)')) - repmat(seg_times(:,2)',length(handles.Segment.Time_Stim(:,1)),1);
+        timedif4(timedif4<0) = nan;
+        [a1,a2] = min(timedif4);
+        stim_endinds = a2;
+        
+        
+        
+        
+        for k=1:size(seg_times,1)
+            
+            handles.i_start_eye = eye_startinds(k);
+            handles.i_end_eye = eye_endinds(k);
+            
+            
+           
+            handles.i_start_stim = stim_startinds(k);
+            handles.i_end_stim = stim_endinds(k);
+            
+            
+            handles.Segment.start_t = handles.Segment.Time_Eye(handles.i_start_eye);
+            handles.Segment.end_t = handles.Segment.Time_Eye(handles.i_end_eye);
+            
+            
+            
+            [handles] = new_segment_Callback(hObject, eventdata, handles,false);
+            
+            handles.params.segment_filename = [raw{k,1} '.mat'];
+            
+            save_segment_Callback(hObject, eventdata, handles);
+            
+            
+            
+            
+            [handles] = reload_raw_Callback(hObject, eventdata, handles);
+            
+            handles.i_start_eye = pre_auto_i_start_eye;
+            handles.i_end_eye = pre_auto_i_end_eye;
+            handles.i_start_stim = pre_auto_i_start_stim;
+            handles.i_end_stim = pre_auto_i_end_stim;
+            
+            
+            handles.Segment.start_t =  pre_auto_Seg_start_t;
+            handles.Segment.end_t = pre_auto_Seg_end_t;
+            
+            [handles] = new_segment_Callback(hObject, eventdata, handles,false);
         end
         
 end
@@ -1563,7 +1846,7 @@ txt = uicontrol('Parent',d,...
 popup = uicontrol('Parent',d,...
     'Style','popup',...
     'Position',[75 70 225 25],...
-    'String',{'Pulse Train';'Electric Only Sinusoid';'Mechanical Sinusoid'},...
+    'String',{'Pulse Train';'Electric Only Sinusoid [CED]';'Mechanical Sinusoid'},...
     'Callback',@choose_stimuli_callback);
 %             'Callback',{@popup_callback,hObject, eventdata, handles});
 
@@ -1594,12 +1877,9 @@ switch choice
     case 'Pulse Train'
         options = pulse_train_dialog(hObject, eventdata, handles);
         options.stim = 1;
-    case 'Electric Only Sinusoid'
-        % If the user is processing an electrical-only sinusoid,
-        % they need to input the stimulus parameters
-        
-        %                 [sine_options]=sine_param_dialog(hObject, eventdata, handles);
-        %                 options.sin = sine_options;
+    case 'Electric Only Sinusoid [CED]'
+        options = elec_only_sine_CED_dialog(hObject, eventdata, handles);
+        options.stim = 2;
     case 'Mechanical Sinusoid'
         
         
@@ -1688,4 +1968,192 @@ options.ontime = ontime;
 options.offtime = offtime;
 options.ISI = ISI;
 
+end
+
+
+function [options] = elec_only_sine_CED_dialog(hObject, eventdata, handles)
+
+
+d2 = dialog('Position',[300 300 400 400],'Name','Pulse Train Params');
+txt1 = uicontrol('Parent',d2,...
+    'Style','text',...
+    'Position',[20 300 350 40],...
+    'String','Please enter the freq. of the sine tested [Hz]:');
+
+in1 = uicontrol('Parent',d2,...
+    'Style','edit',...
+    'Position',[140 290 75 25],...
+    'Units','normalized',...
+    'Callback',@freq_callback);
+
+txt2 = uicontrol('Parent',d2,...
+    'Style','text',...
+    'Position',[20 225 300 40],...
+    'String','Please enter the pre- and post- time added to each segment [ms]:');
+
+in2 = uicontrol('Parent',d2,...
+    'Style','edit',...
+    'Position',[140 215 75 25],...
+    'Units','normalized',...
+    'Callback',@preposttime_callback);
+
+txt3 = uicontrol('Parent',d2,...
+    'Style','text',...
+    'Position',[20 150 300 40],...
+    'String','Please enter the pause time between stimulus conditions [ms]');
+
+in3 = uicontrol('Parent',d2,...
+    'Style','edit',...
+    'Position',[140 140 75 25],...
+    'Units','normalized',...
+    'Callback',@ISI_callback);
+
+
+
+
+btn = uicontrol('Parent',d2,...
+    'Position',[89 20 70 25],...
+    'String','Proceed',...
+    'Callback','delete(gcf)');
+
+
+options.ontime = [];
+options.offtime = [];
+options.ISI = [];
+options.preposttime = [];
+% Wait for d to close before running to completion
+uiwait(d2);
+
+
+    function freq_callback(popup,event)
+        freq = str2double(get(popup,'string'));
+        ontime = ((1/freq)/2) * 1000; % This parameter is saved in [ms]
+        offtime = (1/freq)/2 * 1000; % This parameter is saved in [ms]
+    end
+
+    function preposttime_callback(popup,event)
+        preposttime = str2double(get(popup,'string'));
+       
+    end
+    function ISI_callback(popup,event)
+        ISI = str2double(get(popup,'string'));
+    end
+
+
+options.ontime = ontime;
+options.offtime = offtime;
+options.ISI = ISI;
+options.preposttime = preposttime;
+end
+
+% --- Executes on button press in plot_MPUAccelData.
+function plot_MPUAccelData_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_MPUAccelData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (get(hObject,'Value') == get(hObject,'Max'))
+    handles.params.plot_MPUAccelData = 1;
+else
+    handles.params.plot_MPUAccelData = 0;
+end
+
+% Update plots!
+keep_plot_limit = true; % We want to keep the same plot limits
+
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
+
+guidata(hObject,handles)
+% Hint: get(hObject,'Value') returns toggle state of plot_MPUGyroData
+end
+
+
+% --- Executes on button press in plot_IPR_flag.
+function plot_IPR_flag_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_IPR_flag (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (get(hObject,'Value') == get(hObject,'Max'))
+    handles.params.plot_IPR_flag = 1;
+else
+    handles.params.plot_IPR_flag = 0;
+end
+
+% Update plots!
+keep_plot_limit = false; % We do not want to keep the same plot limits
+
+plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
+
+guidata(hObject,handles)
+% Hint: get(hObject,'Value') returns toggle state of plot_MPUGyroData
+end
+
+
+% --- Executes on button press in auto_seg_lasker.
+function auto_seg_lasker_Callback(hObject, eventdata, handles)
+% hObject    handle to auto_seg_lasker (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+upper_trigLev = handles.params.upper_trigLev;
+lower_trigLev = handles.params.lower_trigLev;
+
+auto_segment_Callback(hObject, eventdata, handles,upper_trigLev,lower_trigLev)
+
+end
+
+
+
+function upper_trigLev_Callback(hObject, eventdata, handles)
+% hObject    handle to upper_trigLev (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = str2double(get(hObject,'String'));
+handles.params.upper_trigLev = input;
+
+guidata(hObject,handles)
+
+% Hints: get(hObject,'String') returns contents of upper_trigLev as text
+%        str2double(get(hObject,'String')) returns contents of upper_trigLev as a double
+
+end
+% --- Executes during object creation, after setting all properties.
+function upper_trigLev_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to upper_trigLev (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+
+function lower_trigLev_Callback(hObject, eventdata, handles)
+% hObject    handle to lower_trigLev (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = str2double(get(hObject,'String'));
+handles.params.lower_trigLev = input;
+
+guidata(hObject,handles)
+
+end
+% Hints: get(hObject,'String') returns contents of lower_trigLev as text
+%        str2double(get(hObject,'String')) returns contents of lower_trigLev as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lower_trigLev_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lower_trigLev (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end

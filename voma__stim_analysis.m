@@ -420,6 +420,7 @@ if handles.upsamp_flag
 else
     handles.CurrData.VOMA_data.stim_ind = handles.stim_ind;
 end
+handles.CurrData.cyc2plot = [];
 
 handles.RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
 handles.RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;

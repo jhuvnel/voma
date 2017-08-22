@@ -265,7 +265,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                 % start times for each cycle of electrical stimulation.
                 
                 
-                temp_stim = CurrData.VOMA_data.Stim_Trace(1,:);
+                temp_stim = CurrData.VOMA_data.Stim_Trace(:,1);
                 
                 temp1 = repmat(CurrData.VOMA_data.Stim_t',1,size(stim_ind,1),size(stim_ind,2));
                 temp2 = repmat(temp_stim(stim_ind),1,1,length(CurrData.VOMA_data.Stim_t));
@@ -354,6 +354,8 @@ handles.Final_Data.stim_ind = stim_ind;
 
 handles.CurrData.VOMA_data.stim_ind = stim_ind;
 handles.RootData(handles.curr_file).VOMA_data.stim_ind = stim_ind;
+
+
 
 if isempty(handles.stim_list)
     handles.stim_list = [true];
@@ -950,8 +952,15 @@ cd(handles.params.pathtosave);
 
 Results = handles.Results;
 Results.name = handles.CurrData.name;
-Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
-Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
+
+if isfield(handles.CurrData,'RawFileName')
+    Results.raw_filename = handles.CurrData.RawFileName;
+end
+
+Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+% 
+% Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
+% Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
 Results.Fs = handles.Final_Data.Fs;
 Results.QPparams = handles.CurrData.QPparams;
 
