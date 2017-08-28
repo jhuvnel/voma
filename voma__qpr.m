@@ -25,7 +25,7 @@ function varargout = voma__qpr(varargin)
 
 % Edit the above text to modify the response to help voma__qpr
 
-% Last Modified by GUIDE v2.5 07-Jul-2017 12:10:19
+% Last Modified by GUIDE v2.5 28-Aug-2017 11:25:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -212,6 +212,14 @@ set(handles.filt_params,'Data',filt_param_data);
 handles.LE_filt_flag = true;
 handles.RE_filt_flag = true;
 
+
+% Initialize the APAQPR routine to the 'simple stitching' method
+handles.params.APAQPR_method = 1;
+
+% Initialize params for the 'findpeaks' APAQPR method
+handles.params.APAQPR_findpeaks_temp_thresh = str2double(get(handles.APAQPR_findpeaks_temp_thresh,'String'));
+
+
 guidata(hObject, handles);
 end
 
@@ -224,6 +232,10 @@ function varargout = voma__qpr_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
+
+% Initialize the 'invert QP' flag for the 'find peaks' QPR algorithm
+handles.params.inv_qp = false;
 end
 
 
@@ -2084,13 +2096,15 @@ switch handles.params.plot_toggle_flag
         switch handles.CurrData.VOMA_data.Parameters.DAQ_code
             
             case {1,2,3}
-                % The 'position' data for Lasker Coil System data is
+                % The 'position' data for Lasker Coil System data are
                 % actually Rotation Vectors, and thus not actually position
                 % angles. We can get a rough approximation of Fick
                 % coordinate angles by multiplying the Rotation Vectors by
                 % 100.
-                pos_scale = 100;
                 
+                if ~strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
+                    pos_scale = 100;
+                end
                 
         end
         
@@ -2256,8 +2270,9 @@ end
 switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
     case 'Current Fitting'
         
-        switch handles.CurrData.VOMA_data.Parameters.DAQ
-            case 'Lasker_CED'
+        %         switch handles.CurrData.VOMA_data.Parameters.DAQ
+        switch handles.CurrData.VOMA_data.Parameters.DAQ_code
+            case {2,3}
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_Trace(:,1),handles.params.stim_plot_mult*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(:,1))),'Marker','*','Color','k','LineWidth',0.5)
                 
             otherwise
@@ -2340,6 +2355,7 @@ switch handles.params.plot_toggle_flag
         
         pos_scale = 1;
         
+        
         switch handles.CurrData.VOMA_data.Parameters.DAQ_code
             
             case {1,2,3}
@@ -2348,7 +2364,10 @@ switch handles.params.plot_toggle_flag
                 % angles. We can get a rough approximation of Fick
                 % coordinate angles by multiplying the Rotation Vectors by
                 % 100.
+                
+                if ~strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
                 pos_scale = 100;
+                end
                 
                 
         end
@@ -2617,8 +2636,10 @@ end
 switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
     case 'Current Fitting'
         
-        switch handles.CurrData.VOMA_data.Parameters.DAQ
-            case 'Lasker_CED'
+        switch handles.CurrData.VOMA_data.Parameters.DAQ_code
+            case {2,3}
+%         switch handles.CurrData.VOMA_data.Parameters.DAQ
+%             case 'Lasker_CED'
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_Trace(:,1),handles.params.stim_plot_mult*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(:,1))),'Marker','*','color','k','LineWidth',0.5)
                 
             otherwise
@@ -3833,6 +3854,12 @@ data_rot = 1;
 
 DAQ_code = handles.CurrData.VOMA_data.Parameters.DAQ_code;
 
+if strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
+    % If, regardless of the system used to record the eye movement data,
+    % the data is presented in Fick angles, change the DAQ_code to '5'
+    DAQ_code = 5;
+end
+
 % Store Relevant Ocular Ang. Pos. data in the proper format for the
 % 'processeyemovements' function
 Data_In.Data_LE_Pos_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X;
@@ -3864,8 +3891,8 @@ handles.CurrData.VOMA_data.Data_RE_Vel_Z = New_Ang_Vel.RE_Vel_Z;
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
-handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
-handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
+handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
@@ -6036,4 +6063,190 @@ else
     handles.RE_filt_flag = false;
 end
 guidata(hObject,handles)
+end
+
+
+% --- Executes on button press in toggle_APAQPR_method.
+function toggle_APAQPR_method_Callback(hObject, eventdata, handles)
+% hObject    handle to toggle_APAQPR_method (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton1
+button_state = get(hObject,'Value');
+if button_state == get(hObject,'Max')
+    handles.params.APAQPR_method = 1 ;
+    set(handles.toggle_APAQPR_method,'String','Simple Stitching')
+    set(handles.simple_stitching_panel,'Visible','on')
+    set(handles.fpeaks_method_panel,'Visible','off')
+elseif button_state == get(hObject,'Min')
+    handles.params.APAQPR_method = 2 ;
+    set(handles.toggle_APAQPR_method,'String','''findpeaks'' Method')
+    set(handles.simple_stitching_panel,'Visible','off')
+    set(handles.fpeaks_method_panel,'Visible','on')
+end
+
+% Hint: get(hObject,'Value') returns toggle state of toggle_APAQPR_method
+end
+
+
+
+
+
+function APAQPR_findpeaks_temp_thresh_Callback(hObject, eventdata, handles)
+% hObject    handle to APAQPR_findpeaks_temp_thresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = get(hObject,'String');
+handles.params.APAQPR_findpeaks_temp_thresh = str2double(input);
+guidata(hObject,handles)% Hints: get(hObject,'String') returns contents of APAQPR_findpeaks_temp_thresh as text
+%        str2double(get(hObject,'String')) returns contents of APAQPR_findpeaks_temp_thresh as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function APAQPR_findpeaks_temp_thresh_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to APAQPR_findpeaks_temp_thresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+end
+% --- Executes on button press in findpeaks_findQPs.
+function findpeaks_findQPs_Callback(hObject, eventdata, handles)
+% hObject    handle to findpeaks_findQPs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+switch handles.params.pos_filt_trace
+    
+    case 1
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X;
+    case 2
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y;
+    case 3
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z;
+    case 4
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X;
+    case 5
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y;
+    case 6
+        Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z;
+        
+end
+
+time = handles.CurrData.VOMA_data.Eye_t;
+
+Fs = handles.CurrData.VOMA_data.Fs;
+
+d_trace = diff(Trace);
+d_trace = [d_trace(1) ; d_trace];
+
+figure
+s1 = subplot(2,1,1);
+plot(time,Trace)
+s2 = subplot(2,1,2);
+plot(time,d_trace)
+
+figure
+
+if handles.params.inv_qp
+findpeaks(-d_trace)
+[pks,locs] = findpeaks(-d_trace)
+    
+else
+findpeaks(d_trace)
+[pks,locs] = findpeaks(d_trace)
+end
+ampthresh = handles.params.APAQPR_derivthresh;
+timethresh = handles.params.APAQPR_findpeaks_temp_thresh;
+
+
+pks2 = pks(pks > ampthresh);
+locs2 = locs(pks > ampthresh);
+
+figure
+plot(locs2(2:end),diff(locs2))
+
+mask = nan(length(d_trace),1);
+mask(1:locs2(1)) = d_trace(1:locs2(1));
+
+for k=2:length(locs2)
+    if ((locs2(k) - locs2(k-1)) < timethresh)
+        mask(locs2(k-1):locs2(k)) = d_trace(locs2(k-1):locs2(k));
+    end
+end
+inds3 = 1:length(mask);
+
+
+% axes(s1)
+% hold on
+plot(handles.vor_plot,time(inds3(~isnan(mask))),Trace(inds3(~isnan(mask))),'k*')
+
+% axes(s2)
+% hold on
+plot(handles.pbp_deriv,time(inds3(~isnan(mask))),mask(inds3(~isnan(mask))),'k*')
+
+linkaxes([s1 s2],'x')
+
+figure
+SP_inds = inds3(~isnan(mask));
+plot(diff(SP_inds))
+
+diff_inds = diff(SP_inds);
+
+qp_inds = [SP_inds([diff_inds>1 false])' SP_inds([false diff_inds>1])'];
+
+
+
+handles.CurrData.QPparams.UGQPRarray = [qp_inds];
+
+set(handles.UGQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray))
+
+% 
+% 
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y(i1),'ko','LineWidth',3);
+% 
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X(i1),'ko','LineWidth',3);
+% plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y(i1),'ko','LineWidth',3);
+
+guidata(hObject,handles)
+end
+
+
+% --- Executes on button press in pushbutton40.
+function pushbutton40_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton40 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+% --- Executes on button press in inv_qps.
+function inv_qps_Callback(hObject, eventdata, handles)
+% hObject    handle to inv_qps (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+if (get(hObject,'Value') == get(hObject,'Max'))
+	handles.params.inv_qp = true;
+
+else
+	handles.params.inv_qp = false;
+
+end
+guidata(hObject,handles)
+
+% Hint: get(hObject,'Value') returns toggle state of inv_qps
 end
