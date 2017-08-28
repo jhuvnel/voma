@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 14-Jun-2017 17:20:16
+% Last Modified by GUIDE v2.5 28-Aug-2017 12:53:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,11 +58,17 @@ function voma__seg_data_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for voma__seg_data
 handles.output = hObject;
 
+% The following from subj_id to stim_intensity will be used to save the
+% values entered in the boxes to make the file name
 handles.params.subj_id = '';
+handles.params.visit_number = '';
 handles.params.date = '';
 handles.params.exp_type = '';
+handles.params.exp_condition = '';
+handles.params.function_type = '';
 handles.params.stim_axis = '';
 handles.params.stim_type = '';
+handles.params.stim_frequency = '';
 handles.params.stim_intensity = '';
 
 handles.params.system_code = 1;
@@ -330,8 +336,29 @@ function save_segment_Callback(hObject, eventdata, handles)
 % hObject    handle to save_segment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+segments = str2num(handles.segment_number.String);
+segments = segments + 1;
 
+    set(handles.worksheet_name,'String',[handles.visit_number.String,'-',handles.date.String,'-',handles.exp_type.String]);
+    handles.experimentdata{segments,1} = handles.seg_filename.String;
+    handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
+    handles.experimentdata{segments,3} = handles.subj_id.String;
+    handles.experimentdata{segments,4} = handles.implant.String;
+    handles.experimentdata{segments,5} = handles.eye_rec.String;
+    handles.experimentdata{segments,9} = [handles.exp_type.String,'-',handles.exp_condition.String,'-',handles.stim_type.String];
+    handles.experimentdata{segments,10} = handles.stim_axis.String;
+    stim_freq = handles.stim_frequency.String;
+    hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
+    stim_freq(hs:end) = [];
+    pt = find(stim_freq == 'p');
+    stim_freq(pt) = '.';
+    handles.experimentdata{segments,12} = str2double(stim_freq);
+    stim_int = handles.stim_intensity.String;
+    dps = find(handles.stim_intensity.String == 'd');
+    stim_int(dps:end) = [];
+    handles.experimentdata{segments,13} = str2num(stim_int);
 
+handles.segment_number.String = num2str(segments);
 
 folder_name = uigetdir('','Select Directory to Save the Segmented Data');
 
@@ -371,7 +398,13 @@ function [handles] = load_raw_Callback(hObject, eventdata, handles)
 set(handles.save_indicator,'String','UNSAVED')
 set(handles.save_indicator,'BackgroundColor','r')
 
+if handles.params.reloadflag == 0
+    handles.segment_number.String = '0';
 
+else
+    
+end
+ 
 switch handles.params.system_code
     
     case 1 % Labyrinth Devices 3D VOG
@@ -985,11 +1018,50 @@ end
 
 end
 
+function visit_number_Callback(hObject, eventdata, handles)
+% hObject    handle to subj_id (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.params.visit_number = get(hObject,'String');
+[handles] = update_seg_filename(hObject, eventdata, handles);
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of subj_id as text
+%        str2double(get(hObject,'String')) returns contents of subj_id as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function visit_number_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to subj_id (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+end
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over date.
+% Enable is set to inactive for this text box
+function date_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to date (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+uicalendar('DestinationUI',handles.date,'OutputDateFormat','yyyymmdd') % pulls up the uicalendar and designates the output destination and format
+waitfor(handles.date,'String') % Waits for the string of the date textbox to be edited
+handles.params.date = get(hObject,'String');
+[handles] = update_seg_filename(hObject, eventdata, handles);
+guidata(hObject,handles)
+end
+
 function date_Callback(hObject, eventdata, handles)
 % hObject    handle to date (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.params.date = get(hObject,'String');
+handles.params.date = get(hObject,'String')
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of date as text
@@ -1035,15 +1107,40 @@ end
 
 end
 
+function exp_condition_Callback(hObject, eventdata, handles)
+% hObject    handle to exp_condition (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.params.exp_condition = get(hObject,'String');
+[handles] = update_seg_filename(hObject, eventdata, handles);
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of exp_condition as text
+%        str2double(get(hObject,'String')) returns contents of exp_condition as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function exp_condition_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to exp_condition (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+end
+
 function stim_axis_Callback(hObject, eventdata, handles)
-% hObject    handle to stim_axis (see GCBO)
+% hObject    handle to stim_type (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_axis = get(hObject,'String');
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
-% Hints: get(hObject,'String') returns contents of stim_axis as text
-%        str2double(get(hObject,'String')) returns contents of stim_axis as a double
+% Hints: get(hObject,'String') returns contents of stim_type as text
+%        str2double(get(hObject,'String')) returns contents of stim_type as a double
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1084,6 +1181,29 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 
+function stim_frequency_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_type (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.params.stim_frequency = get(hObject,'String');
+[handles] = update_seg_filename(hObject, eventdata, handles);
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of stim_type as text
+%        str2double(get(hObject,'String')) returns contents of stim_type as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function stim_frequency_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to stim_type (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
 
 function stim_intensity_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_intensity (see GCBO)
@@ -1111,7 +1231,7 @@ end
 
 function [handles] = update_seg_filename(hObject, eventdata, handles)
 
-handles.params.segment_filename = [handles.params.subj_id '-' handles.params.date '-' handles.params.exp_type '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_intensity '.mat'];
+handles.params.segment_filename = [handles.params.subj_id '-' handles.params.visit_number '-' handles.params.date '-' handles.params.exp_type '-' handles.params.exp_condition '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_frequency '-' handles.params.stim_intensity '.mat'];
 
 set(handles.seg_filename,'String',handles.params.segment_filename);
 end
@@ -1811,28 +1931,6 @@ end
 end
 
 
-function edit15_Callback(hObject, eventdata, handles)
-% hObject    handle to edit15 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit15 as text
-%        str2double(get(hObject,'String')) returns contents of edit15 as a double
-end
-
-% --- Executes during object creation, after setting all properties.
-function edit15_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit15 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-end
-
 
 function [options] = auto_seg_dialog(hObject, eventdata, handles)
 
@@ -2156,4 +2254,97 @@ function lower_trigLev_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+end
+
+% --- Executes on button press in load_excel_sheet.
+function load_spread_sheet_Callback(hObject, eventdata, handles)
+% hObject    handle to load_excel_sheet (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Prompt user for experimental file
+[FileName,PathName,FilterIndex] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet where the data will be exported');
+            
+handles.ss_PathName = PathName;
+handles.ss_FileName = FileName;
+            
+set(handles.exp_spread_sheet_name,'String',FileName);
+guidata(hObject,handles)
+end
+
+% --- Executes on button press in export_data.
+% Exports temporarily saved data from text boxes to spreadsheet
+% Compares filenames if worksheet is already present and replaces old data
+% with new if match is found
+function export_data_Callback(hObject, eventdata, handles)
+% hObject    handle to export_data (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+cd(handles.ss_PathName);
+[status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+if ismember(handles.worksheet_name.String, sheets)
+    segs = size(handles.experimentdata);
+    [num1, txt1, raw1] = xlsread(handles.exp_spread_sheet_name.String, handles.worksheet_name.String,'A:A');
+    oldVals = size(txt1);
+    newEntry = 0;
+    for rs = 1:segs(1)
+        if ismember([handles.experimentdata(rs,1)],txt1) 
+            replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
+        xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
+        
+        else
+        xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
+        newEntry = newEntry+1;
+        end
+    end
+else
+    labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
+    xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
+    segs = size(handles.experimentdata);
+    xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
+end
+handles.export_data.BackgroundColor = [0    1    0];
+pause(1);
+handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
+guidata(hObject,handles)
+end
+
+function implant_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+% --- Executes during object creation, after setting all properties.
+function implant_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to subj_id (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+end
+
+function eye_rec_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+    
+% --- Executes during object creation, after setting all properties.
+function eye_rec_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to subj_id (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 end
