@@ -245,9 +245,50 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
     case {2,3} % These case involves using the CED to record precise eletrical
         % Stimulus pulse arrival times.
         
-        switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
-            case 'Current Fitting'
-                
+        if isfield('handles','Lasker_stim') && isempty(handles.Lasker_stim)
+            
+        else
+            % Construct a questdlg with three options
+            choice = questdlg('It is detected that you are analyzing data from collected on the Lasker system. What type of stimulus was used in this file?', ...
+                'Stimulus Info', ...
+                'Motion','Electrical Only','Pulse Train/Current Fitting','Pulse Train/Current Fitting');
+            % Handle response
+            switch choice
+                case 'Motion'
+                    handles.Lasker_stim = 1;
+                case 'Electrical Only'
+                    handles.Lasker_stim = 2;
+                case 'Pulse Train/Current Fitting'
+                    handles.Lasker_stim = 3;
+            end
+        end
+        
+        switch handles.Lasker_stim
+            
+            case 1 % Motion
+                % Check if the variable is empty. If it is, set the 'stimulus length' to
+                % the starting and ending point of the stimulus trace.
+                % If it is not empty, find the minimum difference between stimulus
+                % start indicies
+                if isempty(stim_ind)
+                    handles.len = length(CurrData.VOMA_data.Eye_t)-1;
+                    handles.len_stim = handles.len;
+                    
+                    
+                    stim_ind = [1 handles.len+1];
+                else
+                    % I am finding the minimum length of all
+                    % cycles and use that for the length of each cycle I extract
+                    handles.len = min(diff(stim_ind(:,1)));
+                    if isempty(handles.len)
+                        handles.len = stim_ind(1,2) - stim_ind(1,1);
+                    end
+                    handles.len_stim = handles.len;
+                    
+                end
+                eye_stim_ind = stim_ind;
+                hold on
+            case 2 % Electrical Only Waveforms
                 % Check if the variable is empty. If it is, set the 'stimulus length' to
                 % the starting and ending point of the stimulus trace.
                 % If it is not empty, find the minimum difference between stimulus
@@ -295,32 +336,133 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                 
                 %                 plot(handles.main_plot,CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                 hold on
-            otherwise
-                
+            case 3 % Pulse Trains / Current Fitting
                 % Check if the variable is empty. If it is, set the 'stimulus length' to
                 % the starting and ending point of the stimulus trace.
                 % If it is not empty, find the minimum difference between stimulus
                 % start indicies
                 if isempty(stim_ind)
-                    handles.len = length(CurrData.VOMA_data.Eye_t)-1;
-                    handles.len_stim = handles.len;
-                    
-                    
-                    stim_ind = [1 handles.len+1];
+                    handles.len_stim = size(CurrData.VOMA_data.Stim_Trace,2)-1;
+                    stim_ind = [1 size(CurrData.VOMA_data.Stim_Trace,2)];
                 else
                     % I am finding the minimum length of all
                     % cycles and use that for the length of each cycle I extract
-                    handles.len = min(diff(stim_ind(:,1)));
-                    if isempty(handles.len)
-                        handles.len = stim_ind(1,2) - stim_ind(1,1);
-                    end
-                    handles.len_stim = handles.len;
-                    
+                    handles.len_stim = min(diff(stim_ind(:,1)))-1;
                 end
-                eye_stim_ind = stim_ind;
+                
+                % Find indices from the eye data traces that correspond to the
+                % start times for each cycle of electrical stimulation.
+                
+                
+                temp_stim = CurrData.VOMA_data.Stim_Trace(:,1);
+                
+                temp1 = repmat(CurrData.VOMA_data.Stim_t',1,size(stim_ind,1),size(stim_ind,2));
+                temp2 = repmat(temp_stim(stim_ind),1,1,length(CurrData.VOMA_data.Stim_t));
+                temp3 = permute(temp2,[3 1 2]);
+                
+                temp4 = temp1 - temp3;
+                
+                temp4(temp4<0) = nan;
+                
+                [temp5,temp6] = min(temp4);
+                
+                eye_stim_ind = squeeze(temp6);
+                
+                if size(eye_stim_ind)==[2,1];
+                    eye_stim_ind = eye_stim_ind';
+                end
+                
+                eye_stim_ind(:,2) = eye_stim_ind(:,2)-1;
+                
+                if isempty(min(diff(stim_ind(:,1))))
+                    handles.len =  eye_stim_ind(:,2) - eye_stim_ind(:,1);
+                else
+                    handles.len = min(eye_stim_ind(1:end-1,2) - eye_stim_ind(1:end-1,1));
+                end
+                
+                eye_stim_ind(end,2) = eye_stim_ind(end,1)+handles.len;
+                
+                %                 plot(handles.main_plot,CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                 hold on
                 
         end
+        %
+        %         switch CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
+        %             case 'Current Fitting'
+        %
+        %                 % Check if the variable is empty. If it is, set the 'stimulus length' to
+        %                 % the starting and ending point of the stimulus trace.
+        %                 % If it is not empty, find the minimum difference between stimulus
+        %                 % start indicies
+        %                 if isempty(stim_ind)
+        %                     handles.len_stim = size(CurrData.VOMA_data.Stim_Trace,2)-1;
+        %                     stim_ind = [1 size(CurrData.VOMA_data.Stim_Trace,2)];
+        %                 else
+        %                     % I am finding the minimum length of all
+        %                     % cycles and use that for the length of each cycle I extract
+        %                     handles.len_stim = min(diff(stim_ind(:,1)))-1;
+        %                 end
+        %
+        %                 % Find indices from the eye data traces that correspond to the
+        %                 % start times for each cycle of electrical stimulation.
+        %
+        %
+        %                 temp_stim = CurrData.VOMA_data.Stim_Trace(:,1);
+        %
+        %                 temp1 = repmat(CurrData.VOMA_data.Stim_t',1,size(stim_ind,1),size(stim_ind,2));
+        %                 temp2 = repmat(temp_stim(stim_ind),1,1,length(CurrData.VOMA_data.Stim_t));
+        %                 temp3 = permute(temp2,[3 1 2]);
+        %
+        %                 temp4 = temp1 - temp3;
+        %
+        %                 temp4(temp4<0) = nan;
+        %
+        %                 [temp5,temp6] = min(temp4);
+        %
+        %                 eye_stim_ind = squeeze(temp6);
+        %
+        %                 if size(eye_stim_ind)==[2,1];
+        %                     eye_stim_ind = eye_stim_ind';
+        %                 end
+        %
+        %                 eye_stim_ind(:,2) = eye_stim_ind(:,2)-1;
+        %
+        %                 if isempty(min(diff(stim_ind(:,1))))
+        %                     handles.len =  eye_stim_ind(:,2) - eye_stim_ind(:,1);
+        %                 else
+        %                     handles.len = min(eye_stim_ind(1:end-1,2) - eye_stim_ind(1:end-1,1));
+        %                 end
+        %
+        %                 eye_stim_ind(end,2) = eye_stim_ind(end,1)+handles.len;
+        %
+        %                 %                 plot(handles.main_plot,CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+        %                 hold on
+        %             otherwise
+        %
+        %                 % Check if the variable is empty. If it is, set the 'stimulus length' to
+        %                 % the starting and ending point of the stimulus trace.
+        %                 % If it is not empty, find the minimum difference between stimulus
+        %                 % start indicies
+        %                 if isempty(stim_ind)
+        %                     handles.len = length(CurrData.VOMA_data.Eye_t)-1;
+        %                     handles.len_stim = handles.len;
+        %
+        %
+        %                     stim_ind = [1 handles.len+1];
+        %                 else
+        %                     % I am finding the minimum length of all
+        %                     % cycles and use that for the length of each cycle I extract
+        %                     handles.len = min(diff(stim_ind(:,1)));
+        %                     if isempty(handles.len)
+        %                         handles.len = stim_ind(1,2) - stim_ind(1,1);
+        %                     end
+        %                     handles.len_stim = handles.len;
+        %
+        %                 end
+        %                 eye_stim_ind = stim_ind;
+        %                 hold on
+        %
+        %         end
         
     case {1,4,5,6}
         
@@ -670,7 +812,7 @@ if handles.params.lefteye_flag == 1
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[0,128,0]/255,'LineWidth',1)
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
-
+        
         
         
     end
@@ -694,7 +836,7 @@ if handles.params.righteye_flag == 1
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[64,224,208]/255,'LineWidth',1)
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[255,0,255]/255,'LineWidth',1)
-
+        
     end
     
 end
@@ -707,16 +849,47 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         %         plot(handles.main_plot,handles.Final_Data.Eye_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),handles.Final_Data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),'k','LineWidth',1)
         
     case {2,3}
-        switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
-            case 'Current Fitting'
-                %                 plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+        
+        
+        if isfield('handles','Lasker_stim') || isempty(handles.Lasker_stim)
+            
+        else
+            % Construct a questdlg with three options
+            choice = questdlg('It is detected that you are analyzing data from collected on the Lasker system. What type of stimulus was used in this file?', ...
+                'Stimulus Info', ...
+                'Motion','Electrical Only','Pulse Train/Current Fitting','Pulse Train/Current Fitting');
+            % Handle response
+            switch choice
+                case 'Motion'
+                    handles.Lasker_stim = 1;
+                case 'Electrical Only'
+                    handles.Lasker_stim = 2;
+                case 'Pulse Train/Current Fitting'
+                    handles.Lasker_stim = 3;
+            end
+        end
+        
+        switch handles.Lasker_stim
+            case 1
+                plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
+                
+            case 2
+                asdfasdf
+            case 3
                 plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                 
-            otherwise
-                
-                
-                plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
         end
+        
+        %         switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
+        %             case 'Current Fitting'
+        %                 %                 plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+        %                 plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+        %
+        %             otherwise
+        %
+        %
+        %                 plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
+        %         end
 end
 
 xlabel(handles.main_plot,'Time [s]')
@@ -958,7 +1131,7 @@ if isfield(handles.CurrData,'RawFileName')
 end
 
 Results.Parameters = handles.CurrData.VOMA_data.Parameters;
-% 
+%
 % Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
 % Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
 Results.Fs = handles.Final_Data.Fs;
@@ -993,11 +1166,11 @@ else
 end
 
 if button_state == high
-        handles.params.plot_saved_cycles_flag = 1;
-        handles.params.plot_final_trace = 0;
-        
-    elseif button_state == low;
-        handles.params.plot_saved_cycles_flag = 0;
+    handles.params.plot_saved_cycles_flag = 1;
+    handles.params.plot_final_trace = 0;
+    
+elseif button_state == low;
+    handles.params.plot_saved_cycles_flag = 0;
 end
 % Update plot
 plot_data(hObject, eventdata, handles)
@@ -1117,17 +1290,46 @@ if handles.params.plot_cycleavg_flag == 1
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         case {1,4,5,6}
             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
-
+            
             
         case {2,3}
-            switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
-                case 'Current Fitting'
-                    %             plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
-                    
-                otherwise
-                    
-                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
+            
+            if isfield('handles','Lasker_stim') || isempty(handles.Lasker_stim)
+                
+            else
+                % Construct a questdlg with three options
+                choice = questdlg('It is detected that you are analyzing data from collected on the Lasker system. What type of stimulus was used in this file?', ...
+                    'Stimulus Info', ...
+                    'Motion','Electrical Only','Pulse Train/Current Fitting','Pulse Train/Current Fitting');
+                % Handle response
+                switch choice
+                    case 'Motion'
+                        handles.Lasker_stim = 1;
+                    case 'Electrical Only'
+                        handles.Lasker_stim = 2;
+                    case 'Pulse Train/Current Fitting'
+                        handles.Lasker_stim = 3;
+                end
             end
+            
+            switch handles.Lasker_stim
+                case 1
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
+                    
+                case 2
+                    asdfasdfasdf
+                case 3
+                    
+            end
+            
+            %             switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
+            %                 case 'Current Fitting'
+            %                     %             plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+            %
+            %                 otherwise
+            %
+            %                     plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
+            %             end
     end
     
     
@@ -1704,7 +1906,7 @@ switch eventdata.Key
         if handles.params.plot_saved_cycles_flag == 0
             flag = true;
             
-        else 
+        else
             flag = false;
             
         end
@@ -1715,7 +1917,7 @@ switch eventdata.Key
         if handles.params.plot_cycleavg_flag == 0
             flag = true;
             
-        else 
+        else
             flag = false;
             
         end
