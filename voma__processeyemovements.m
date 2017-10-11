@@ -520,8 +520,6 @@ for j=1:2
         
         case {1,2,3,6} % Raw Coil Signals to Rotation Vectors
             
-            
-            
             switch j
                 
                 case 1 % Left Eye
@@ -534,14 +532,15 @@ for j=1:2
                     gains = gains_R;
             end
             
-            if DAQ_code == 6
-                rot = fick2rot(rawData);
-            elseif Data_In_flag
+            if Data_In_flag
                 % If the user is recalculating angular velocity for coil
                 % data, we will reload the ROTATION VECTORS and not the raw
                 % coil signals, so we can skip the 'raw2rot' section.
                 
-                rot = rawData;
+                rot_corr = rawData;
+            elseif DAQ_code == 6
+                rot = fick2rot(rawData);
+            
             else
                 
                 % Converting raw data to rotation vectors
