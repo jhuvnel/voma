@@ -351,9 +351,20 @@ function [handles]=save_segment_Callback(hObject, eventdata, handles)
 handles.params.segment_filename = handles.seg_filename.String;
 segments = str2num(handles.segment_number.String);
 
+%PJB edit. If the user chooses to segment a file manually BEFORE running
+%the 'mechancial auto' segment function, there is no 'foldername' saved in
+%the handles. This small piece of code checks and asks the user for a
+%folder to save segmented files. Note, we may want to display the 'save'
+%folder on the front panel and allow the user to update the save location.
+if isempty(getappdata(handles.save_segment,'foldername')) || (numel(getappdata(handles.save_segment,'foldername'))==1 && (getappdata(handles.save_segment,'foldername')==0))
+    folder_name = {uigetdir('','Select Directory to Save the Segmented Data')};
+    setappdata(handles.save_segment,'foldername',folder_name{1});
+    cd(folder_name{1})
+else
+    
+    cd(getappdata(handles.save_segment,'foldername'))
+end
 
-
-cd(getappdata(handles.save_segment,'foldername'))
 Data = handles.Segment;
 
 
