@@ -3863,13 +3863,24 @@ switch handles.params.pos_filt_method
         end
         
     case 3
+        % Check if the user submitted an ODD frame length for the median
+        % filter. If so, the filter will be zero-phase and symmetric.
+        if mod(handles.params.angpos_filt_param1,2)==1
+            
         
-        temp_smth = medfilt1(temp,handles.params.angpos_filt_param1);
-        filt_type = 'Median Filter';
-        filt_param1 = handles.params.angpos_filt_param1;
-        filt_param2 = '';
-        filt_param3 = '';
-        
+            
+            temp_smth = medfilt1(temp,handles.params.angpos_filt_param1);
+            filt_type = 'Median Filter';
+            filt_param1 = handles.params.angpos_filt_param1;
+            filt_param2 = '';
+            filt_param3 = '';
+        else
+            %The user input an ODD frame length, which would create a
+            %non-zero phase distortion.
+            
+            h = msgbox({'The frame length for the Median Filter must be ODD to ensure zero phase distortion. '});
+            return
+        end
     case 4 % irlssmooth
         
         
