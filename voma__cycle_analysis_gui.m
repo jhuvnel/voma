@@ -269,7 +269,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
     case {2,3} % These case involves using the CED to record precise eletrical
         % Stimulus pulse arrival times.
         
-        if isfield('handles','Lasker_stim') && isempty(handles.Lasker_stim)
+        if isfield(handles,'Lasker_stim') && isempty(handles.Lasker_stim)
             
         else
             % Construct a questdlg with three options
@@ -317,9 +317,12 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                 % the starting and ending point of the stimulus trace.
                 % If it is not empty, find the minimum difference between stimulus
                 % start indicies
+                
+                a = size(CurrData.VOMA_data.Stim_Trace);
+                [~,dim] = max(a);
                 if isempty(stim_ind)
-                    handles.len_stim = size(CurrData.VOMA_data.Stim_Trace,2)-1;
-                    stim_ind = [1 size(CurrData.VOMA_data.Stim_Trace,2)];
+                    handles.len_stim = size(CurrData.VOMA_data.Stim_Trace,dim)-1;
+                    stim_ind = [1 size(CurrData.VOMA_data.Stim_Trace,dim)];
                 else
                     % I am finding the minimum length of all
                     % cycles and use that for the length of each cycle I extract
@@ -330,35 +333,70 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                 % start times for each cycle of electrical stimulation.
                 
                 
-                temp_stim = CurrData.VOMA_data.Stim_Trace(:,1);
+                temp_stim = CurrData.VOMA_data.Stim_t(:,1);
                 
-                temp1 = repmat(CurrData.VOMA_data.Stim_t',1,size(stim_ind,1),size(stim_ind,2));
-                temp2 = repmat(temp_stim(stim_ind),1,1,length(CurrData.VOMA_data.Stim_t));
+                
+                Eye_t_vect = CurrData.VOMA_data.Eye_t';
+                
+                if isrow(Eye_t_vect)
+                    Eye_t_vect = Eye_t_vect';
+                end
+                % Create array of Eye data time stamps
+                temp1 = repmat(Eye_t_vect,1,size(stim_ind,1),size(stim_ind,2));
+                
+                
+                stim_vals = temp_stim(stim_ind);
+                if sum(size(stim_vals) == [2 1]) == 2
+                    stim_vals = stim_vals';
+                end
+                    
+                
+                temp2 = repmat(stim_vals,1,1,length(CurrData.VOMA_data.Eye_t));
                 temp3 = permute(temp2,[3 1 2]);
+
                 
                 temp4 = temp1 - temp3;
                 
-                temp4(temp4<0) = nan;
+                temp4b = temp4;
                 
-                [temp5,temp6] = min(temp4);
+                temp4b(temp4b<0) = nan;
+                
+                if max(temp4(:,1)) < 0
+                    temp4b(:,:,1) = abs(temp4(:,:,1));
+                end
+                
+                if max(temp4(:,2)) < 0
+                    temp4b(:,:,2) = abs(temp4(:,:,2));
+                end
+                
+                
+                [temp5,temp6] = min(temp4b);
                 
                 eye_stim_ind = squeeze(temp6);
                 
-                if size(eye_stim_ind)==[2,1];
+                
+                
+                if sum(size(eye_stim_ind)==[2,1]) == 2
                     eye_stim_ind = eye_stim_ind';
                 end
-                
-                eye_stim_ind(:,2) = eye_stim_ind(:,2)-1;
+%                 
+%                 eye_stim_ind(:,2) = eye_stim_ind(:,2)-1;
                 
                 if isempty(min(diff(stim_ind(:,1))))
                     handles.len =  eye_stim_ind(:,2) - eye_stim_ind(:,1);
                 else
-                    handles.len = min(eye_stim_ind(1:end-1,2) - eye_stim_ind(1:end-1,1));
+                    handles.len = min(diff(eye_stim_ind));
                 end
                 
-                eye_stim_ind(end,2) = eye_stim_ind(end,1)+handles.len;
+                if isrow(eye_stim_ind)
+                    eye_stim_ind = eye_stim_ind';
+                end
+                
                 
                 %                 plot(handles.main_plot,CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
+                
+                
+                
                 hold on
             case 3 % Pulse Trains / Current Fitting
                 % Check if the variable is empty. If it is, set the 'stimulus length' to
@@ -875,7 +913,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
     case {2,3}
         
         
-        if isfield('handles','Lasker_stim') || isempty(handles.Lasker_stim)
+        if isfield(handles,'Lasker_stim') || isempty(handles.Lasker_stim)
             
         else
             % Construct a questdlg with three options
@@ -898,7 +936,8 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
                 plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
                 
             case 2
-                asdfasdf
+                plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim,1),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim,1),'Marker','*','color','k','LineWidth',0.5)
+
             case 3
                 plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim),200*ones(1,length(CurrData.VOMA_data.Stim_Trace(1,handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)
                 
@@ -1038,7 +1077,7 @@ if button_state == high
         rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         
-        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + len)'];
+        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)'];
     end
     
     % Compute the cycle average
@@ -1318,7 +1357,7 @@ if handles.params.plot_cycleavg_flag == 1
             
         case {2,3}
             
-            if isfield('handles','Lasker_stim') || isempty(handles.Lasker_stim)
+            if isfield(handles,'Lasker_stim') || isempty(handles.Lasker_stim)
                 
             else
                 % Construct a questdlg with three options
@@ -1341,7 +1380,7 @@ if handles.params.plot_cycleavg_flag == 1
                     plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
                     
                 case 2
-                    asdfasdfasdf
+                    plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(1,1):handles.Final_Data.stim_ind(1,1)+handles.len_stim,1)-handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(1,1)),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(1,1):handles.Final_Data.stim_ind(1,1)+handles.len_stim,1),'Marker','*','color','k','LineWidth',0.5)
                 case 3
                     
             end
@@ -1402,7 +1441,7 @@ if handles.params.plot_final_trace == 1
         rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
-        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + len)];
+        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)];
         
         
         t_cyc = [t_cyc  handles.Final_Data.Eye_t(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];

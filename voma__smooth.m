@@ -1,5 +1,5 @@
 %%
-function [yy,coefs]= smooth(x,y,p,xx,LinExtrap,d2)
+function [yy,coefs]= voma_smooth(x,y,p,xx,LinExtrap,d2)
 % SMOOTH Calculates a smoothing spline.
 %
 %  CALL:  yy = smooth(x,y,p,xx,def,d2)

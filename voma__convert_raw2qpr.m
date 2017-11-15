@@ -1145,7 +1145,8 @@ switch handles.params.file_format
                     FileName = [raw{n,1}];
                     
                     %% Check with peter on this? 
-                    DAQ_code = 6; % This is the code used in the 'processeyemovements' code to indicate we are dealing with a file that was only recorded using digital coil system
+                    DAQ_code = 6; % This is the code used in the 'processeyemovements' 
+                    % code to indicate we are dealing with a file that was only recorded using digital coil system
 
                     inds = [];
                     [direction, frequency, amplitude, theta, phi] = voma__readFileInfo(filepath,FileName);
@@ -1399,7 +1400,7 @@ switch handles.params.file_format
                             
                         case 4
                             Parameters(n-1).DAQ = 'Fick Angles';
-                            Parameters(n-1).DAQ_code = 5; % KLUDGE lets just mark this as a MVI file so it can be processed using fick angles.
+                            Parameters(n-1).DAQ_code = 3;
                             
                     end
                     
@@ -1419,7 +1420,7 @@ switch handles.params.file_format
                     headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
                     switch raw{n,9}
                         
-                        case 'Electrical Only'
+                        case {'Electrical Only','ElectricOnly*','ElectricalOnly*'}
                             Stimulus{n-1} = {Data.Stim_Trig};
                             Stim_t{n-1} = {Data.Time_Stim(:,1)};
                             
@@ -1448,7 +1449,7 @@ switch handles.params.file_format
                     
                     switch raw{n,9}
                         
-                        case 'Electric Only'
+                        case {'Electrical Only','ElectricOnly','ElectricalOnly'}
                             
                             % Create sinusoidal stimulus file
                             Transitions = abs(diff(Data.Stim_Trig));

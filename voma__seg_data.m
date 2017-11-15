@@ -2324,24 +2324,42 @@ function export_data_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 cd(handles.ss_PathName);
 [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+
 handles.experimentdata = getappdata(hObject,'data');
+
+
+rmvinds = strfind(handles.experimentdata(:,1),'.mat');
+for k=1:length(rmvinds)
+   
+    temp = handles.experimentdata{k,1};
+    
+    temp(rmvinds{k}:rmvinds{k}+3) = '';
+    
+    handles.experimentdata{k,1} = temp;
+end
+
+
 if ismember(handles.worksheet_name.String, sheets)
     segs = size(handles.experimentdata);
     [num1, txt1, raw1] = xlsread(handles.exp_spread_sheet_name.String, handles.worksheet_name.String,'A:A');
     oldVals = size(txt1);
     newEntry = 0;
     for rs = 1:segs(1)
-        if ismember([handles.experimentdata(rs,1)],txt1) 
+        if ismember([handles.experimentdata(rs,1)],txt1)
             replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-        xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
-        
+            xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
+            
         else
-        xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
-        newEntry = newEntry+1;
+            xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
+            newEntry = newEntry+1;
         end
     end
 else
     labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
+    % Check if the length of the Sheet name is > 31 chars
+    if length(handles.worksheet_name.String)> 31
+        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
+    end
     xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
     segs = size(handles.experimentdata);
     xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
