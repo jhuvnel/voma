@@ -97,6 +97,30 @@ if isfield(CurrData.VOMA_data,'UpSamp')
             handles.upsamp_flag = true;
         case 'Load the data on its original time base.'
             handles.upsamp_flag = false;
+            
+            choice2 = questdlg('Clear stimulus indices?', ...
+                'Upsampled Data Found', ...
+                'YES','NO','NO');
+            % Handle response
+            switch choice2
+                case 'YES'
+                    handles.CurrData.VOMA_data.stim_ind = [];
+                    CurrData.VOMA_data.stim_ind = [];
+                case 'NO'
+            end
+            
+            choice3 = questdlg('Clear final list of data cycles?', ...
+                'Upsampled Data Found', ...
+                'YES','NO','NO');
+            % Handle response
+            switch choice3
+                case 'YES'
+                    handles.CurrData.cyc2plot = [];
+                    handles.params.plot_cycle_val = [];
+                    
+                    CurrData.cyc2plot = [];
+                case 'NO'
+            end
         otherwise
             % If the user exits the dialog box, just load the data on the
             % original time base.
