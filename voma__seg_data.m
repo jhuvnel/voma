@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 28-Aug-2017 12:53:04
+% Last Modified by GUIDE v2.5 30-Aug-2017 13:49:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,7 +70,13 @@ handles.params.stim_axis = '';
 handles.params.stim_type = '';
 handles.params.stim_frequency = '';
 handles.params.stim_intensity = '';
+handles.folder_name = '';
 
+    handles.right_extra = 300;
+    handles.left_extra = 300;
+
+    handles.experimentdata = {};
+    setappdata(handles.export_data,'data',handles.experimentdata);
 handles.params.system_code = 1;
 
 handles.params.plot_MPUGyroData = 1;
@@ -90,6 +96,12 @@ handles.params.vog_data_acq_version = 1;
 
 handles.params.Lasker_param1 = 1;
 handles.params.Lasker_param2 = 1;
+
+handles.savedStart = [];
+handles.savedEnd = [];
+
+handles.params.threshold_val = '';
+handles.params.threshold_plot = '';
 
 handles.Yaxis_MPU_Rot_theta = str2double(get(handles.Yaxis_Rot_Theta,'String'));
 
@@ -138,11 +150,11 @@ if user_seg_flag
     uiwait(msgbox('Please align the vertical line of the crosshair with the ending point of the stimulus','Segment Eye Movement Data'));
     [x2,y2] = ginput(1);
     time_cutout_s = [x1 ; x2];
-    
+
     [a1,i_start_eye] = min(abs(handles.Segment.Time_Eye - time_cutout_s(1,1)));
     [a2,i_end_eye] = min(abs(handles.Segment.Time_Eye - time_cutout_s(2,1)));
     
-    if isvector(handles.Segment.Time_Stim)
+    if isvector(handles.Segment.Time_Stim())
         
         [b1,i_start_stim] = min(abs(handles.Segment.Time_Stim - time_cutout_s(1,1)));
         [b2,i_end_stim] = min(abs(handles.Segment.Time_Stim - time_cutout_s(2,1)));
@@ -332,13 +344,49 @@ end
 end
 
 % --- Executes on button press in save_segment.
-function save_segment_Callback(hObject, eventdata, handles)
+function [handles]=save_segment_Callback(hObject, eventdata, handles)
 % hObject    handle to save_segment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.params.segment_filename = handles.seg_filename.String;
 segments = str2num(handles.segment_number.String);
-segments = segments + 1;
 
+%PJB edit. If the user chooses to segment a file manually BEFORE running
+%the 'mechancial auto' segment function, there is no 'foldername' saved in
+%the handles. This small piece of code checks and asks the user for a
+%folder to save segmented files. Note, we may want to display the 'save'
+%folder on the front panel and allow the user to update the save location.
+if isempty(getappdata(handles.save_segment,'foldername')) || (numel(getappdata(handles.save_segment,'foldername'))==1 && (getappdata(handles.save_segment,'foldername')==0))
+    folder_name = {uigetdir('','Select Directory to Save the Segmented Data')};
+    setappdata(handles.save_segment,'foldername',folder_name{1});
+    cd(folder_name{1})
+else
+    
+    cd(getappdata(handles.save_segment,'foldername'))
+end
+
+Data = handles.Segment;
+
+
+% Note, there is an error in matlab if the first character of a file name
+% is: '-'.
+% This can happen if the user decides not to inlcude an input for the
+% 'SubjectID' filename input.
+if strcmp(handles.params.segment_filename(1),'-')
+    uiwait(msgbox('You have attempted to save a file segment which has a filename leading with a ''-'' character. This will cause an error saving the file, so we are adding a ''_'' character infront of the filename.','Segment Eye Movement Data'));
+    
+    handles.params.segment_filename = ['_' handles.params.segment_filename];
+    set(handles.seg_filename,'String',handles.params.segment_filename);
+else
+end
+
+save(handles.params.segment_filename,'Data')
+
+
+
+
+segments = segments + 1;
+handles.experimentdata = getappdata(handles.export_data,'data');
     set(handles.worksheet_name,'String',[handles.visit_number.String,'-',handles.date.String,'-',handles.exp_type.String]);
     handles.experimentdata{segments,1} = handles.seg_filename.String;
     handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
@@ -357,33 +405,10 @@ segments = segments + 1;
     dps = find(handles.stim_intensity.String == 'd');
     stim_int(dps:end) = [];
     handles.experimentdata{segments,13} = str2num(stim_int);
-
+setappdata(handles.export_data,'data',handles.experimentdata);
 handles.segment_number.String = num2str(segments);
-
-folder_name = uigetdir('','Select Directory to Save the Segmented Data');
-
-% folder_name = handles.folder_name;
-
-cd(folder_name)
-Data = handles.Segment;
-
-% Note, there is an error in matlab if the first character of a file name
-% is: '-'.
-% This can happen if the user decides not to inlcude an input for the
-% 'SubjectID' filename input.
-if strcmp(handles.params.segment_filename(1),'-')
-    uiwait(msgbox('You have attempted to save a file segment which has a filename leading with a ''-'' character. This will cause an error saving the file, so we are adding a ''_'' character infront of the filename.','Segment Eye Movement Data'));
-    
-    handles.params.segment_filename = ['_' handles.params.segment_filename];
-    set(handles.seg_filename,'String',handles.params.segment_filename);
-else
-end
-
-save(handles.params.segment_filename,'Data')
-
 set(handles.save_indicator,'String','SAVED!')
 set(handles.save_indicator,'BackgroundColor','g')
-
 guidata(hObject,handles)
 end
 
@@ -400,6 +425,7 @@ set(handles.save_indicator,'BackgroundColor','r')
 
 if handles.params.reloadflag == 0
     handles.segment_number.String = '0';
+    handles.experimentdata = {};
 
 else
     
@@ -1057,6 +1083,7 @@ handles.params.date = get(hObject,'String');
 guidata(hObject,handles)
 end
 
+
 function date_Callback(hObject, eventdata, handles)
 % hObject    handle to date (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1137,6 +1164,7 @@ function stim_axis_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_axis = get(hObject,'String');
+setappdata(hObject,'ax',get(hObject,'String'))
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
@@ -1162,6 +1190,7 @@ function stim_type_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_type = get(hObject,'String');
+setappdata(hObject,'type',get(hObject,'String'))
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
@@ -1186,6 +1215,7 @@ function stim_frequency_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_frequency = get(hObject,'String');
+setappdata(hObject,'fq',get(hObject,'String'))
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
@@ -1210,6 +1240,7 @@ function stim_intensity_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_intensity = get(hObject,'String');
+setappdata(hObject,'intensity',get(hObject,'String'))
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
@@ -1230,6 +1261,15 @@ end
 end
 
 function [handles] = update_seg_filename(hObject, eventdata, handles)
+handles.params.subj_id = handles.subj_id.String;
+handles.params.visit_number = handles.visit_number.String;
+handles.params.date = handles.date.String;
+handles.params.exp_type = handles.exp_type.String;
+handles.params.exp_condition = handles.exp_condition.String;
+handles.params.stim_axis = getappdata(handles.stim_axis,'ax');
+handles.params.stim_type = getappdata(handles.stim_type,'type');
+handles.params.stim_frequency = getappdata(handles.stim_frequency,'fq');
+handles.params.stim_intensity = getappdata(handles.stim_intensity,'intensity');
 
 handles.params.segment_filename = [handles.params.subj_id '-' handles.params.visit_number '-' handles.params.date '-' handles.params.exp_type '-' handles.params.exp_condition '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_frequency '-' handles.params.stim_intensity '.mat'];
 
@@ -1926,6 +1966,8 @@ switch choice.stim
             
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
         end
+    case 3 %Mechanical Sinusoid
+        [handles] = mechanical_auto_seg_Callback(hObject, eventdata, handles);
         
 end
 end
@@ -1979,7 +2021,7 @@ switch choice
         options = elec_only_sine_CED_dialog(hObject, eventdata, handles);
         options.stim = 2;
     case 'Mechanical Sinusoid'
-        
+        options.stim = 3;
         
         
 end
@@ -2283,6 +2325,9 @@ function export_data_Callback(hObject, eventdata, handles)
 cd(handles.ss_PathName);
 [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
 
+handles.experimentdata = getappdata(hObject,'data');
+
+
 rmvinds = strfind(handles.experimentdata(:,1),'.mat');
 for k=1:length(rmvinds)
    
@@ -2363,4 +2408,504 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+end
+
+function [handles] = mechanical_auto_seg_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+window = 500;
+b = (1/window)*ones(1,window);
+a = 1;
+x = filter(b,a,handles.Segment.HeadMPUVel_X);
+y = filter(b,a,handles.Segment.HeadMPUVel_Y);
+z = filter(b,a,handles.Segment.HeadMPUVel_Z);
+t = handles.Segment.Time_Stim(:,1);
+threshPTx = find(abs(gradient(x)<0.02));
+threshPTy = find(abs(gradient(y)<0.02));
+threshPTz = find(abs(gradient(z)<0.02));
+xVal =  mean(x(threshPTx));
+yVal =  mean(y(threshPTy));
+zVal =  mean(z(threshPTz));
+handles.Segment.HeadMPUVel_X = handles.Segment.HeadMPUVel_X - xVal;
+handles.Segment.HeadMPUVel_Y = handles.Segment.HeadMPUVel_Y - yVal;
+handles.Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z - zVal;
+
+handles.gyro_mag = sqrt((handles.Segment.HeadMPUVel_X.^2) + (handles.Segment.HeadMPUVel_Y.^2) + (handles.Segment.HeadMPUVel_Z.^2)); % Calculating the magnitude of the X Y and Z velocities
+trace = handles.gyro_mag;
+mask = zeros(length(trace),1);
+handles.thresh_plot = figure('Name','Choose Threshold', 'NumberTitle','off');
+    handles.thresh_plot.OuterPosition = [512   600   700   520];
+    ax1 = axes;
+    ax1.Position = [0.06 0.2 0.9 0.75];
+
+    handles.xVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X');
+hold on
+    handles.yVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y');
+
+    handles.zVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-GYRO-Z');
+
+    plot(ax1,handles.Segment.Time_Stim(:,1),handles.gyro_mag,'color','k','DisplayName','MPU-Vel Magnitude');
+
+handles.h = plot(ax1,handles.Segment.Time_Stim(:,1),zeros(1,length(handles.gyro_mag)),'g','DisplayName','Threshold Value');
+ 
+
+hold off
+legend('show')
+
+handles.thresh_value = uicontrol(handles.thresh_plot,'Style','edit','Position',[210 13 70 30],'fontsize',12,'CallBack',{@thresh_value_Callback, handles});
+thresh_prompt = uicontrol(handles.thresh_plot,'Style','text','String','Enter a Threshold Value:','Position',[15 18 190 20],'FontSize',12);
+thresh_instruct = uicontrol(handles.thresh_plot,'Style','text','String','(Click enter after entering a value to adjust the threshold line and click "ok" when complete)','Position',[290 13 250 30],'FontSize',8);
+handles.thresh_close = uicontrol(handles.thresh_plot,'Style','pushbutton','String','OK','fontsize',12,'Position',[600 13 70 30],'CallBack',{@thresh_save_Callback, handles},'KeyPressFcn',{@thresh_save_KeyPressFcn, handles});
+uiwait(gcf)
+saved_thresh = getappdata(handles.thresh_value,'save');
+close(handles.thresh_plot);
+
+
+
+mask(trace > saved_thresh) = ones(length(mask(trace > saved_thresh)),1); % All of the indicies where the magnitudes is greater than 20 will be changed from zero to 1
+inds = [1:length(mask)];
+onset_inds = inds([false ; diff(mask)>0]); % take the backward difference but keep the values greater than zero, disregard the first index, find the index value which corresponds to those positive differences 
+
+end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep the values less than zero, disregard the first index, find the index value which corresponds to those negative differences
+
+onset_inds_final = onset_inds([true  diff(onset_inds)>300]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
+% Keeping the first index allows for the initial onset to be selected
+end_inds_final = end_inds([diff(end_inds)>300 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
+% Keeping the last index allows for the last end to be selected
+
+lengthCheck = [];
+end_del = [];
+onset_del = [];
+go = 1;
+    if length(onset_inds_final) ~= length(end_inds_final)
+        uneven = max([length(onset_inds_final) length(end_inds_final)]);
+        if uneven == length(onset_inds_final)
+            check = 1;
+        while go
+            
+             if check == length(onset_inds_final)
+                    go = 0;
+             end
+
+                if check > length(end_inds_final)
+                    onset_inds_final(check) = [];
+                        check = check - 1;
+                elseif check > 1
+                    if (onset_inds_final(check) - end_inds_final(check-1)) < 0
+                    onset_inds_final(check) = [];
+                        check = check - 1;
+                end            
+            elseif onset_inds_final(check) > end_inds_final(check)
+                    onset_inds_final(check) = [];
+                        check = check - 1;
+
+                end
+                check = check +1;
+        end
+
+        end
+        
+        if uneven == length(end_inds_final)
+            check = 1;
+         while go
+                if check == length(end_inds_final)
+                    go = 0;
+                end
+
+                if check > length(onset_inds_final)
+                    end_inds_final(check) = [];
+                        check = check - 1;
+                elseif check > 1
+                    if (onset_inds_final(check) - end_inds_final(check-1)) < 0
+                        end_inds_final(check) = [];
+                        check = check - 1;
+                end        
+                elseif onset_inds_final(check) > end_inds_final(check)
+                    end_inds_final(check) = [];
+                        check = check - 1;
+
+                end
+
+                check = check +1;
+            end
+        
+        end
+    end
+    check = 1;
+    go = 1;
+    while go
+                if check == length(end_inds_final)
+                    go = 0;
+                end
+    if (end_inds_final(check) - onset_inds_final(check)) < 300
+           end_inds_final(check) = [];
+            onset_inds_final(check) = [];
+                        check = check - 1;
+    end
+    check = check +1;
+    end
+    
+
+  
+
+handles.end_inds_final = end_inds_final;
+handles.onset_inds_final = onset_inds_final;
+for plots = 1:length(end_inds_final)
+    handles.plot_num = plots;
+    handles.seg_plots = figure('Name',['Segment: ',num2str(plots)], 'NumberTitle','off');
+    handles.seg_plots.OuterPosition = [220   300   1100   720];
+    handles.ax1 = axes;
+    handles.ax1.Position = [0.09 0.1 0.72 0.85];
+    
+    handles.HeadMPUVel_Z_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':');
+    hold on
+    handles.HeadMPUVel_Y_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':');
+    handles.HeadMPUVel_X_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':');
+    x1 = [-100 -100 600 600];
+    y1 = [-400 300 300 -400];
+    if (handles.onset_inds_final(plots) - handles.left_extra) < 1
+    a = handles.Segment.Time_Stim(1);
+    else
+    a = handles.Segment.Time_Stim((handles.onset_inds_final(plots) - handles.left_extra));
+    end
+    if (handles.end_inds_final(plots) +  handles.right_extra)>length(handles.Segment.Time_Stim)
+        b = handles.Segment.Time_Stim(end);
+    else
+    b = handles.Segment.Time_Stim((handles.end_inds_final(plots) +  handles.right_extra));
+    end
+    v1 = [handles.ax1.XLim(1) handles.ax1.YLim(1); a handles.ax1.YLim(1); a handles.ax1.YLim(2); handles.ax1.XLim(1) handles.ax1.YLim(2)];
+    f1 = [1 2 3 4];
+    v2 = [b handles.ax1.YLim(1); handles.ax1.XLim(2) handles.ax1.YLim(1); handles.ax1.XLim(2) handles.ax1.YLim(2); b handles.ax1.YLim(2)];
+    f2 = [1 2 3 4];
+    handles.seg_patch1 = patch('Faces',f1,'Vertices',v1,'FaceColor','k','FaceAlpha',.3,'EdgeColor','none');
+    handles.seg_patch2 = patch('Faces',f2,'Vertices',v2,'FaceColor','k','FaceAlpha',.3,'EdgeColor','none');
+    if str2num(handles.segment_number.String) > 0
+    for done = 1:str2num(handles.segment_number.String)
+        patch('Faces',[1 2 3 4], 'Vertices',[handles.Segment.Time_Stim(handles.savedStart(done)) handles.ax1.YLim(1); handles.Segment.Time_Stim(handles.savedEnd(done)) handles.ax1.YLim(1);handles.Segment.Time_Stim(handles.savedEnd(done)) handles.ax1.YLim(2); handles.Segment.Time_Stim(handles.savedStart(done)) handles.ax1.YLim(2)],...
+            'FaceColor','g','FaceAlpha',.3,'EdgeColor','none');
+    end
+    end
+    hold off
+
+    handles.ok_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','OK','fontsize',12,'Position',[975 10 70 30],'CallBack',{@ok_seg_Callback, handles},'KeyPressFcn',{@ok_seg_KeyPressFcn, handles});
+    
+    handles.reject_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','Reject This Segment','fontsize',12,'Position',[15 10 160 30],'CallBack',{@reject_seg_Callback, handles});
+    
+    handles.right_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.right_extra/100,'fontsize',12,'Position',[900 295 60 30]);
+    handles.left_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.left_extra/100,'fontsize',12,'Position',[15 295 60 30]);
+    
+    setappdata(handles.ok_seg,'r',handles.end_inds_final(plots) +  handles.right_extra);
+    setappdata(handles.ok_seg,'l',handles.onset_inds_final(plots) - handles.left_extra);
+    
+    handles.instructions = uicontrol(handles.seg_plots,'Style','text','String','Use the arrows to increase or decrease the buffer zone on the corresponding side. If a segment has a pause, adjust the window to encompass the entire segment, save within the first detected component, reject all following components.','fontsize',12,'Position',[895 365 175 240]);
+    handles.inc_right = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25BA;</html>','fontsize',20,'Position',[930 325 30 30],'CallBack',{@inc_right_Callback, handles});
+    handles.dec_right = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25C4;</html>','fontsize',20,'Position',[900 325 30 30],'CallBack',{@dec_right_Callback, handles});
+   
+   
+    handles.dec_left = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25BA;</html>','fontsize',20,'Position',[45 325 30 30],'CallBack',{@dec_left_Callback, handles});
+    handles.inc_left = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25C4;</html>','fontsize',20,'Position',[15 325 30 30],'CallBack',{@inc_left_Callback, handles});
+
+ % Future for direction    
+%z_val = sum(handles.Segment.HeadMPUVel_Z((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
+%y_val = sum(handles.Segment.HeadMPUVel_Y((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
+%x_val = sum(handles.Segment.HeadMPUVel_X((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
+
+
+handles.stim_axis_confirm = uicontrol(handles.seg_plots,'Style','edit','String',handles.params.stim_axis,'fontsize',8,'Position',[990 200 60 30],'CallBack',{@stim_axis_confirm_Callback ,handles});
+handles.stim_axis_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Axis','fontsize',10,'Position',[910 195 60 30]);
+%setappdata(handles.stim_axis,'ax',axis);
+%handles.stim_axis.String = axis;
+handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','edit','String',handles.params.stim_type,'fontsize',8,'Position',[990 165 60 30],'CallBack',{@stim_type_confirm_Callback ,handles});
+handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
+handles.stim_freq_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 130 60 30],'CallBack',{@stim_freq_confirm_Callback ,handles});
+handles.stim_freq_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Freq','fontsize',10,'Position',[910 125 70 30]);
+handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 95 60 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
+handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
+
+guidata(hObject,handles)
+    uiwait(gcf)
+    if getappdata(handles.ok_seg,'skip') == 0
+handles.savedStart(str2num(handles.segment_number.String)) = getappdata(handles.ok_seg,'l');
+handles.savedEnd(str2num(handles.segment_number.String)) = getappdata(handles.ok_seg,'r');
+
+    end
+close(handles.seg_plots);
+
+    handles.right_extra = 300;
+    handles.left_extra = 300;
+        handles.stim_frequency.String = '';
+    handles.params.stim_frequency = '';
+        handles.stim_intensity.String = '';
+    handles.params.stim_intensity = '';
+setappdata(handles.stim_frequency,'fq','');
+setappdata(handles.stim_intensity,'intensity','');
+    [handles] = update_seg_filename(hObject, eventdata, handles);
+    set(handles.save_indicator,'String','UNSAVED');
+set(handles.save_indicator,'BackgroundColor','r');
+    guidata(hObject,handles)
+end
+
+
+
+end
+
+function inc_right_Callback(hObject, eventdata, handles)
+handles.r = str2num(handles.right_extra_val.String)*100;
+handles.r = handles.r + 200;
+handles.right_extra_val.String = handles.r/100;
+handles.seg_patch2.XData([1 4]) = handles.seg_patch2.XData([1 4]) + [2;2];
+setappdata(handles.ok_seg,'r',handles.end_inds_final(handles.plot_num) +  handles.r);
+guidata(hObject,handles)
+end
+
+function dec_right_Callback(hObject, eventdata, handles)
+handles.r = str2num(handles.right_extra_val.String)*100;
+handles.r = handles.r - 200; 
+handles.right_extra_val.String = handles.r/100;
+handles.seg_patch2.XData([1 4]) = handles.seg_patch2.XData([1 4]) - [2;2];
+setappdata(handles.ok_seg,'r',handles.end_inds_final(handles.plot_num) +  handles.r);
+guidata(hObject,handles)
+end
+
+
+function inc_left_Callback(hObject, eventdata, handles)
+handles.l = str2num(handles.left_extra_val.String)*100;
+handles.l = handles.l + 200;
+handles.left_extra_val.String = handles.l/100;
+handles.seg_patch1.XData([2 3]) = handles.seg_patch1.XData([2 3]) - [2;2];
+setappdata(handles.ok_seg,'l',handles.onset_inds_final(handles.plot_num) - handles.l);
+guidata(hObject,handles)
+end
+
+function dec_left_Callback(hObject, eventdata, handles)
+handles.l = str2num(handles.left_extra_val.String)*100;
+handles.l = handles.l - 200;
+handles.left_extra_val.String = handles.l/100;
+handles.seg_patch1.XData([2 3]) = handles.seg_patch1.XData([2 3]) + [2;2];
+setappdata(handles.ok_seg,'l',handles.onset_inds_final(handles.plot_num) - handles.l);
+guidata(hObject,handles)
+end
+
+
+function [handles] = stim_axis_confirm_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.stim_axis.String = get(hObject,'String');
+setappdata(handles.stim_axis,'ax',get(hObject,'String'));
+guidata(hObject,handles)
+[handles] = update_seg_filename(hObject, eventdata, handles);
+% Hints: get(hObject,'String') returns contents of stim_intensity as text
+%        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+function [handles] = stim_type_confirm_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.stim_type.String = get(hObject,'String');
+setappdata(handles.stim_type,'type',get(hObject,'String'));
+%if strcmp(get(hObject,'String'),'Gaussian')
+ %   handles.stim_frequency.String = 'NA';
+  %  handles.stim_freq_confirm.String ='NA';
+   % setappdata(handles.stim_frequency,'fq','NA');
+%elseif strcmp(get(hObject,'String'),'Trapezoid')
+ %       handles.stim_frequency.String = 'NA';
+  %      handles.stim_freq_confirm.String = 'NA';
+   % setappdata(handles.stim_frequency,'fq','NA');
+%else
+%end
+guidata(hObject,handles)
+[handles] = update_seg_filename(hObject, eventdata, handles);
+% Hints: get(hObject,'String') returns contents of stim_intensity as text
+%        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+function [handles] = stim_freq_confirm_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.stim_frequency.String = get(hObject,'String');
+setappdata(handles.stim_frequency,'fq',get(hObject,'String'));
+guidata(hObject,handles)
+[handles] = update_seg_filename(hObject, eventdata, handles);
+% Hints: get(hObject,'String') returns contents of stim_intensity as text
+%        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+function [handles] = stim_intensity_confirm_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.stim_intensity.String = get(hObject,'String');
+setappdata(handles.stim_intensity,'intensity',get(hObject,'String'));
+guidata(hObject,handles)
+[handles] = update_seg_filename(hObject, eventdata, handles);
+% Hints: get(hObject,'String') returns contents of stim_intensity as text
+%        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+function reject_seg_Callback(hObject, eventdata, handles)
+setappdata(handles.ok_seg,'skip',1);
+uiresume(gcbf)
+end
+
+function ok_seg_KeyPressFcn(hObject, eventdata, handles)
+key = get(gcf,'CurrentKey');
+if(strcmp(key, 'return'))
+    ok_seg_Callback(hObject, eventdata, handles);
+end
+end
+
+function ok_seg_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[handles] = update_seg_filename(hObject, eventdata, handles);
+if getappdata(hObject,'r') > length(handles.Segment.Time_Stim)
+    e = handles.Segment.Time_Stim(end);
+else
+e = handles.Segment.Time_Stim(getappdata(hObject,'r'));
+end
+
+s = handles.Segment.Time_Stim(getappdata(hObject,'l'));
+setappdata(hObject,'skip',0);
+
+    [a1,i_start_eye] = min(abs(handles.Segment.Time_Eye - s));
+    [a2,i_end_eye] = min(abs(handles.Segment.Time_Eye - e));
+    
+    if isvector(handles.Segment.Time_Stim())
+        
+        [b1,i_start_stim] = min(abs(handles.Segment.Time_Stim - s));
+        [b2,i_end_stim] = min(abs(handles.Segment.Time_Stim - e));
+        
+    else
+        
+        
+        [b1,i_start_stim] = min(abs(handles.Segment.Time_Stim(:,1) - s));
+        [b2,i_end_stim] = min(abs(handles.Segment.Time_Stim(:,1) - e));
+        
+        
+    end
+    
+    handles.i_start_eye = i_start_eye;
+    handles.i_end_eye = i_end_eye;
+    handles.i_start_stim = i_start_stim;
+    handles.i_end_stim = i_end_stim;
+    
+    handles.Segment.start_t = s;
+    handles.Segment.end_t = e;
+%
+
+
+Segment.segment_code_version = mfilename;
+Segment.raw_filename = handles.Segment.raw_filename;
+Segment.start_t = s;
+Segment.end_t = e;
+Segment.LE_Position_X = handles.Segment.LE_Position_X(i_start_eye:i_end_eye);
+Segment.LE_Position_Y = handles.Segment.LE_Position_Y(i_start_eye:i_end_eye);
+Segment.LE_Position_Z = handles.Segment.LE_Position_Z(i_start_eye:i_end_eye);
+
+Segment.RE_Position_X = handles.Segment.RE_Position_X(i_start_eye:i_end_eye);
+Segment.RE_Position_Y = handles.Segment.RE_Position_Y(i_start_eye:i_end_eye);
+Segment.RE_Position_Z = handles.Segment.RE_Position_Z(i_start_eye:i_end_eye);
+
+Segment.LE_Velocity_X = handles.Segment.LE_Velocity_X(i_start_eye:i_end_eye);
+Segment.LE_Velocity_Y = handles.Segment.LE_Velocity_Y(i_start_eye:i_end_eye);
+Segment.LE_Velocity_LARP = handles.Segment.LE_Velocity_LARP(i_start_eye:i_end_eye);
+Segment.LE_Velocity_RALP = handles.Segment.LE_Velocity_RALP(i_start_eye:i_end_eye);
+Segment.LE_Velocity_Z = handles.Segment.LE_Velocity_Z(i_start_eye:i_end_eye);
+
+Segment.RE_Velocity_X = handles.Segment.RE_Velocity_X(i_start_eye:i_end_eye);
+Segment.RE_Velocity_Y = handles.Segment.RE_Velocity_Y(i_start_eye:i_end_eye);
+Segment.RE_Velocity_LARP = handles.Segment.RE_Velocity_LARP(i_start_eye:i_end_eye);
+Segment.RE_Velocity_RALP = handles.Segment.RE_Velocity_RALP(i_start_eye:i_end_eye);
+Segment.RE_Velocity_Z = handles.Segment.RE_Velocity_Z(i_start_eye:i_end_eye);
+
+Segment.Fs = handles.Segment.Fs;
+
+Segment.Time_Eye = handles.Segment.Time_Eye(i_start_eye:i_end_eye);
+if isvector(handles.Segment.Time_Stim) % This is kludge to process either MVI LD VOG files, or PJB Lasker system elec. stime data. This needs to be rewritten
+    Segment.Time_Stim = handles.Segment.Time_Stim(i_start_stim:i_end_stim);
+else
+    Segment.Time_Stim = handles.Segment.Time_Stim(i_start_stim:i_end_stim,:);
+end
+
+
+switch handles.params.system_code
+    case 1
+        Segment.Stim_Trig = handles.Segment.Stim_Trig(i_start_eye:i_end_eye);
+    case 2
+        
+        if isempty(handles.Segment.Stim_Trig)
+            Segment.Stim_Trig = [];
+        else
+            Segment.Stim_Trig = handles.Segment.Stim_Trig(i_start_stim:i_end_stim);
+        end
+end
+
+Segment.HeadMPUVel_X = handles.Segment.HeadMPUVel_X(i_start_stim:i_end_stim);
+Segment.HeadMPUVel_Y = handles.Segment.HeadMPUVel_Y(i_start_stim:i_end_stim);
+Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z(i_start_stim:i_end_stim);
+
+Segment.HeadMPUAccel_X = handles.Segment.HeadMPUAccel_X(i_start_stim:i_end_stim);
+Segment.HeadMPUAccel_Y = handles.Segment.HeadMPUAccel_Y(i_start_stim:i_end_stim);
+Segment.HeadMPUAccel_Z = handles.Segment.HeadMPUAccel_Z(i_start_stim:i_end_stim);
+
+
+
+
+handles.Segment = Segment;
+
+segments = str2num(handles.segment_number.String);
+if segments == 0
+folder_name = {uigetdir('','Select Directory to Save the Segmented Data')};
+setappdata(handles.save_segment,'foldername',folder_name{1});
+end
+
+
+[handles]=save_segment_Callback(hObject, eventdata, handles);
+pause(1)
+guidata(hObject,handles)
+uiresume(gcbf)
+% Hints: get(hObject,'String') returns contents of stim_intensity as text
+%        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+function thresh_save_KeyPressFcn(hObject, eventdata, handles)
+key = get(gcf,'CurrentKey');
+if(strcmp(key, 'return'))
+    thresh_save_Callback(hObject, eventdata, handles);
+end
+end
+
+function thresh_save_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+setappdata(handles.thresh_value,'save',str2num(handles.thresh_value.String));
+guidata(hObject,handles)
+uiresume(gcbf)
+% Hints: get(hObject,'String') returns contents of stim_intensity as text
+%        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+function thresh_value_Callback(hObject, eventdata, handles)
+% hObject    handle to stim_intensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.threshold_Value = get(hObject,'String');
+[handles] = update_thresh_val(hObject, eventdata, handles);
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of stim_intensity as text
+%        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+
+function [handles] = update_thresh_val(hObject, eventdata, handles)
+thresh_line = ones(1,length(handles.gyro_mag));
+thresh_line(1:end) = str2num(handles.threshold_Value);
+handles.h.YData = thresh_line;
 end
