@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 03-Apr-2017 12:59:41
+% Last Modified by GUIDE v2.5 05-Dec-2017 12:18:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,6 +80,12 @@ axes(handles.main_plot);
 handles.H = axis;
 
 handles.params.keyboard_flag = true;
+
+handles.individualSave = 0;
+handles.individual.LeftData = [];
+handles.individual.RightData = [];
+handles.L = 0;
+handles.R = 0;
 
 % The 'voma__stim_analysis' GUI offers the option to upsample the processed
 % Eye and Stimulus data traces, and save them in parallel to the processed
@@ -1112,6 +1118,7 @@ function savedata_Callback(hObject, eventdata, handles)
 
 set(handles.save_status,'BackgroundColor','red')
 drawnow
+fields = fieldnames(handles.Results);
 
 if ~isfield(handles,'Results')
     
@@ -1123,6 +1130,7 @@ end
 
 cd(handles.params.pathtosave);
 
+if ((handles.LEcheck.Value == 1) && (handles.REcheck.Value == 1))
 Results = handles.Results;
 Results.name = handles.CurrData.name;
 
@@ -1143,6 +1151,71 @@ if ~isempty(strfind(handles.CurrData.name,'.mat'))
     save([handles.CurrData.name(1:end-4) '_CycleAvg'],'Results')
 else
     save([handles.CurrData.name '_CycleAvg'],'Results')
+end
+handles.individualSave = 2;
+guidata(hObject, handles);
+end
+
+if ((handles.LEcheck.Value == 1) && (handles.REcheck.Value == 0))
+    keep = find(strncmp(fields,'r',1));
+    Results = rmfield(handles.Results,{fields{keep}})
+Results.name = handles.CurrData.name;
+
+if isfield(handles.CurrData,'RawFileName')
+    Results.raw_filename = handles.CurrData.RawFileName;
+end
+
+Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+%
+% Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
+% Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
+Results.Fs = handles.Final_Data.Fs;
+Results.QPparams = handles.CurrData.QPparams;
+
+
+
+if ~isempty(strfind(handles.CurrData.name,'.mat'))
+    save([handles.CurrData.name(1:end-4) '_CycleAvg_LeftOnly'],'Results')
+else
+    save([handles.CurrData.name '_CycleAvg_LeftOnly'],'Results')
+end
+if handles.individualSave < 2
+handles.individualSave = handles.individualSave + 1;
+handles.individual.LeftData = Results;
+handles.LEcheck.BackgroundColor = [0 1 0];
+guidata(hObject, handles);
+end
+end
+
+if ((handles.LEcheck.Value == 0) && (handles.REcheck.Value == 1))
+    keep = find(strncmp(fields,'l',1));
+    Results = rmfield(handles.Results,{fields{keep}})
+Results.name = handles.CurrData.name;
+
+if isfield(handles.CurrData,'RawFileName')
+    Results.raw_filename = handles.CurrData.RawFileName;
+end
+
+Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+%
+% Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
+% Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
+Results.Fs = handles.Final_Data.Fs;
+Results.QPparams = handles.CurrData.QPparams;
+
+
+
+if ~isempty(strfind(handles.CurrData.name,'.mat'))
+    save([handles.CurrData.name(1:end-4) '_CycleAvg_RightOnly'],'Results')
+else
+    save([handles.CurrData.name '_CycleAvg_RightOnly'],'Results')
+end
+if handles.individualSave < 2
+handles.individualSave = handles.individualSave + 1;
+handles.individual.RightData = Results;
+handles.REcheck.BackgroundColor = [0 1 0];
+guidata(hObject, handles);
+end
 end
 
 set(handles.save_status,'BackgroundColor','green')
@@ -1705,6 +1778,40 @@ function go_back_to_gui_Callback(hObject, eventdata, handles)
 % hObject    handle to go_back_to_gui (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if handles.individualSave == 2
+  fieldsL = fieldnames(handles.individual.LeftData);
+  fieldsR = fieldnames(handles.individual.RightData);
+  same = find(strcmp(fieldsL,fieldsR));
+    a = rmfield(handles.individual.LeftData,{fieldsL{same}});
+    b = handles.individual.RightData;
+    names=[fieldnames(a);fieldnames(b)]
+    Results = cell2struct([struct2cell(a);struct2cell(b)],names,1)
+Results.name = handles.CurrData.name;
+
+if isfield(handles.CurrData,'RawFileName')
+    Results.raw_filename = handles.CurrData.RawFileName;
+end
+
+Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+%
+% Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
+% Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
+Results.Fs = handles.Final_Data.Fs;
+Results.QPparams = handles.CurrData.QPparams;
+
+
+
+if ~isempty(strfind(handles.CurrData.name,'.mat'))
+    save([handles.CurrData.name(1:end-4) '_CycleAvg'],'Results')
+else
+    save([handles.CurrData.name '_CycleAvg'],'Results')
+end
+
+guidata(hObject, handles);  
+elseif handles.individualSave == 1
+    h = msgbox('Data for only one eye has been saved!');
+else
+end
 close(handles.figure1)
 voma__qpr(handles.RootData)
 
@@ -1936,3 +2043,32 @@ end
 handles = guidata(hObject);
 
 guidata(hObject,handles)
+
+
+% --- Executes on button press in LEcheck.
+function LEcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to LEcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (handles.L == 0) && (handles.R == 0)
+    handles.LEcheck.BackgroundColor = [1 0 0];
+    handles.REcheck.BackgroundColor = [1 0 0];
+    handles.L = 1;
+elseif (handles.REcheck.BackgroundColor == [0 1 0])
+    handles.L = 1;
+end
+% Hint: get(hObject,'Value') returns toggle state of LEcheck
+
+% --- Executes on button press in REcheck.
+function REcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to REcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (handles.L == 0) && (handles.R == 0)
+    handles.LEcheck.BackgroundColor = [1 0 0];
+    handles.REcheck.BackgroundColor = [1 0 0];
+    handles.R = 1;
+elseif (handles.LEcheck.BackgroundColor == [0 1 0])
+    handles.R = 1;
+end
+% Hint: get(hObject,'Value') returns toggle state of REcheck
