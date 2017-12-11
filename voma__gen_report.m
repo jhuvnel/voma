@@ -561,7 +561,8 @@ plotname = [file_params{2,1} ' ' file_params{2,2} ' '  file_params{2,3} ' ' ...
 save_loc = pwd;
 stim_cond =  {file_params{2:end,5}};
 for k=1:length(Data)
-    Stim_trace(k).Data = handles.CycAvg(k).Data.stim(2,:);
+%     Stim_trace(k).Data = handles.CycAvg(k).Data.stim(2,:);
+    Stim_trace(k).Data = mean(handles.CycAvg(k).Data.stim);
 end
 legend_flag = false;
 SCC = handles.params.stimaxis;

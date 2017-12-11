@@ -291,9 +291,9 @@ switch handles.params.detect_method
         stim_neg_thresh_ind = inds(neg_ind > 0 )';
         
         
-        handles.pos_stim_ind = stim_pos_thresh_ind;
+%         handles.pos_stim_ind = stim_pos_thresh_ind;
 
-%         handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.params.upsamp_Fs);
+        handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.params.upsamp_Fs);
 %         handles.neg_stim_ind = stim_neg_thresh_ind;
         
 %         set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus([stim_pos_thresh_ind stim_neg_thresh_ind])]);
@@ -584,7 +584,7 @@ function pre_stim_dur_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 input = get(hObject,'String');
 
-handles.params.pre_stim_dur = str2double(input);
+handles.params.pre_stim_dur = str2double(input)/1000;
 
 
 guidata(hObject,handles)
