@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 05-Dec-2017 12:18:39
+% Last Modified by GUIDE v2.5 14-Dec-2017 10:55:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1114,11 +1114,10 @@ end
 function savedata_Callback(hObject, eventdata, handles)
 % hObject    handle to savedata (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
+% handles    structure with handles and user data (see GUIDATA)   
 set(handles.save_status,'BackgroundColor','red')
 drawnow
-fields = fieldnames(handles.Results);
+
 
 if ~isfield(handles,'Results')
     
@@ -1127,10 +1126,11 @@ if ~isfield(handles,'Results')
     drawnow
     return
 end
-
+fields = fieldnames(handles.Results);
 cd(handles.params.pathtosave);
 
-if ((handles.LEcheck.Value == 1) && (handles.REcheck.Value == 1))
+if handles.singleEyeSwitch.Value == 0
+
 Results = handles.Results;
 Results.name = handles.CurrData.name;
 
@@ -1154,7 +1154,8 @@ else
 end
 handles.individualSave = 2;
 guidata(hObject, handles);
-end
+
+elseif handles.singleEyeSwitch.Value == 1
 
 if ((handles.LEcheck.Value == 1) && (handles.REcheck.Value == 0))
     keep = find(strncmp(fields,'r',1));
@@ -1216,6 +1217,10 @@ handles.individual.RightData = Results;
 handles.REcheck.BackgroundColor = [0 1 0];
 guidata(hObject, handles);
 end
+end
+
+
+
 end
 
 set(handles.save_status,'BackgroundColor','green')
@@ -1778,14 +1783,14 @@ function go_back_to_gui_Callback(hObject, eventdata, handles)
 % hObject    handle to go_back_to_gui (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if handles.individualSave == 2
+if (handles.individualSave == 2) && (handles.singleEyeSwitch.Value == 1)
   fieldsL = fieldnames(handles.individual.LeftData);
   fieldsR = fieldnames(handles.individual.RightData);
   same = find(strcmp(fieldsL,fieldsR));
     a = rmfield(handles.individual.LeftData,{fieldsL{same}});
     b = handles.individual.RightData;
-    names=[fieldnames(a);fieldnames(b)]
-    Results = cell2struct([struct2cell(a);struct2cell(b)],names,1)
+    names=[fieldnames(a);fieldnames(b)];
+    Results = cell2struct([struct2cell(a);struct2cell(b)],names,1);
 Results.name = handles.CurrData.name;
 
 if isfield(handles.CurrData,'RawFileName')
@@ -1807,13 +1812,36 @@ else
     save([handles.CurrData.name '_CycleAvg'],'Results')
 end
 
-guidata(hObject, handles);  
-elseif handles.individualSave == 1
-    h = msgbox('Data for only one eye has been saved!');
-else
-end
+guidata(hObject, handles);
 close(handles.figure1)
 voma__qpr(handles.RootData)
+elseif (handles.individualSave == 1) && (handles.singleEyeSwitch.Value == 1)
+    choice = questdlg('Data from only one eye has been saved.', ...
+        'Cycle Analysis GUI Error', ...
+        'OK, continue analysis','Continue to QPR GUI','OK, continue analysis');
+    % Handle response
+    switch choice
+        case 'OK, let me go back.'
+        case 'Continue to QPR GUI'
+            close(handles.figure1)
+voma__qpr(handles.RootData)
+    end
+elseif (handles.individualSave == 0) && (handles.singleEyeSwitch.Value == 1)
+        choice = questdlg('No data has been saved.', ...
+        'Cycle Analysis GUI Error', ...
+        'OK, continue analysis.','Continue to QPR GUI','OK, continue analysis');
+    % Handle response
+    switch choice
+        case 'OK, let me go back.'
+        case 'Continue to QPR GUI'
+            close(handles.figure1)
+voma__qpr(handles.RootData)
+    end
+else
+    close(handles.figure1)
+voma__qpr(handles.RootData)
+end
+
 
 
 % --- Executes on button press in all_on.
@@ -2050,13 +2078,7 @@ function LEcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to LEcheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if (handles.L == 0) && (handles.R == 0)
-    handles.LEcheck.BackgroundColor = [1 0 0];
-    handles.REcheck.BackgroundColor = [1 0 0];
-    handles.L = 1;
-elseif (handles.REcheck.BackgroundColor == [0 1 0])
-    handles.L = 1;
-end
+
 % Hint: get(hObject,'Value') returns toggle state of LEcheck
 
 % --- Executes on button press in REcheck.
@@ -2064,11 +2086,38 @@ function REcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to REcheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if (handles.L == 0) && (handles.R == 0)
+
+% Hint: get(hObject,'Value') returns toggle state of REcheck
+
+
+% --- Executes on button press in singleEyeSwitch.
+function singleEyeSwitch_Callback(hObject, eventdata, handles)
+% hObject    handle to singleEyeSwitch (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of singleEyeSwitch
+if handles.singleEyeSwitch.Value == 1
+    handles.h = figure;
+handles.h.NumberTitle = 'off';
+handles.h.Name = 'Seperate Eye Analysis Instructions';
+handles.h.Position = [520   678   560   250];
+instruct = uicontrol(handles.h,'Style','text','String',['To save data from each eye seperately:',10,'1. Choose one eye to start with, and unchek the box corresponding to the other eye.',10,...
+    '2. Run through normal analysis procedure making sure to click Plot Cycle Average before Save Processed Data.',10,...
+    '3. After saving the data from the first eye, follow the same procedure for the second eye being sure to click Plot Cycle Average before saving.',10,...
+    '4. Once bot sets of individual eye data are saved, clicking Go back to qpr GUI will automatically create and save a joined file.'],'Position',[30 0 500 225],'HorizontalAlignment','left','FontSize',12);
+guidata(hObject,handles)
+    handles.singleEyeSwitch.String = 'on';
+    handles.sepEyes.BackgroundColor = [0 1 0];
+    handles.singleEyeSwitch.BackgroundColor = [0 1 0];
     handles.LEcheck.BackgroundColor = [1 0 0];
     handles.REcheck.BackgroundColor = [1 0 0];
-    handles.R = 1;
-elseif (handles.LEcheck.BackgroundColor == [0 1 0])
-    handles.R = 1;
+elseif handles.singleEyeSwitch.Value == 0
+    handles.singleEyeSwitch.String = 'off';
+    handles.sepEyes.BackgroundColor = [0.9400 0.9400 0.9400];
+    handles.singleEyeSwitch.BackgroundColor = [0.9400 0.9400 0.9400];
+        handles.LEcheck.BackgroundColor = [0.9400 0.9400 0.9400];
+    handles.REcheck.BackgroundColor = [0.9400 0.9400 0.9400];
+    close(handles.h)
+    guidata(hObject,handles)
 end
-% Hint: get(hObject,'Value') returns toggle state of REcheck
