@@ -22,7 +22,7 @@ function varargout = voma__gen_report(varargin)
 
 % Edit the above text to modify the response to help voma__gen_report
 
-% Last Modified by GUIDE v2.5 09-May-2017 11:40:08
+% Last Modified by GUIDE v2.5 20-Dec-2017 13:09:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,6 +84,13 @@ handles.CycAvg = [];
 %Initialize Scale Vals
 handles.params.pos_y_scale = str2double(get(handles.pos_y_scale,'String'));
 handles.params.neg_y_scale = str2double(get(handles.neg_y_scale,'String'));
+
+% Initialize plots as cycle averages.
+handles.params.plot_type_flag = 1;
+
+% Initialize invert_stim flag to FALSE
+handles.params.invert_stim = false;
+
 
 % Update handles structure
 guidata(hObject, handles);
@@ -569,7 +576,7 @@ SCC = handles.params.stimaxis;
 
 Scale = [handles.params.neg_y_scale handles.params.pos_y_scale];
 
-[hx] = MVI_Gen_Cyc_Avg_Plot__inputdata(Data,plotname,save_loc,stim_cond,Stim_trace,legend_flag,SCC,Scale);
+[hx] = MVI_Gen_Cyc_Avg_Plot__inputdata(Data,plotname,save_loc,stim_cond,Stim_trace,legend_flag,SCC,Scale,handles.params.plot_type_flag,handles.params.invert_stim);
 
 folder_name = uigetdir(pwd,'Choose the folder location to save the report printout');
 
@@ -716,3 +723,40 @@ function processed_filename_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes when selected object is changed in report_plot_opt.
+function report_plot_opt_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in report_plot_opt 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
+    case 'plot_cycavg_radbutton'
+        handles.params.plot_type_flag = 1;
+    case 'plot_allcycs_radbutton'
+        handles.params.plot_type_flag = 2;
+     
+end
+
+
+
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes on button press in inv_stim_chkbx.
+function inv_stim_chkbx_Callback(hObject, eventdata, handles)
+% hObject    handle to inv_stim_chkbx (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (get(hObject,'Value') == get(hObject,'Max'))
+	handles.params.invert_stim = true;
+else
+	handles.params.invert_stim = false;
+end
+
+% Update handles structure
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of inv_stim_chkbx

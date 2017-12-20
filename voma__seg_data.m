@@ -384,31 +384,39 @@ save(handles.params.segment_filename,'Data')
 
 
 
+if ~isfield(handles,'skip_excel_fill_flag')
+
+
+
 
 segments = segments + 1;
 handles.experimentdata = getappdata(handles.export_data,'data');
-    set(handles.worksheet_name,'String',[handles.visit_number.String,'-',handles.date.String,'-',handles.exp_type.String]);
-    handles.experimentdata{segments,1} = handles.seg_filename.String;
-    handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
-    handles.experimentdata{segments,3} = handles.subj_id.String;
-    handles.experimentdata{segments,4} = handles.implant.String;
-    handles.experimentdata{segments,5} = handles.eye_rec.String;
-    handles.experimentdata{segments,9} = [handles.exp_type.String,'-',handles.exp_condition.String,'-',handles.stim_type.String];
-    handles.experimentdata{segments,10} = handles.stim_axis.String;
-    stim_freq = handles.stim_frequency.String;
-    hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
-    stim_freq(hs:end) = [];
-    pt = find(stim_freq == 'p');
-    stim_freq(pt) = '.';
-    handles.experimentdata{segments,12} = str2double(stim_freq);
-    stim_int = handles.stim_intensity.String;
-    dps = find(handles.stim_intensity.String == 'd');
-    stim_int(dps:end) = [];
-    handles.experimentdata{segments,13} = str2num(stim_int);
+set(handles.worksheet_name,'String',[handles.visit_number.String,'-',handles.date.String,'-',handles.exp_type.String]);
+handles.experimentdata{segments,1} = handles.seg_filename.String;
+handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
+handles.experimentdata{segments,3} = handles.subj_id.String;
+handles.experimentdata{segments,4} = handles.implant.String;
+handles.experimentdata{segments,5} = handles.eye_rec.String;
+handles.experimentdata{segments,9} = [handles.exp_type.String,'-',handles.exp_condition.String,'-',handles.stim_type.String];
+handles.experimentdata{segments,10} = handles.stim_axis.String;
+stim_freq = handles.stim_frequency.String;
+hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
+stim_freq(hs:end) = [];
+pt = find(stim_freq == 'p');
+stim_freq(pt) = '.';
+handles.experimentdata{segments,12} = str2double(stim_freq);
+stim_int = handles.stim_intensity.String;
+dps = find(handles.stim_intensity.String == 'd');
+stim_int(dps:end) = [];
+handles.experimentdata{segments,13} = str2num(stim_int);
 setappdata(handles.export_data,'data',handles.experimentdata);
 handles.segment_number.String = num2str(segments);
 set(handles.save_indicator,'String','SAVED!')
 set(handles.save_indicator,'BackgroundColor','g')
+
+end
+
+
 guidata(hObject,handles)
 end
 
@@ -1808,6 +1816,10 @@ switch choice.stim
             
             handles.params.segment_filename = [raw{k,1} '.mat'];
             
+            handles.seg_filename.String = [raw{k,1} '.mat'];
+            
+            handles.skip_excel_fill_flag = 1;
+            
             save_segment_Callback(hObject, eventdata, handles);
             
             
@@ -1827,6 +1839,9 @@ switch choice.stim
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
             
         end
+        
+        
+        handles = rmfield(handles,'skip_excel_fill_flag');
         
     case 2 % Electrical only Sinusoids
         Time = handles.Segment.Time_Stim(:,1);

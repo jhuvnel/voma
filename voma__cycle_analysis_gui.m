@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 03-Apr-2017 12:59:41
+% Last Modified by GUIDE v2.5 20-Dec-2017 10:30:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,6 +80,8 @@ axes(handles.main_plot);
 handles.H = axis;
 
 handles.params.keyboard_flag = true;
+
+handles.params.user.savefile_suffix = '';
 
 % The 'voma__stim_analysis' GUI offers the option to upsample the processed
 % Eye and Stimulus data traces, and save them in parallel to the processed
@@ -559,7 +561,7 @@ handles.Final_Data.stim_ind = stim_ind;
 handles.CurrData.VOMA_data.stim_ind = stim_ind;
 handles.RootData(handles.curr_file).VOMA_data.stim_ind = stim_ind;
 
-
+set(handles.user_cyc_len,'String',num2str((handles.len/handles.Final_Data.Fs)*1000));
 
 if isempty(handles.stim_list)
     handles.stim_list = [true];
@@ -1187,7 +1189,7 @@ end
 cd(handles.params.pathtosave);
 
 Results = handles.Results;
-Results.name = handles.CurrData.name;
+Results.name = [handles.CurrData.name(1:end-4) handles.params.user.savefile_suffix '.mat'];
 
 if isfield(handles.CurrData,'RawFileName')
     Results.raw_filename = handles.CurrData.RawFileName;
@@ -1203,9 +1205,9 @@ Results.QPparams = handles.CurrData.QPparams;
 
 
 if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) '_CycleAvg'],'Results')
+    save([handles.CurrData.name(1:end-4) handles.params.user.savefile_suffix '_CycleAvg'],'Results')
 else
-    save([handles.CurrData.name '_CycleAvg'],'Results')
+    save([handles.CurrData.name handles.params.user.savefile_suffix '_CycleAvg'],'Results')
 end
 
 set(handles.save_status,'BackgroundColor','green')
@@ -1999,3 +2001,64 @@ end
 handles = guidata(hObject);
 
 guidata(hObject,handles)
+
+
+
+function user_cyc_len_Callback(hObject, eventdata, handles)
+% hObject    handle to user_cyc_len (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = get(hObject,'String');
+
+handles.len = (str2double(input)/1000)*handles.Final_Data.Fs;
+handles.len_stim = handles.len;
+
+plot_cycle_Callback(hObject, eventdata, handles)
+
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of user_cyc_len as text
+%        str2double(get(hObject,'String')) returns contents of user_cyc_len as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function user_cyc_len_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to user_cyc_len (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function user_savefile_suffix_Callback(hObject, eventdata, handles)
+% hObject    handle to user_savefile_suffix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = get(hObject,'String');
+
+if isempty(input)
+    handles.params.user.savefile_suffix = '';
+else
+    handles.params.user.savefile_suffix = ['_' input];
+end
+
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of user_savefile_suffix as text
+%        str2double(get(hObject,'String')) returns contents of user_savefile_suffix as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function user_savefile_suffix_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to user_savefile_suffix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
