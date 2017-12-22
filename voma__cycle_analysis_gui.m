@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 14-Dec-2017 10:55:17
+% Last Modified by GUIDE v2.5 20-Dec-2017 15:38:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1144,6 +1144,7 @@ Results.Parameters = handles.CurrData.VOMA_data.Parameters;
 % Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
 Results.Fs = handles.Final_Data.Fs;
 Results.QPparams = handles.CurrData.QPparams;
+Results.cyclist = get(handles.stim_table,'Data');
 
 
 
@@ -1156,71 +1157,80 @@ handles.individualSave = 2;
 guidata(hObject, handles);
 
 elseif handles.singleEyeSwitch.Value == 1
-
+if (handles.LEcheck.Value == handles.REcheck.Value)
+msg = msgbox('Select one eye to save data from.');
+end
 if ((handles.LEcheck.Value == 1) && (handles.REcheck.Value == 0))
     keep = find(strncmp(fields,'r',1));
-    Results = rmfield(handles.Results,{fields{keep}})
-Results.name = handles.CurrData.name;
+    Results = rmfield(handles.Results,{fields{keep}});
+    Results.name = handles.CurrData.name;
 
-if isfield(handles.CurrData,'RawFileName')
-    Results.raw_filename = handles.CurrData.RawFileName;
-end
+    if isfield(handles.CurrData,'RawFileName')
+        Results.raw_filename = handles.CurrData.RawFileName;
+    end
 
-Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+    Results.Parameters = handles.CurrData.VOMA_data.Parameters;
 %
 % Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
 % Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
-Results.Fs = handles.Final_Data.Fs;
-Results.QPparams = handles.CurrData.QPparams;
+    Results.Fs = handles.Final_Data.Fs;
+    Results.QPparams = handles.CurrData.QPparams;
+    Results.l_cyclist = get(handles.stim_table,'Data');
+    handles.l_cyclist = get(handles.stim_table,'Data');
 
 
 
-if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) '_CycleAvg_LeftOnly'],'Results')
-else
-    save([handles.CurrData.name '_CycleAvg_LeftOnly'],'Results')
-end
-if handles.individualSave < 2
-handles.individualSave = handles.individualSave + 1;
-handles.individual.LeftData = Results;
-handles.LEcheck.BackgroundColor = [0 1 0];
-guidata(hObject, handles);
-end
+    if ~isempty(strfind(handles.CurrData.name,'.mat'))
+        save([handles.CurrData.name(1:end-4) '_CycleAvg_LeftOnly'],'Results')
+    else
+        save([handles.CurrData.name '_CycleAvg_LeftOnly'],'Results')
+    end
+    if handles.individualSave < 2
+        handles.individualSave = handles.individualSave + 1;
+        handles.individual.LeftData = Results;
+        handles.LEcheck.BackgroundColor = [0 1 0];
+        handles = rmfield(handles,'Results');
+    end
+        guidata(hObject, handles);
+
 end
 
 if ((handles.LEcheck.Value == 0) && (handles.REcheck.Value == 1))
     keep = find(strncmp(fields,'l',1));
-    Results = rmfield(handles.Results,{fields{keep}})
-Results.name = handles.CurrData.name;
+    Results = rmfield(handles.Results,{fields{keep}});
+    Results.name = handles.CurrData.name;
 
-if isfield(handles.CurrData,'RawFileName')
-    Results.raw_filename = handles.CurrData.RawFileName;
-end
+    if isfield(handles.CurrData,'RawFileName')
+        Results.raw_filename = handles.CurrData.RawFileName;
+    end
 
-Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+    Results.Parameters = handles.CurrData.VOMA_data.Parameters;
 %
 % Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
 % Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
-Results.Fs = handles.Final_Data.Fs;
-Results.QPparams = handles.CurrData.QPparams;
+    Results.Fs = handles.Final_Data.Fs;
+    Results.QPparams = handles.CurrData.QPparams;
+    Results.r_cyclist = get(handles.stim_table,'Data');
+    handles.r_cyclist = get(handles.stim_table,'Data');
 
 
-
-if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) '_CycleAvg_RightOnly'],'Results')
-else
-    save([handles.CurrData.name '_CycleAvg_RightOnly'],'Results')
+    if ~isempty(strfind(handles.CurrData.name,'.mat'))
+        save([handles.CurrData.name(1:end-4) '_CycleAvg_RightOnly'],'Results')
+    else
+        save([handles.CurrData.name '_CycleAvg_RightOnly'],'Results')
+    end
+    if handles.individualSave < 2
+        handles.individualSave = handles.individualSave + 1;
+        handles.individual.RightData = Results;
+        handles.REcheck.BackgroundColor = [0 1 0];
+        handles = rmfield(handles,'Results');
+        guidata(hObject, handles);
+    end
+        guidata(hObject, handles);
 end
-if handles.individualSave < 2
-handles.individualSave = handles.individualSave + 1;
-handles.individual.RightData = Results;
-handles.REcheck.BackgroundColor = [0 1 0];
-guidata(hObject, handles);
-end
-end
 
 
-
+        guidata(hObject, handles);
 end
 
 set(handles.save_status,'BackgroundColor','green')
@@ -1763,7 +1773,15 @@ RootData = handles.RootData;
 RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
 RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;
 RootData(handles.curr_file).QPparams = handles.CurrData.QPparams;
+if (handles.singleEyeSwitch.Value == 0) 
 RootData(handles.curr_file).cyc2plot = get(handles.stim_table,'Data');
+        RootData(handles.curr_file).L_cyc2plot = [];
+        RootData(handles.curr_file).R_cyc2plot = [];
+elseif (handles.singleEyeSwitch.Value == 1)
+        RootData(handles.curr_file).L_cyc2plot = handles.l_cyclist;
+        RootData(handles.curr_file).R_cyc2plot = handles.r_cyclist;
+        RootData(handles.curr_file).cyc2plot = [];
+end
 RootData(handles.curr_file).VOMA_data.stim_ind = handles.CurrData.VOMA_data.stim_ind;
 
 cd(handles.pathname);
@@ -1783,6 +1801,7 @@ function go_back_to_gui_Callback(hObject, eventdata, handles)
 % hObject    handle to go_back_to_gui (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+cd(handles.params.pathtosave);
 if (handles.individualSave == 2) && (handles.singleEyeSwitch.Value == 1)
   fieldsL = fieldnames(handles.individual.LeftData);
   fieldsR = fieldnames(handles.individual.RightData);
@@ -1813,6 +1832,7 @@ else
 end
 
 guidata(hObject, handles);
+close(handles.h)
 close(handles.figure1)
 voma__qpr(handles.RootData)
 elseif (handles.individualSave == 1) && (handles.singleEyeSwitch.Value == 1)
@@ -1823,6 +1843,7 @@ elseif (handles.individualSave == 1) && (handles.singleEyeSwitch.Value == 1)
     switch choice
         case 'OK, let me go back.'
         case 'Continue to QPR GUI'
+            close(handles.h)
             close(handles.figure1)
 voma__qpr(handles.RootData)
     end
@@ -1834,6 +1855,7 @@ elseif (handles.individualSave == 0) && (handles.singleEyeSwitch.Value == 1)
     switch choice
         case 'OK, let me go back.'
         case 'Continue to QPR GUI'
+            close(handles.h)
             close(handles.figure1)
 voma__qpr(handles.RootData)
     end
@@ -2078,7 +2100,16 @@ function LEcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to LEcheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if handles.singleEyeSwitch.Value == 1
+handles.lefteye_flag.Value = handles.LEcheck.Value;
+handles.params.lefteye_flag = handles.LEcheck.Value;
+    if isfield(handles,'r_cyclist') && (handles.LEcheck.Value == 1) && (handles.individualSave < 2)
+        handles.stim_list = true(1,length(handles.Final_Data.stim_ind));
+        set(handles.keep_cycle,'Value',1);
+        updatestimlist(hObject, eventdata, handles)
+    end
+guidata(hObject,handles)
+end
 % Hint: get(hObject,'Value') returns toggle state of LEcheck
 
 % --- Executes on button press in REcheck.
@@ -2086,7 +2117,16 @@ function REcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to REcheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if handles.singleEyeSwitch.Value == 1
+handles.righteye_flag.Value = handles.REcheck.Value;
+handles.params.righteye_flag = handles.REcheck.Value;
+    if isfield(handles,'l_cyclist') && (handles.REcheck.Value == 1) && (handles.individualSave < 2)
+        handles.stim_list = true(1,length(handles.Final_Data.stim_ind));
+        set(handles.keep_cycle,'Value',1);
+        updatestimlist(hObject, eventdata, handles)
+    end
+guidata(hObject,handles)
+end
 % Hint: get(hObject,'Value') returns toggle state of REcheck
 
 
@@ -2103,9 +2143,9 @@ handles.h.NumberTitle = 'off';
 handles.h.Name = 'Seperate Eye Analysis Instructions';
 handles.h.Position = [520   678   560   250];
 instruct = uicontrol(handles.h,'Style','text','String',['To save data from each eye seperately:',10,'1. Choose one eye to start with, and unchek the box corresponding to the other eye.',10,...
-    '2. Run through normal analysis procedure making sure to click Plot Cycle Average before Save Processed Data.',10,...
-    '3. After saving the data from the first eye, follow the same procedure for the second eye being sure to click Plot Cycle Average before saving.',10,...
-    '4. Once bot sets of individual eye data are saved, clicking Go back to qpr GUI will automatically create and save a joined file.'],'Position',[30 0 500 225],'HorizontalAlignment','left','FontSize',12);
+    '2. Run through normal analysis procedure making sure to click "Plot Cycle Average" before "Save Processed Data".',10,...
+    '3. After saving the data from the first eye, follow the same procedure for the second eye being sure to click "Plot Cycle Average" before saving.',10,...
+    '4. Once both sets of individual eye data are saved, click "Update Saved Cycle List" and then "Go back to qpr GUI", which will automatically create and save a joined file.'],'Position',[30 0 500 245],'HorizontalAlignment','left','FontSize',12);
 guidata(hObject,handles)
     handles.singleEyeSwitch.String = 'on';
     handles.sepEyes.BackgroundColor = [0 1 0];
@@ -2118,6 +2158,36 @@ elseif handles.singleEyeSwitch.Value == 0
     handles.singleEyeSwitch.BackgroundColor = [0.9400 0.9400 0.9400];
         handles.LEcheck.BackgroundColor = [0.9400 0.9400 0.9400];
     handles.REcheck.BackgroundColor = [0.9400 0.9400 0.9400];
-    close(handles.h)
+    if isfield(handles, 'h')
+        if ishandle(handles.h)
+            close(handles.h)
+        end
+    end
     guidata(hObject,handles)
 end
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isfield(handles, 'h')
+    if ishandle(handles.h)
+        close(handles.h)
+    end
+end
+% Hint: delete(hObject) closes the figure
+delete(hObject);
+
+
+% --- Executes when entered data in editable cell(s) in stim_table.
+function stim_table_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to stim_table (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
