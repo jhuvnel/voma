@@ -25,7 +25,8 @@ function varargout = voma__qpr(varargin)
 
 % Edit the above text to modify the response to help voma__qpr
 
-% Last Modified by GUIDE v2.5 31-Aug-2017 23:24:12
+
+% Last Modified by GUIDE v2.5 05-Dec-2017 11:58:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -6506,6 +6507,7 @@ guidata(hObject,handles)
 
 % Hint: get(hObject,'Value') returns toggle state of inv_qps
 end
+
 
 
 % --- Executes on button press in find_angvel_offset.
