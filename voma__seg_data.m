@@ -351,9 +351,20 @@ function [handles]=save_segment_Callback(hObject, eventdata, handles)
 handles.params.segment_filename = handles.seg_filename.String;
 segments = str2num(handles.segment_number.String);
 
+%PJB edit. If the user chooses to segment a file manually BEFORE running
+%the 'mechancial auto' segment function, there is no 'foldername' saved in
+%the handles. This small piece of code checks and asks the user for a
+%folder to save segmented files. Note, we may want to display the 'save'
+%folder on the front panel and allow the user to update the save location.
+if isempty(getappdata(handles.save_segment,'foldername')) || (numel(getappdata(handles.save_segment,'foldername'))==1 && (getappdata(handles.save_segment,'foldername')==0))
+    folder_name = {uigetdir('','Select Directory to Save the Segmented Data')};
+    setappdata(handles.save_segment,'foldername',folder_name{1});
+    cd(folder_name{1})
+else
+    
+    cd(getappdata(handles.save_segment,'foldername'))
+end
 
-
-cd(getappdata(handles.save_segment,'foldername'))
 Data = handles.Segment;
 
 
@@ -373,31 +384,39 @@ save(handles.params.segment_filename,'Data')
 
 
 
+if ~isfield(handles,'skip_excel_fill_flag')
+
+
+
 
 segments = segments + 1;
 handles.experimentdata = getappdata(handles.export_data,'data');
-    set(handles.worksheet_name,'String',[handles.visit_number.String,'-',handles.date.String,'-',handles.exp_type.String]);
-    handles.experimentdata{segments,1} = handles.seg_filename.String;
-    handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
-    handles.experimentdata{segments,3} = handles.subj_id.String;
-    handles.experimentdata{segments,4} = handles.implant.String;
-    handles.experimentdata{segments,5} = handles.eye_rec.String;
-    handles.experimentdata{segments,9} = [handles.exp_type.String,'-',handles.exp_condition.String,'-',handles.stim_type.String];
-    handles.experimentdata{segments,10} = handles.stim_axis.String;
-    stim_freq = handles.stim_frequency.String;
-    hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
-    stim_freq(hs:end) = [];
-    pt = find(stim_freq == 'p');
-    stim_freq(pt) = '.';
-    handles.experimentdata{segments,12} = str2double(stim_freq);
-    stim_int = handles.stim_intensity.String;
-    dps = find(handles.stim_intensity.String == 'd');
-    stim_int(dps:end) = [];
-    handles.experimentdata{segments,13} = str2num(stim_int);
+set(handles.worksheet_name,'String',[handles.visit_number.String,'-',handles.date.String,'-',handles.exp_type.String]);
+handles.experimentdata{segments,1} = handles.seg_filename.String;
+handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
+handles.experimentdata{segments,3} = handles.subj_id.String;
+handles.experimentdata{segments,4} = handles.implant.String;
+handles.experimentdata{segments,5} = handles.eye_rec.String;
+handles.experimentdata{segments,9} = [handles.exp_type.String,'-',handles.exp_condition.String,'-',handles.stim_type.String];
+handles.experimentdata{segments,10} = handles.stim_axis.String;
+stim_freq = handles.stim_frequency.String;
+hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
+stim_freq(hs:end) = [];
+pt = find(stim_freq == 'p');
+stim_freq(pt) = '.';
+handles.experimentdata{segments,12} = str2double(stim_freq);
+stim_int = handles.stim_intensity.String;
+dps = find(handles.stim_intensity.String == 'd');
+stim_int(dps:end) = [];
+handles.experimentdata{segments,13} = str2num(stim_int);
 setappdata(handles.export_data,'data',handles.experimentdata);
 handles.segment_number.String = num2str(segments);
 set(handles.save_indicator,'String','SAVED!')
 set(handles.save_indicator,'BackgroundColor','g')
+
+end
+
+
 guidata(hObject,handles)
 end
 
@@ -1797,6 +1816,10 @@ switch choice.stim
             
             handles.params.segment_filename = [raw{k,1} '.mat'];
             
+            handles.seg_filename.String = [raw{k,1} '.mat'];
+            
+            handles.skip_excel_fill_flag = 1;
+            
             save_segment_Callback(hObject, eventdata, handles);
             
             
@@ -1816,6 +1839,9 @@ switch choice.stim
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
             
         end
+        
+        
+        handles = rmfield(handles,'skip_excel_fill_flag');
         
     case 2 % Electrical only Sinusoids
         Time = handles.Segment.Time_Stim(:,1);
@@ -2313,24 +2339,42 @@ function export_data_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 cd(handles.ss_PathName);
 [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+
 handles.experimentdata = getappdata(hObject,'data');
+
+
+rmvinds = strfind(handles.experimentdata(:,1),'.mat');
+for k=1:length(rmvinds)
+   
+    temp = handles.experimentdata{k,1};
+    
+    temp(rmvinds{k}:rmvinds{k}+3) = '';
+    
+    handles.experimentdata{k,1} = temp;
+end
+
+
 if ismember(handles.worksheet_name.String, sheets)
     segs = size(handles.experimentdata);
     [num1, txt1, raw1] = xlsread(handles.exp_spread_sheet_name.String, handles.worksheet_name.String,'A:A');
     oldVals = size(txt1);
     newEntry = 0;
     for rs = 1:segs(1)
-        if ismember([handles.experimentdata(rs,1)],txt1) 
+        if ismember([handles.experimentdata(rs,1)],txt1)
             replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-        xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
-        
+            xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
+            
         else
-        xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
-        newEntry = newEntry+1;
+            xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
+            newEntry = newEntry+1;
         end
     end
 else
     labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
+    % Check if the length of the Sheet name is > 31 chars
+    if length(handles.worksheet_name.String)> 31
+        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
+    end
     xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
     segs = size(handles.experimentdata);
     xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);

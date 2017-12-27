@@ -25,6 +25,7 @@ function varargout = voma__qpr(varargin)
 
 % Edit the above text to modify the response to help voma__qpr
 
+
 % Last Modified by GUIDE v2.5 05-Dec-2017 11:58:49
 
 % Begin initialization code - DO NOT EDIT
@@ -189,23 +190,23 @@ handles.params.abs_APAQOR_thresh_flag = true;
 handles.params.link_x_axis_plots = false;
 
 % Initialize the 'Filter_Param' table
-filt_param_data = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'}; ...
-    {'LE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-    {'LE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-    {'LE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-    {'RE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-    {'RE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-    {'RE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-    {'LE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'LE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'LE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'RE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'RE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'};...
-    {'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-    {'RE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}];
+filt_param_data = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'} {'Removed Ang. Vel. Offset?'} { 'APAQPR Thresh.'} { 'Min. SPV Fit Time [ms]'}; ...
+    {'LE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+    {'LE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+    {'LE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+    {'RE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+    {'RE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+    {'RE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+    {'LE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'LE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'LE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'RE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'RE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''};...
+    {'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+    {'RE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}];
 set(handles.filt_params,'Data',filt_param_data);
 
 % Initialize flags for filtering LEFT and RIGHT eye
@@ -218,7 +219,7 @@ handles.params.APAQPR_method = 1;
 
 % Initialize params for the 'findpeaks' APAQPR method
 handles.params.APAQPR_findpeaks_temp_thresh = str2double(get(handles.APAQPR_findpeaks_temp_thresh,'String'));
-
+handles.params.inv_qp = false;
 
 guidata(hObject, handles);
 end
@@ -271,7 +272,7 @@ if handles.reload_flag == 0
     % Since we loaded a new file, the 'smooth_flag' should be false
     handles.params.smooth_flag = 0;
     
-   % Brian this is a test. 
+    % Brian this is a test.
     
 elseif handles.reload_flag == 1
     % This 'reload_flag' is true when the user is 'recalling' this qpr gui
@@ -315,23 +316,23 @@ if (~isfield(handles.CurrData,'QPparams')) || (isempty(handles.CurrData.QPparams
     handles.CurrData.QPparams.UGQPRarray = [];
     
     % Initialize the 'Filter_Param' table
-    filt_param_data = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'}; ...
-        {'LE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-        {'LE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-        {'LE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-        {'RE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-        {'RE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-        {'RE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''}; ...
-        {'LE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'LE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'LE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'RE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'RE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'};...
-        {'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}; ...
-        {'RE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'}];
+    filt_param_data = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'} {'Removed Ang. Vel. Offset?'} { 'APAQPR Thresh.'} { 'Min. SPV Fit Time [ms]'}; ...
+        {'LE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+        {'LE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+        {'LE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+        {'RE - X Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+        {'RE - Y Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+        {'RE - Z Pos'} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {''} {''} {''} {'N/A'} {''} {'N/A'}; ...
+        {'LE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'LE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'LE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'RE - LARP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'RE - RALP Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'RE - LHRH Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''};...
+        {'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'RE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}];
     set(handles.filt_params,'Data',filt_param_data);
     
     
@@ -383,6 +384,17 @@ if (~isfield(handles.CurrData,'QPparams')) || (isempty(handles.CurrData.QPparams
     handles.CurrData.QPparams.APAQPR.Trend.RE_Y = [];
     handles.CurrData.QPparams.APAQPR.Trend.RE_Z = [];
     
+    handles.CurrData.QPparams.AngVelOffset.LE_X = [];
+    handles.CurrData.QPparams.AngVelOffset.LE_Y = [];
+    handles.CurrData.QPparams.AngVelOffset.LE_Z = [];
+    handles.CurrData.QPparams.AngVelOffset.LE_LARP = [];
+    handles.CurrData.QPparams.AngVelOffset.LE_RALP = [];
+    
+    handles.CurrData.QPparams.AngVelOffset.RE_X = [];
+    handles.CurrData.QPparams.AngVelOffset.RE_Y = [];
+    handles.CurrData.QPparams.AngVelOffset.RE_Z = [];
+    handles.CurrData.QPparams.AngVelOffset.RE_LARP = [];
+    handles.CurrData.QPparams.AngVelOffset.RE_RALP = [];
     %
     handles.CurrData.QPparams.qpr_routine =  get(handles.qpr_routine,'Value');
 else
@@ -397,18 +409,35 @@ else
     
     if isfield(handles.CurrData.QPparams,'filt_params')
         
-        handles.params.e_vel_param1 = handles.CurrData.QPparams.filt_params{8,3};
-        set(handles.e_vel_param1,'String',handles.CurrData.QPparams.filt_params{8,3});
-        handles.params.e_vel_param2 = handles.CurrData.QPparams.filt_params{8,4};
-        set(handles.e_vel_param2,'String',handles.CurrData.QPparams.filt_params{8,4});
-        handles.params.e_vel_param3 = handles.CurrData.QPparams.filt_params{8,5};
-        set(handles.e_vel_param3,'String',handles.CurrData.QPparams.filt_params{8,5});
-        handles.params.e_vel_param4 = handles.CurrData.QPparams.filt_params{8,6};
-        set(handles.e_vel_param4,'String',handles.CurrData.QPparams.filt_params{8,6});
-        handles.params.e_vel_param5 = handles.CurrData.QPparams.filt_params{8,7};
-        set(handles.e_vel_param5,'String',handles.CurrData.QPparams.filt_params{8,7});
-        handles.params.e_vel_param6 = handles.CurrData.QPparams.filt_params{8,8};
-        set(handles.e_vel_param6,'String',handles.CurrData.QPparams.filt_params{8,8});
+        if ~isempty(handles.CurrData.QPparams.filt_params{8,3})
+            
+            
+            handles.params.e_vel_param1 = handles.CurrData.QPparams.filt_params{8,3};
+            set(handles.e_vel_param1,'String',handles.CurrData.QPparams.filt_params{8,3});
+            handles.params.e_vel_param2 = handles.CurrData.QPparams.filt_params{8,4};
+            set(handles.e_vel_param2,'String',handles.CurrData.QPparams.filt_params{8,4});
+            handles.params.e_vel_param3 = handles.CurrData.QPparams.filt_params{8,5};
+            set(handles.e_vel_param3,'String',handles.CurrData.QPparams.filt_params{8,5});
+            handles.params.e_vel_param4 = handles.CurrData.QPparams.filt_params{8,6};
+            set(handles.e_vel_param4,'String',handles.CurrData.QPparams.filt_params{8,6});
+            handles.params.e_vel_param5 = handles.CurrData.QPparams.filt_params{8,7};
+            set(handles.e_vel_param5,'String',handles.CurrData.QPparams.filt_params{8,7});
+            handles.params.e_vel_param6 = handles.CurrData.QPparams.filt_params{8,8};
+            set(handles.e_vel_param6,'String',handles.CurrData.QPparams.filt_params{8,8});
+        else
+            handles.params.e_vel_param1 = handles.CurrData.QPparams.filt_params{11,3};
+            set(handles.e_vel_param1,'String',handles.CurrData.QPparams.filt_params{11,3});
+            handles.params.e_vel_param2 = handles.CurrData.QPparams.filt_params{11,4};
+            set(handles.e_vel_param2,'String',handles.CurrData.QPparams.filt_params{11,4});
+            handles.params.e_vel_param3 = handles.CurrData.QPparams.filt_params{11,5};
+            set(handles.e_vel_param3,'String',handles.CurrData.QPparams.filt_params{11,5});
+            handles.params.e_vel_param4 = handles.CurrData.QPparams.filt_params{11,6};
+            set(handles.e_vel_param4,'String',handles.CurrData.QPparams.filt_params{11,6});
+            handles.params.e_vel_param5 = handles.CurrData.QPparams.filt_params{11,7};
+            set(handles.e_vel_param5,'String',handles.CurrData.QPparams.filt_params{11,7});
+            handles.params.e_vel_param6 = handles.CurrData.QPparams.filt_params{11,8};
+            set(handles.e_vel_param6,'String',handles.CurrData.QPparams.filt_params{11,8});
+        end
         
         % KLUDGE!
         if strcmp(handles.CurrData.QPparams.filt_params{8,9},'')
@@ -474,6 +503,22 @@ else
         
     else
         
+        
+    end
+    
+    if (~isfield(handles.CurrData.QPparams,'AngVelOffset')) || (isempty(handles.CurrData.QPparams.AngVelOffset))
+        handles.CurrData.QPparams.AngVelOffset.LE_X = [];
+        handles.CurrData.QPparams.AngVelOffset.LE_Y = [];
+        handles.CurrData.QPparams.AngVelOffset.LE_Z = [];
+        handles.CurrData.QPparams.AngVelOffset.LE_LARP = [];
+        handles.CurrData.QPparams.AngVelOffset.LE_RALP = [];
+        
+        handles.CurrData.QPparams.AngVelOffset.RE_X = [];
+        handles.CurrData.QPparams.AngVelOffset.RE_Y = [];
+        handles.CurrData.QPparams.AngVelOffset.RE_Z = [];
+        handles.CurrData.QPparams.AngVelOffset.RE_LARP = [];
+        handles.CurrData.QPparams.AngVelOffset.RE_RALP = [];
+    else
         
     end
     
@@ -595,16 +640,45 @@ end
 
 filt_params = get(handles.filt_params,'Data');
 
+% if size(filt_params,2)==10
+%     % You are loading a file from an earlier version of voma__qpr, BEFORE
+%     % the APAQPR routine was added
+%
+%     filt_params = [filt_params repmat({''},size(filt_params,1),3)];
+%     filt_params(1,:) = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'}];
+%     set(handles.filt_params,'Data',filt_params);
+% end
+
 if size(filt_params,2)==10
     % You are loading a file from an earlier version of voma__qpr, BEFORE
     % the APAQPR routine was added
     
-    filt_params = [filt_params repmat({''},size(filt_params,1),3)];
-    filt_params(1,:) = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'}];
+    filt_params = [filt_params repmat({''},size(filt_params,1),6)];
+    filt_params(1,:) = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'} {'Removed Ang. Vel. Offset?'} { 'APAQPR Thresh.'} { 'Min. SPV Fit Time [ms]'}];
     set(handles.filt_params,'Data',filt_params);
 end
 
+if size(filt_params,2)<14
+    % You are loading a file from an earlier version of voma__qpr, BEFORE
+    % the 'remove Ang. Vel. Offset' routine was added
+    
+    filt_params = [filt_params repmat({''},size(filt_params,1),3)];
+    filt_params(1,:) = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'} {'Removed Ang. Vel. Offset?'} { 'APAQPR Thresh.'} { 'Min. SPV Fit Time [ms]'}];
+    set(handles.filt_params,'Data',filt_params);
+end
 
+if size(filt_params,1)<14
+    % If we entered this statement, we may be analyzing a VOMA file that
+    % was analyzed BEFORE we began saving/analyze the Y- and X-component
+    % eye velocity traces. We will make room for saving the filter
+    % parameters for those traces here.
+    filt_params(14:17,:) =   [{'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
+        {'RE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}];
+    set(handles.filt_params,'Data',filt_params);
+    
+end
 
 % if strcmp(filt_params{8,11},'y')
 %     handles.CurrData.QPparams.APAQPR.Flag.LE_X = true;
@@ -894,7 +968,10 @@ function [handles] = start_deseccade_Callback(hObject, eventdata, handles)
 % desaccade2 = RALP
 % desaccade3 = LHRH
 %
-
+set(handles.save_status,'BackgroundColor','red')
+set(handles.save_status,'String','Filtering AngVel Traces')
+set(handles.save_status,'FontSize',12)
+drawnow
 % This code uses the custom 'desaccade' routine (specifically Version 3.
 % This version of the code takes ina  data trace, splines over the whole
 % trace, then checks if there is an input argument containing Quick Phase
@@ -2334,8 +2411,8 @@ if handles.params.R_5==1
 end
 
 if handles.params.abs_APAQOR_thresh_flag
-    plot(handles.CurrData.VOMA_data.Eye_t,handles.params.APAQPR_derivthresh*ones(1,length(handles.CurrData.VOMA_data.Eye_t)),'k')
-    plot(handles.CurrData.VOMA_data.Eye_t,-handles.params.APAQPR_derivthresh*ones(1,length(handles.CurrData.VOMA_data.Eye_t)),'k')
+    plot(handles.CurrData.VOMA_data.Eye_t,handles.params.APAQPR_derivthresh*ones(length(handles.CurrData.VOMA_data.Eye_t),1),'k')
+    plot(handles.CurrData.VOMA_data.Eye_t,-handles.params.APAQPR_derivthresh*ones(length(handles.CurrData.VOMA_data.Eye_t),1),'k')
     
     
 else
@@ -2366,7 +2443,7 @@ switch handles.params.plot_toggle_flag
                 % 100.
                 
                 if ~strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
-                pos_scale = 100;
+                    pos_scale = 100;
                 end
                 
                 
@@ -2377,7 +2454,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_X
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2396,7 +2473,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2413,7 +2490,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_Z
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Z{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2430,7 +2507,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_X
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2449,7 +2526,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2467,7 +2544,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_X
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2485,7 +2562,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2502,7 +2579,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Z
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Z{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2537,7 +2614,7 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2638,8 +2715,8 @@ switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
         
         switch handles.CurrData.VOMA_data.Parameters.DAQ_code
             case {2,3}
-%         switch handles.CurrData.VOMA_data.Parameters.DAQ
-%             case 'Lasker_CED'
+                %         switch handles.CurrData.VOMA_data.Parameters.DAQ
+                %             case 'Lasker_CED'
                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_Trace(:,1),handles.params.stim_plot_mult*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(:,1))),'Marker','*','color','k','LineWidth',0.5)
                 
             otherwise
@@ -2939,7 +3016,10 @@ function save_qp_params_Callback(hObject, eventdata, handles)
 % hObject    handle to save_qp_params (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+set(handles.save_status,'BackgroundColor','red')
+set(handles.save_status,'String','Saving VOMA File')
+set(handles.save_status,'FontSize',12)
+drawnow
 % The 'voma__stim_analysis' GUI offers the option to upsample the processed
 % Eye and Stimulus data traces, and save them in parallel to the processed
 % data in the original time base. We will ask the user which traces they
@@ -2956,7 +3036,7 @@ if isfield(handles.CurrData.VOMA_data,'UpSamp')
             % Delete the old, upsampled data traces
             handles.CurrData.VOMA_data = rmfield(handles.CurrData.VOMA_data,'UpSamp');
             handles.CurrData.VOMA_data.stim_ind = [];
-%             handles.CurrData.cyc2plot = 1;
+            %             handles.CurrData.cyc2plot = 1;
             handles.CurrData = rmfield(handles.CurrData,'cyc2plot');
             % Flag the system to save the data as normal
             handles.upsamp_flag = true;
@@ -3441,17 +3521,29 @@ if button_state == get(hObject,'Max')
     switch handles.params.pos_filt_trace
         
         case 1
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
+            end
         case 2
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
+            end
         case 3
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
+            end
         case 4
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
+            end
         case 5
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
+            end
         case 6
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
+            end
     end
     
     switch handles.params.pos_filt_method
@@ -3608,7 +3700,7 @@ if ~isempty(filt_params{handles.params.pos_filt_trace+1,2})
     end
     
     try
-        temp_APAQPR_derivthresh = filt_params{handles.params.pos_filt_trace + 1,14};
+        temp_APAQPR_derivthresh = filt_params{handles.params.pos_filt_trace + 1,15};
         if ~isempty(temp_APAQPR_derivthresh)
             handles.params.APAQPR_derivthresh = temp_APAQPR_derivthresh;
             set(handles.APAQPR_derivthresh,'String',num2str(handles.params.APAQPR_derivthresh))
@@ -3772,13 +3864,24 @@ switch handles.params.pos_filt_method
         end
         
     case 3
+        % Check if the user submitted an ODD frame length for the median
+        % filter. If so, the filter will be zero-phase and symmetric.
+        if mod(handles.params.angpos_filt_param1,2)==1
+            
         
-        temp_smth = medfilt1(temp,handles.params.angpos_filt_param1);
-        filt_type = 'Median Filter';
-        filt_param1 = handles.params.angpos_filt_param1;
-        filt_param2 = '';
-        filt_param3 = '';
-        
+            
+            temp_smth = medfilt1(temp,handles.params.angpos_filt_param1);
+            filt_type = 'Median Filter';
+            filt_param1 = handles.params.angpos_filt_param1;
+            filt_param2 = '';
+            filt_param3 = '';
+        else
+            %The user input an ODD frame length, which would create a
+            %non-zero phase distortion.
+            
+            h = msgbox({'The frame length for the Median Filter must be ODD to ensure zero phase distortion. '});
+            return
+        end
     case 4 % irlssmooth
         
         
@@ -3853,11 +3956,22 @@ data_rot = 1;
 
 
 DAQ_code = handles.CurrData.VOMA_data.Parameters.DAQ_code;
+% Initialize the output format as and empty value. If needed, we will
+% update the value below.
+OutputFormat = [];
 
 if strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
     % If, regardless of the system used to record the eye movement data,
     % the data is presented in Fick angles, change the DAQ_code to '5'
     DAQ_code = 5;
+    OutputFormat = 1;
+end
+
+if strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'RotVect')
+    % If, regardless of the system used to record the eye movement data,
+    % the data is presented in Rotation Vectors, change the DAQ_code to '3'
+    DAQ_code = 3;
+    OutputFormat = 2;
 end
 
 % Store Relevant Ocular Ang. Pos. data in the proper format for the
@@ -3872,7 +3986,7 @@ Data_In.Data_RE_Pos_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z;
 
 Data_In.Fs = handles.CurrData.VOMA_data.Fs;
 
-[New_Ang_Vel] = voma__processeyemovements([],[],[],[],0,data_rot,DAQ_code,[],Data_In);
+[New_Ang_Vel] = voma__processeyemovements([],[],[],[],0,data_rot,DAQ_code,OutputFormat,Data_In);
 
 handles.CurrData.VOMA_data.Data_LE_Vel_X = New_Ang_Vel.LE_Vel_X;
 handles.CurrData.VOMA_data.Data_LE_Vel_Y = New_Ang_Vel.LE_Vel_Y;
@@ -3898,6 +4012,58 @@ handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = handles.CurrData.VOMA_dat
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
 handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
+
+%Clear any ang. vel. offset saved in the file.
+handles.params.temp_vel_offset_trace_LEX = [];
+handles.params.temp_vel_offset_trace_LEY = [];
+handles.params.temp_vel_offset_trace_LEZ = [];
+handles.params.temp_vel_offset_trace_LELARP = [];
+handles.params.temp_vel_offset_trace_LERALP = [];
+handles.params.temp_vel_offset_trace_REX = [];
+handles.params.temp_vel_offset_trace_REY = [];
+handles.params.temp_vel_offset_trace_REZ = [];
+handles.params.temp_vel_offset_trace_RELARP = [];
+handles.params.temp_vel_offset_trace_RERALP = [];
+
+handles.CurrData.QPparams.AngVelOffset.LE_X = [];
+handles.CurrData.QPparams.AngVelOffset.LE_Y = [];
+handles.CurrData.QPparams.AngVelOffset.LE_Z = [];
+handles.CurrData.QPparams.AngVelOffset.LE_LARP = [];
+handles.CurrData.QPparams.AngVelOffset.LE_RALP = [];
+handles.CurrData.QPparams.AngVelOffset.RE_X = [];
+handles.CurrData.QPparams.AngVelOffset.RE_Y = [];
+handles.CurrData.QPparams.AngVelOffset.RE_Z = [];
+handles.CurrData.QPparams.AngVelOffset.RE_LARP = [];
+handles.CurrData.QPparams.AngVelOffset.RE_RALP = [];
+
+handles.params.temp_vel_offset_LEX_method = [];
+handles.params.temp_vel_offset_LEY_method = [];
+handles.params.temp_vel_offset_LELARP_method = [];
+handles.params.temp_vel_offset_LERALP_method = [];
+handles.params.temp_vel_offset_LEZ_method = [];
+
+handles.params.temp_vel_offset_REX_method = [];
+handles.params.temp_vel_offset_REY_method = [];
+handles.params.temp_vel_offset_RELARP_method = [];
+handles.params.temp_vel_offset_RERALP_method = [];
+handles.params.temp_vel_offset_REZ_method = [];
+
+filt_params = get(handles.filt_params,'Data');
+
+filt_params{8,14} = '';
+filt_params{9,14} = '';
+filt_params{10,14} = '';
+filt_params{11,14} = '';
+filt_params{12,14} = '';
+filt_params{13,14} = '';
+filt_params{14,14} = '';
+filt_params{15,14} = '';
+filt_params{16,14} = '';
+filt_params{17,14} = '';
+
+
+set(handles.filt_params,'Data',filt_params);
+
 
 guidata(hObject,handles)
 end
@@ -3943,26 +4109,38 @@ switch handles.params.pos_filt_trace
         handles.CurrData.QPparams.APAQPR.Trend.LE_X = [];
         handles.CurrData.QPparams.APAQPR.Flag.LE_X = false;
         handles.CurrData.QPparams.APAQPR.Array.LE_X = [];
+        handles.CurrData.QPparams.APAQPR.Thresh.LE_X = [];
+        handles.CurrData.QPparams.APAQPR.AbsVal.LE_X = [];
     case 2
         handles.CurrData.QPparams.APAQPR.Trend.LE_Y = [];
         handles.CurrData.QPparams.APAQPR.Flag.LE_Y = false;
         handles.CurrData.QPparams.APAQPR.Array.LE_Y = [];
+        handles.CurrData.QPparams.APAQPR.Thresh.LE_Y = [];
+        handles.CurrData.QPparams.APAQPR.AbsVal.LE_Y = [];
     case 3
         handles.CurrData.QPparams.APAQPR.Trend.LE_Z = [];
         handles.CurrData.QPparams.APAQPR.Flag.LE_Z = false;
         handles.CurrData.QPparams.APAQPR.Array.LE_Z = [];
+        handles.CurrData.QPparams.APAQPR.Thresh.LE_Z = [];
+        handles.CurrData.QPparams.APAQPR.AbsVal.LE_Z = [];
     case 4
         handles.CurrData.QPparams.APAQPR.Trend.RE_X = [];
         handles.CurrData.QPparams.APAQPR.Flag.RE_X = false;
         handles.CurrData.QPparams.APAQPR.Array.RE_X = [];
+        handles.CurrData.QPparams.APAQPR.Thresh.RE_X = [];
+        handles.CurrData.QPparams.APAQPR.AbsVal.RE_X = [];
     case 5
         handles.CurrData.QPparams.APAQPR.Trend.RE_Y = [];
         handles.CurrData.QPparams.APAQPR.Flag.RE_Y = false;
         handles.CurrData.QPparams.APAQPR.Array.RE_Y = [];
+        handles.CurrData.QPparams.APAQPR.Thresh.RE_Y = [];
+        handles.CurrData.QPparams.APAQPR.AbsVal.RE_Y = [];
     case 6
         handles.CurrData.QPparams.APAQPR.Trend.RE_Z = [];
         handles.CurrData.QPparams.APAQPR.Flag.RE_Z = false;
         handles.CurrData.QPparams.APAQPR.Array.RE_Z = [];
+        handles.CurrData.QPparams.APAQPR.Thresh.RE_Z = [];
+        handles.CurrData.QPparams.APAQPR.AbsVal.RE_Z = [];
 end
 
 set(handles.APAQPR_table,'Data',[]);
@@ -5178,7 +5356,7 @@ end
 thresh = handles.params.APAQPR_derivthresh;
 
 if handles.params.abs_APAQOR_thresh_flag
-    % If the user chose to use an absolute value threshold (i.e., catch QPs in both directions) 
+    % If the user chose to use an absolute value threshold (i.e., catch QPs in both directions)
     diff_pos = abs(diff(Trace2));
     
     % Grab indices where the aboslute value of the eye velocity crosses the threshold
@@ -5307,17 +5485,17 @@ switch h
         
         switch handles.params.pos_filt_trace
             case 1
-                handles.CurrData.QPparams.APAQPR.Array.LE_X = [handles.CurrData.QPparams.APAQPR.Array.LE_X ; i1'];
+                handles.CurrData.QPparams.APAQPR.Array.LE_X{end} = [handles.CurrData.QPparams.APAQPR.Array.LE_X{end} ; i1'];
             case 2
-                handles.CurrData.QPparams.APAQPR.Array.LE_Y = [handles.CurrData.QPparams.APAQPR.Array.LE_Y ; i1'];
+                handles.CurrData.QPparams.APAQPR.Array.LE_Y{end} = [handles.CurrData.QPparams.APAQPR.Array.LE_Y{end} ; i1'];
             case 3
-                handles.CurrData.QPparams.APAQPR.Array.LE_Z = [handles.CurrData.QPparams.APAQPR.Array.LE_Z ; i1'];
+                handles.CurrData.QPparams.APAQPR.Array.LE_Z{end} = [handles.CurrData.QPparams.APAQPR.Array.LE_Z{end} ; i1'];
             case 4
-                handles.CurrData.QPparams.APAQPR.Array.RE_X = [handles.CurrData.QPparams.APAQPR.Array.RE_X ; i1'];
+                handles.CurrData.QPparams.APAQPR.Array.RE_X{end} = [handles.CurrData.QPparams.APAQPR.Array.RE_X{end} ; i1'];
             case 5
-                handles.CurrData.QPparams.APAQPR.Array.RE_Y = [handles.CurrData.QPparams.APAQPR.Array.RE_Y ; i1'];
+                handles.CurrData.QPparams.APAQPR.Array.RE_Y{end} = [handles.CurrData.QPparams.APAQPR.Array.RE_Y{end} ; i1'];
             case 6
-                handles.CurrData.QPparams.APAQPR.Array.RE_Z = [handles.CurrData.QPparams.APAQPR.Array.RE_Z ; i1'];
+                handles.CurrData.QPparams.APAQPR.Array.RE_Z{end} = [handles.CurrData.QPparams.APAQPR.Array.RE_Z{end} ; i1'];
         end
         
         [handles] = plot_smth_data(hObject,eventdata,handles);
@@ -5419,28 +5597,76 @@ sacc_inds = handles.params.sacc_inds_temp;
 switch handles.params.pos_filt_trace
     
     case 1
-        handles.CurrData.QPparams.APAQPR.Array.LE_X = sacc_inds;
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_X')
+            handles.CurrData.QPparams.APAQPR.Array.LE_X = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.LE_X{end+1} = sacc_inds;
+        end
         handles.CurrData.QPparams.APAQPR.Flag.LE_X = true;
+        handles.CurrData.QPparams.APAQPR.Thresh.LE_X = [handles.CurrData.QPparams.APAQPR.Thresh.LE_X ; handles.params.APAQPR_derivthresh];
+        
+        handles.CurrData.QPparams.APAQPR.AbsVal.LE_X = [handles.CurrData.QPparams.APAQPR.AbsVal.LE_X ; handles.params.abs_APAQOR_thresh_flag];
         Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X;
     case 2
-        handles.CurrData.QPparams.APAQPR.Array.LE_Y = sacc_inds;
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_Y')
+            handles.CurrData.QPparams.APAQPR.Array.LE_Y = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.LE_Y{end+1} = sacc_inds;
+        end
         handles.CurrData.QPparams.APAQPR.Flag.LE_Y = true;
+        handles.CurrData.QPparams.APAQPR.Thresh.LE_Y = [handles.CurrData.QPparams.APAQPR.Thresh.LE_Y;handles.params.APAQPR_derivthresh];
+        handles.CurrData.QPparams.APAQPR.AbsVal.LE_Y = [handles.CurrData.QPparams.APAQPR.AbsVal.LE_Y;handles.params.abs_APAQOR_thresh_flag];
+        
         Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y;
     case 3
-        handles.CurrData.QPparams.APAQPR.Array.LE_Z = sacc_inds;
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_Z')
+            handles.CurrData.QPparams.APAQPR.Array.LE_Z = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.LE_Z{end+1} = sacc_inds;
+        end
         handles.CurrData.QPparams.APAQPR.Flag.LE_Z = true;
+        
+        handles.CurrData.QPparams.APAQPR.Thresh.LE_Z = [handles.CurrData.QPparams.APAQPR.Thresh.LE_Z;handles.params.APAQPR_derivthresh];
+        handles.CurrData.QPparams.APAQPR.AbsVal.LE_Z = [handles.CurrData.QPparams.APAQPR.AbsVal.LE_Z;handles.params.abs_APAQOR_thresh_flag];
+        
         Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z;
     case 4
-        handles.CurrData.QPparams.APAQPR.Array.RE_X = sacc_inds;
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_X')
+            handles.CurrData.QPparams.APAQPR.Array.RE_X = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.RE_X{end+1} = sacc_inds;
+        end
         handles.CurrData.QPparams.APAQPR.Flag.RE_X = true;
+        
+        handles.CurrData.QPparams.APAQPR.Thresh.RE_X = [handles.CurrData.QPparams.APAQPR.Thresh.RE_X;handles.params.APAQPR_derivthresh];
+        handles.CurrData.QPparams.APAQPR.AbsVal.RE_X = [handles.CurrData.QPparams.APAQPR.AbsVal.RE_X;handles.params.abs_APAQOR_thresh_flag];
+        
         Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X;
     case 5
-        handles.CurrData.QPparams.APAQPR.Array.RE_Y = sacc_inds;
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_Y')
+            handles.CurrData.QPparams.APAQPR.Array.RE_Y = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.RE_Y{end+1} = sacc_inds;
+        end
         handles.CurrData.QPparams.APAQPR.Flag.RE_Y = true;
+        
+        
+        handles.CurrData.QPparams.APAQPR.Thresh.RE_Y = [handles.CurrData.QPparams.APAQPR.Thresh.RE_Y;handles.params.APAQPR_derivthresh];
+        handles.CurrData.QPparams.APAQPR.AbsVal.RE_Y = [handles.CurrData.QPparams.APAQPR.AbsVal.RE_Y;handles.params.abs_APAQOR_thresh_flag];
+        
         Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y;
     case 6
-        handles.CurrData.QPparams.APAQPR.Array.RE_Z = sacc_inds;
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_Z')
+            handles.CurrData.QPparams.APAQPR.Array.RE_Z = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.RE_Z{end+1} = sacc_inds;
+        end
         handles.CurrData.QPparams.APAQPR.Flag.RE_Z = true;
+        
+        
+        handles.CurrData.QPparams.APAQPR.Thresh.RE_Z = [handles.CurrData.QPparams.APAQPR.Thresh.RE_Z;handles.params.APAQPR_derivthresh];
+        handles.CurrData.QPparams.APAQPR.AbsVal.RE_Z = [handles.CurrData.QPparams.APAQPR.AbsVal.RE_Z;handles.params.abs_APAQOR_thresh_flag];
+
         Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z;
         
 end
@@ -5572,7 +5798,7 @@ switch h
                 Trend(start:stop) = B(1) + B(2)*handles.CurrData.VOMA_data.Eye_t(start:stop);
                 Trend(1:start) = Trend(start)*ones(length(Trend(1:start)),1);
                 Trend(stop:end) = Trend(stop)*ones(length(Trend(stop:end)),1);
-                handles.CurrData.QPparams.APAQPR.Trend.LE_X = [handles.CurrData.QPparams.APAQPR.Trend.LE_X Trend];
+                
             case 2
                 Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y;
                 
@@ -5631,9 +5857,32 @@ switch h
                 
         end
         
+        handles.temp_linear_pos_trend = Trend;
         
         
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,Trend)
+        switch handles.CurrData.VOMA_data.Parameters.DAQ_code
+            
+            case {1,2,3}
+                % The 'position' data for Lasker Coil System data is
+                % actually Rotation Vectors, and thus not actually position
+                % angles. We can get a rough approximation of Fick
+                % coordinate angles by multiplying the Rotation Vectors by
+                % 100.
+                
+                if ~strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
+                    pos_scale = 100;
+                else
+                    pos_scale = 1;
+                end
+                
+                
+            otherwise
+                pos_scale = 1;
+        end
+        
+        
+        
+        plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,pos_scale*Trend)
         
         %         filt_params = get(handles.filt_params,'Data');
         %         filt_params{handles.params.pos_filt_trace + 1,13} = ['AngPos = ' num2str(B(2)) '*Time + ' num2str(B(1))];
@@ -5659,22 +5908,30 @@ function APAQPR_detrend_Callback(hObject, eventdata, handles)
 switch handles.params.pos_filt_trace
     
     case 1
-        handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X - handles.CurrData.QPparams.APAQPR.Trend.LE_X(:,end);
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X -  handles.temp_linear_pos_trend;
+        handles.CurrData.QPparams.APAQPR.Trend.LE_X = [handles.CurrData.QPparams.APAQPR.Trend.LE_X  handles.temp_linear_pos_trend];
     case 2
-        handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y - handles.CurrData.QPparams.APAQPR.Trend.LE_Y(:,end);
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y -  handles.temp_linear_pos_trend;
+        handles.CurrData.QPparams.APAQPR.Trend.LE_Y = [handles.CurrData.QPparams.APAQPR.Trend.LE_Y  handles.temp_linear_pos_trend];
     case 3
-        handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z - handles.CurrData.QPparams.APAQPR.Trend.LE_Z(:,end);
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z -  handles.temp_linear_pos_trend;
+        handles.CurrData.QPparams.APAQPR.Trend.LE_Z = [handles.CurrData.QPparams.APAQPR.Trend.LE_Z  handles.temp_linear_pos_trend];
     case 4
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X - handles.CurrData.QPparams.APAQPR.Trend.RE_X(:,end);
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X -  handles.temp_linear_pos_trend;
+        handles.CurrData.QPparams.APAQPR.Trend.RE_X = [handles.CurrData.QPparams.APAQPR.Trend.RE_X  handles.temp_linear_pos_trend];
     case 5
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y - handles.CurrData.QPparams.APAQPR.Trend.RE_Y(:,end);
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y -  handles.temp_linear_pos_trend;
+        handles.CurrData.QPparams.APAQPR.Trend.RE_Y = [handles.CurrData.QPparams.APAQPR.Trend.RE_Y  handles.temp_linear_pos_trend];
     case 6
-        handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z - handles.CurrData.QPparams.APAQPR.Trend.RE_Z(:,end);
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z -  handles.temp_linear_pos_trend;
+        handles.CurrData.QPparams.APAQPR.Trend.RE_Z = [handles.CurrData.QPparams.APAQPR.Trend.RE_Z  handles.temp_linear_pos_trend];
 end
 [handles] = plot_smth_data(hObject,eventdata,handles);
 % Update the user indicator that the position traces were changed
 [handles] = update_eye_pos(hObject, eventdata, handles, 1);
 
+% Clear the temporary linear trend variable
+handles.temp_linear_pos_trend = [];
 
 filt_params = get(handles.filt_params,'Data');
 filt_params{handles.params.pos_filt_trace + 1,12} = 'y';
@@ -5863,10 +6120,10 @@ end
 
 
 filt_params = get(handles.filt_params,'Data');
-filt_params{1,14} = 'APAQPR Thresh.';
-filt_params{handles.params.pos_filt_trace + 1,14} = handles.params.APAQPR_derivthresh;
-filt_params{1,15} = 'Min. SPV Fit Time [ms]';
-filt_params{handles.params.pos_filt_trace + 1,15} = handles.params.min_spv_fit_time;
+filt_params{1,15} = 'APAQPR Thresh.';
+filt_params{handles.params.pos_filt_trace + 1,15} = handles.params.APAQPR_derivthresh;
+filt_params{1,16} = 'Min. SPV Fit Time [ms]';
+filt_params{handles.params.pos_filt_trace + 1,16} = handles.params.min_spv_fit_time;
 set(handles.filt_params,'Data',filt_params);
 
 
@@ -6155,12 +6412,12 @@ plot(time,d_trace)
 figure
 
 if handles.params.inv_qp
-findpeaks(-d_trace)
-[pks,locs] = findpeaks(-d_trace)
+    findpeaks(-d_trace)
+    [pks,locs] = findpeaks(-d_trace)
     
 else
-findpeaks(d_trace)
-[pks,locs] = findpeaks(d_trace)
+    findpeaks(d_trace)
+    [pks,locs] = findpeaks(d_trace)
 end
 ampthresh = handles.params.APAQPR_derivthresh;
 timethresh = handles.params.APAQPR_findpeaks_temp_thresh;
@@ -6207,14 +6464,14 @@ handles.CurrData.QPparams.UGQPRarray = [qp_inds];
 
 set(handles.UGQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.UGQPRarray))
 
-% 
-% 
+%
+%
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP(i1),'ko','LineWidth',3);
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP(i1),'ko','LineWidth',3);
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z(i1),'ko','LineWidth',3);
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X(i1),'ko','LineWidth',3);
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y(i1),'ko','LineWidth',3);
-% 
+%
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP(i1),'ko','LineWidth',3);
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP(i1),'ko','LineWidth',3);
 % plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t(i1),handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z(i1),'ko','LineWidth',3);
@@ -6240,13 +6497,575 @@ function inv_qps_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.inv_qp = true;
-
+    handles.params.inv_qp = true;
+    
 else
-	handles.params.inv_qp = false;
-
+    handles.params.inv_qp = false;
+    
 end
 guidata(hObject,handles)
 
 % Hint: get(hObject,'Value') returns toggle state of inv_qps
+end
+
+
+
+% --- Executes on button press in find_angvel_offset.
+function find_angvel_offset_Callback(hObject, eventdata, handles)
+% hObject    handle to find_angvel_offset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Ask the user which 'AngVel Offset Removal Method' they prefer to use
+h = questdlg(['Which AngVel Offset Method do you want to use? ' char(10) char(10) ...
+    'Method 1: Pick two endpoints. We will find the mean value of the chosen ' ...
+    'eye velocity trace between each end point. This mean value will be '...
+    'subtracted from the whole trace. ' char(10) char(10) ...
+    'Method 2: Pick a start and end point. This function will find the mean value of the chosen trace to the LEFT of the start point (Offset1), '...
+    'and the mean value to the RIGHT of the chosen endpoint (Offset2). An offset curve is generated where: ' char(10) ...
+    '- [1:Start]: Offset1' char(10) ...
+    '- [Start+1:End-1]: linear spaced trace connecting Offset1 to Offset2' char(10) ...
+    '- [EndPt:length(AngVel)]: Offset2'] ...
+    ,'Ang. Vel Linear Tred Removal','Method 1','Method 2','Nevermind','Nevermind');
+
+str = {'LE - X', 'LE - Y' , 'LE - LARP' , 'LE - RALP' , 'LE - Z' ...
+    'RE - X', 'RE - Y' , 'RE - LARP' , 'RE - RALP' , 'RE - Z'};
+
+if ~strcmp(h,'Nevermind') && ~isempty(h)
+    [s,v] = listdlg('Name','AngVel Offset Removal: Trace Selection','PromptString',['Choose AngVel Trace'],...
+        'SelectionMode','multiple',...
+        'ListString',str)
+    
+    handles.temp_angvel_offset_traces = s;
+end
+
+
+
+
+switch h
+    
+    case 'Method 1'
+        
+        uiwait(msgbox('Click ''OK'' when you are ready to choose the first data point','Ang. Vel. Offset Removal'));
+        [x1,y1] = ginput(1);
+        uiwait(msgbox('Click ''OK'' when you are ready to choose the second data point','Ang. Vel. Offset Removal'));
+        [x2,y2] = ginput(1);
+        x = [x1 ; x2];
+        
+        if iscolumn(handles.CurrData.VOMA_data.Eye_t)
+            handles.CurrData.VOMA_data.Eye_t = handles.CurrData.VOMA_data.Eye_t';
+            
+        end
+        
+        [temp,i1] = min(abs(handles.CurrData.VOMA_data.Eye_t([1 1],:) - x(:,ones(1,length(handles.CurrData.VOMA_data.Eye_t)))),[],2);
+        
+        
+        start = i1(1);
+        stop = i1(2);
+        
+        filt_params = get(handles.filt_params,'Data');
+        
+        
+        if sum(ismember(s,1))>0
+            % LE_X
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
+            mean_dat = mean(Data(start:stop));
+            
+            
+            vel_offset_trace_LEX = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LEX)
+            
+            handles.params.temp_vel_offset_LEX_method = 'Method 1';
+            handles.params.temp_vel_offset_trace_LEX = vel_offset_trace_LEX;
+            
+        end
+        
+        % LE_Y
+        if sum(ismember(s,2))>0
+            
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_LEY = mean_dat*ones(length(Data),1);
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LEY)
+            handles.params.temp_vel_offset_LEY_method = 'Method 1';
+            handles.params.temp_vel_offset_trace_LEY = vel_offset_trace_LEY;
+            
+        end
+        
+        
+        % LE_LARP
+        if sum(ismember(s,3))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_LELARP = mean_dat*ones(length(Data),1);
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LELARP)
+            handles.params.temp_vel_offset_LELARP_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_LELARP = vel_offset_trace_LELARP;
+        end
+        % LE_RALP
+        if sum(ismember(s,4))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_LERALP = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LERALP)
+            handles.params.temp_vel_offset_LERALP_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_LERALP = vel_offset_trace_LERALP;
+        end
+        % LE_Z
+        if sum(ismember(s,5))>0
+            
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_LEZ = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LEZ)
+            handles.params.temp_vel_offset_LEZ_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_LEZ = vel_offset_trace_LEZ;
+        end
+        
+        
+        
+        % RE_X
+        if sum(ismember(s,6))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_REX = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_REX)
+            handles.params.temp_vel_offset_REX_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_REX = vel_offset_trace_REX;
+        end
+        % RE_Y
+        if sum(ismember(s,7))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_REY = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_REY)
+            handles.params.temp_vel_offset_REY_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_REY = vel_offset_trace_REY;
+        end
+        
+        % RE_LARP
+        if sum(ismember(s,8))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_RELARP = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_RELARP)
+            handles.params.temp_vel_offset_RELARP_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_RELARP = vel_offset_trace_RELARP;
+        end
+        % RE_RALP
+        if sum(ismember(s,9))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_RERALP = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_RERALP)
+            handles.params.temp_vel_offset_RERALP_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_RERALP = vel_offset_trace_RERALP;
+        end
+        % RE_Z
+        if sum(ismember(s,10))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
+            mean_dat = mean(Data(start:stop));
+            
+            vel_offset_trace_REZ = mean_dat*ones(length(Data),1);
+            
+            
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_REZ)
+            handles.params.temp_vel_offset_REZ_method = 'Method 1';
+            
+            handles.params.temp_vel_offset_trace_REZ = vel_offset_trace_REZ;
+            
+        end
+        set(handles.filt_params,'Data',filt_params);
+        
+    case 'Method 2'
+        
+        
+        uiwait(msgbox('Click ''OK'' when you are ready to choose the first data point','Ang. Vel. Offset Removal'));
+        [x1,y1] = ginput(1);
+        uiwait(msgbox('Click ''OK'' when you are ready to choose the second data point','Ang. Vel. Offset Removal'));
+        [x2,y2] = ginput(1);
+        x = [x1 ; x2];
+        
+        if iscolumn(handles.CurrData.VOMA_data.Eye_t)
+            handles.CurrData.VOMA_data.Eye_t = handles.CurrData.VOMA_data.Eye_t';
+            
+        end
+        
+        [temp,i1] = min(abs(handles.CurrData.VOMA_data.Eye_t([1 1],:) - x(:,ones(1,length(handles.CurrData.VOMA_data.Eye_t)))),[],2);
+        
+        
+        start = i1(1);
+        stop = i1(2);
+        
+        filt_params = get(handles.filt_params,'Data');
+        
+        
+        if sum(ismember(s,1))>0
+            % LE_X
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_LEX = zeros(length(Data),1);
+            vel_offset_trace_LEX(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_LEX(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_LEX(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LEX)
+            
+            handles.params.temp_vel_offset_LEX_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_LEX = vel_offset_trace_LEX;
+            
+        end
+        
+        % LE_Y
+        if sum(ismember(s,2))>0
+            
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_LEY = zeros(length(Data),1);
+            vel_offset_trace_LEY(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_LEY(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_LEY(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LEY)
+            handles.params.temp_vel_offset_LEY_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_LEY = vel_offset_trace_LEY;
+            
+        end
+        
+        
+        % LE_LARP
+        if sum(ismember(s,3))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_LELARP = zeros(length(Data),1);
+            vel_offset_trace_LELARP(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_LELARP(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_LELARP(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LELARP)
+            handles.params.temp_vel_offset_LELARP_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_LELARP = vel_offset_trace_LELARP;
+        end
+        % LE_RALP
+        if sum(ismember(s,4))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_LERALP = zeros(length(Data),1);
+            vel_offset_trace_LERALP(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_LERALP(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_LERALP(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LERALP)
+            handles.params.temp_vel_offset_LERALP_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_LERALP = vel_offset_trace_LERALP;
+        end
+        % LE_Z
+        if sum(ismember(s,5))>0
+            
+            Data = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_LEZ = zeros(length(Data),1);
+            vel_offset_trace_LEZ(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_LEZ(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_LEZ(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_LEZ)
+            handles.params.temp_vel_offset_LEZ_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_LEZ = vel_offset_trace_LEZ;
+        end
+        
+        
+        
+        % RE_X
+        if sum(ismember(s,6))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_REX = zeros(length(Data),1);
+            vel_offset_trace_REX(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_REX(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_REX(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_REX)
+            handles.params.temp_vel_offset_REX_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_REX = vel_offset_trace_REX;
+        end
+        % RE_Y
+        if sum(ismember(s,7))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_REY = zeros(length(Data),1);
+            vel_offset_trace_REY(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_REY(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_REY(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_REY)
+            handles.params.temp_vel_offset_REY_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_REY = vel_offset_trace_REY;
+        end
+        
+        % RE_LARP
+        if sum(ismember(s,8))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_RELARP = zeros(length(Data),1);
+            vel_offset_trace_RELARP(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_RELARP(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_RELARP(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_RELARP)
+            handles.params.temp_vel_offset_RELARP_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_RELARP = vel_offset_trace_RELARP;
+        end
+        % RE_RALP
+        if sum(ismember(s,9))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_RERALP = zeros(length(Data),1);
+            vel_offset_trace_RERALP(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_RERALP(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_RERALP(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_RERALP)
+            handles.params.temp_vel_offset_RERALP_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_RERALP = vel_offset_trace_RERALP;
+        end
+        % RE_Z
+        if sum(ismember(s,10))>0
+            Data = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
+            start_mean = mean(Data(1:start));
+            stop_mean = mean(Data(stop:end));
+            
+            vel_offset_trace_REZ = zeros(length(Data),1);
+            vel_offset_trace_REZ(1:start) = start_mean*ones(length([1:start]),1);
+            vel_offset_trace_REZ(stop:end) = stop_mean*ones(length([stop:length(Data)]),1);
+            vel_offset_trace_REZ(start+1:stop-1) = linspace(start_mean,stop_mean,length([start+1:stop-1]));
+            plot(handles.vor_plot,handles.CurrData.VOMA_data.Eye_t,vel_offset_trace_REZ)
+            handles.params.temp_vel_offset_REZ_method = 'Method 2';
+            
+            handles.params.temp_vel_offset_trace_REZ = vel_offset_trace_REZ;
+        end
+        set(handles.filt_params,'Data',filt_params);
+        
+    case 'Nevermind'
+        
+        
+end
+
+set(handles.filt_params,'Data',filt_params);
+
+
+guidata(hObject,handles)
+end
+
+% --- Executes on button press in remove_angvel_offset.
+function remove_angvel_offset_Callback(hObject, eventdata, handles)
+% hObject    handle to remove_angvel_offset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+if isempty(handles.temp_angvel_offset_traces)
+    
+    
+else
+    
+    s = handles.temp_angvel_offset_traces;
+    
+    filt_params = get(handles.filt_params,'Data');
+    
+    if sum(ismember(s,1))>0
+        
+        % LE_X
+        handles.CurrData.VOMA_data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X - handles.params.temp_vel_offset_trace_LEX;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X - handles.params.temp_vel_offset_trace_LEX;
+        handles.CurrData.QPparams.AngVelOffset.LE_X = [handles.CurrData.QPparams.AngVelOffset.LE_X  handles.params.temp_vel_offset_trace_LEX];
+        handles.params.temp_vel_offset_trace_LEX = [];
+        filt_params{14,14} = ['y - ' handles.params.temp_vel_offset_LEX_method];
+        
+    end
+    
+    if sum(ismember(s,2))>0
+        % LE_Y
+        handles.CurrData.VOMA_data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y - handles.params.temp_vel_offset_trace_LEY;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y - handles.params.temp_vel_offset_trace_LEY;
+        handles.CurrData.QPparams.AngVelOffset.LE_Y = [handles.CurrData.QPparams.AngVelOffset.LE_Y  handles.params.temp_vel_offset_trace_LEY];
+        handles.params.temp_vel_offset_trace_LEY = [];
+        filt_params{15,14} = ['y - ' handles.params.temp_vel_offset_LEY_method];
+    end
+    if sum(ismember(s,5))>0
+        % LE_Z
+        handles.CurrData.VOMA_data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z - handles.params.temp_vel_offset_trace_LEZ;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z - handles.params.temp_vel_offset_trace_LEZ;
+        handles.CurrData.QPparams.AngVelOffset.LE_Z = [handles.CurrData.QPparams.AngVelOffset.LE_Z  handles.params.temp_vel_offset_trace_LEZ];
+        handles.params.temp_vel_offset_trace_LEZ = [];
+        filt_params{10,14} = ['y - ' handles.params.temp_vel_offset_LEZ_method];
+    end
+    if sum(ismember(s,3))>0
+        % LE_LARP
+        handles.CurrData.VOMA_data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP - handles.params.temp_vel_offset_trace_LELARP;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP - handles.params.temp_vel_offset_trace_LELARP;
+        handles.CurrData.QPparams.AngVelOffset.LE_LARP = [handles.CurrData.QPparams.AngVelOffset.LE_LARP  handles.params.temp_vel_offset_trace_LELARP];
+        handles.params.temp_vel_offset_trace_LELARP = [];
+        filt_params{8,14} = ['y - ' handles.params.temp_vel_offset_LELARP_method];
+        
+    end
+    if sum(ismember(s,4))>0
+        % LE_RALP
+        handles.CurrData.VOMA_data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP - handles.params.temp_vel_offset_trace_LERALP;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP - handles.params.temp_vel_offset_trace_LERALP;
+        handles.CurrData.QPparams.AngVelOffset.LE_RALP = [handles.CurrData.QPparams.AngVelOffset.LE_RALP  handles.params.temp_vel_offset_trace_LERALP];
+        handles.params.temp_vel_offset_trace_LERALP = [];
+        filt_params{9,14} = ['y - ' handles.params.temp_vel_offset_LERALP_method];
+    end
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    if sum(ismember(s,6))>0
+        
+        % RE_X
+        handles.CurrData.VOMA_data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X - handles.params.temp_vel_offset_trace_REX;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X - handles.params.temp_vel_offset_trace_REX;
+        handles.CurrData.QPparams.AngVelOffset.RE_X = [handles.CurrData.QPparams.AngVelOffset.RE_X  handles.params.temp_vel_offset_trace_REX];
+        handles.params.temp_vel_offset_trace_REX = [];
+        filt_params{16,14} = ['y - ' handles.params.temp_vel_offset_REX_method];
+    end
+    if sum(ismember(s,7))>0
+        % RE_Y
+        handles.CurrData.VOMA_data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y - handles.params.temp_vel_offset_trace_REY;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y - handles.params.temp_vel_offset_trace_REY;
+        handles.CurrData.QPparams.AngVelOffset.RE_Y = [handles.CurrData.QPparams.AngVelOffset.RE_Y  handles.params.temp_vel_offset_trace_REY];
+        handles.params.temp_vel_offset_trace_REY = [];
+        filt_params{17,14} = ['y - ' handles.params.temp_vel_offset_REY_method];
+    end
+    if sum(ismember(s,10))>0
+        % RE_Z
+        handles.CurrData.VOMA_data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z - handles.params.temp_vel_offset_trace_REZ;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z - handles.params.temp_vel_offset_trace_REZ;
+        handles.CurrData.QPparams.AngVelOffset.RE_Z = [handles.CurrData.QPparams.AngVelOffset.RE_Z  handles.params.temp_vel_offset_trace_REZ];
+        handles.params.temp_vel_offset_trace_REZ = [];
+        filt_params{13,14} = ['y - ' handles.params.temp_vel_offset_REZ_method];
+    end
+    if sum(ismember(s,8))>0
+        % RE_LARP
+        handles.CurrData.VOMA_data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP - handles.params.temp_vel_offset_trace_RELARP;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP - handles.params.temp_vel_offset_trace_RELARP;
+        handles.CurrData.QPparams.AngVelOffset.RE_LARP = [handles.CurrData.QPparams.AngVelOffset.RE_LARP  handles.params.temp_vel_offset_trace_RELARP];
+        handles.params.temp_vel_offset_trace_RELARP = [];
+        filt_params{11,14} = ['y - ' handles.params.temp_vel_offset_RELARP_method];
+    end
+    if sum(ismember(s,9))>0
+        % RE_RALP
+        handles.CurrData.VOMA_data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP - handles.params.temp_vel_offset_trace_RERALP;
+        
+        handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP - handles.params.temp_vel_offset_trace_RERALP;
+        handles.CurrData.QPparams.AngVelOffset.RE_RALP = [handles.CurrData.QPparams.AngVelOffset.RE_RALP  handles.params.temp_vel_offset_trace_RERALP];
+        handles.params.temp_vel_offset_trace_RERALP = [];
+        filt_params{12,14} = ['y - ' handles.params.temp_vel_offset_RERALP_method];
+    end
+
+    
+    
+    
+    
+    
+    % Clear the temp-offset traces
+    handles.params.temp_vel_offset_trace_LEX = [];
+    handles.params.temp_vel_offset_trace_LEY = [];
+    handles.params.temp_vel_offset_trace_LEZ = [];
+    handles.params.temp_vel_offset_trace_LELARP = [];
+    handles.params.temp_vel_offset_trace_LERALP = [];
+    
+    handles.params.temp_vel_offset_trace_REX = [];
+    handles.params.temp_vel_offset_trace_REY = [];
+    handles.params.temp_vel_offset_trace_REZ = [];
+    handles.params.temp_vel_offset_trace_RELARP = [];
+    handles.params.temp_vel_offset_trace_RERALP = [];
+    
+    handles.params.temp_vel_offset_LEX_method = [];
+    handles.params.temp_vel_offset_LEY_method = [];
+    handles.params.temp_vel_offset_LELARP_method = [];
+    handles.params.temp_vel_offset_LERALP_method = [];
+    handles.params.temp_vel_offset_LEZ_method = [];
+    
+    handles.params.temp_vel_offset_REX_method = [];
+    handles.params.temp_vel_offset_REY_method = [];
+    handles.params.temp_vel_offset_RELARP_method = [];
+    handles.params.temp_vel_offset_RERALP_method = [];
+    handles.params.temp_vel_offset_REZ_method = [];
+    
+    handles.temp_angvel_offset_traces = [];
+    
+    [handles] = plot_smth_data(hObject,eventdata,handles);
+    
+    % Mark that changes were made to the data
+    handles.params.save_flag = true;
+    
+    set(handles.filt_params,'Data',filt_params);
+    
+    guidata(hObject,handles)
+    
+end
 end

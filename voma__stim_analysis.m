@@ -109,7 +109,9 @@ if handles.upsamp_flag
     
     handles.UpSamp = handles.CurrData.VOMA_data.UpSamp;
     
+    handles.params.upsamp_Fs = handles.UpSamp.Fs;
     
+    set(handles.upsamp_Fs,'String',num2str(handles.params.upsamp_Fs))
 else
     
     handles.Stimulus = handles.CurrData.VOMA_data.Stim_Trace;
@@ -282,33 +284,54 @@ end
 switch handles.params.detect_method
     
     case 1
-        inds = [1:length(handles.Time)];
+       
         
-        pos_ind = [false ; diff(handles.Stimulus>handles.params.align_thresh)];
-        neg_ind = [false ; diff(handles.Stimulus<-handles.params.align_thresh)];
+        if handles.params.align_thresh >= 0
+            
+            inds = [1:length(handles.Time)];
         
-        stim_pos_thresh_ind = inds(pos_ind > 0 )';
-        stim_neg_thresh_ind = inds(neg_ind > 0 )';
+            pos_ind = [false ; diff(handles.Stimulus > handles.params.align_thresh)];
         
+            stim_pos_thresh_ind = inds(pos_ind > 0 )';
+%             stim_neg_thresh_ind = inds(neg_ind > 0 )';
+            
+           
+            
+        else
+            
+            inds = [1:length(handles.Time)];
         
-        handles.pos_stim_ind = stim_pos_thresh_ind;
-
-%         handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.params.upsamp_Fs);
-%         handles.neg_stim_ind = stim_neg_thresh_ind;
+            pos_ind = [false ; diff(handles.Stimulus < handles.params.align_thresh)];
         
-%         set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus([stim_pos_thresh_ind stim_neg_thresh_ind])]);
-        set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind ]) handles.Stimulus([stim_pos_thresh_ind ])]);
-
-        axes(handles.stim_plot);
-        cla
-%         handles.stim_ind = [handles.pos_stim_ind handles.neg_stim_ind];
-        handles.stim_ind = [handles.pos_stim_ind ];
-
+            stim_pos_thresh_ind = inds(pos_ind > 0 )';
+            
+            
+        end
+        
+         if handles.upsamp_flag
+                
+                handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.params.upsamp_Fs);
+                
+            else
+                handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.CurrData.VOMA_data.Fs);
+                
+            end
+            
+            %         handles.neg_stim_ind = stim_neg_thresh_ind;
+            
+            %         set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus([stim_pos_thresh_ind stim_neg_thresh_ind])]);
+            set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind ]) handles.Stimulus([stim_pos_thresh_ind ])]);
+            
+            axes(handles.stim_plot);
+            cla
+            %         handles.stim_ind = [handles.pos_stim_ind handles.neg_stim_ind];
+            handles.stim_ind = [handles.pos_stim_ind ];
+        
         plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
         hold on
         plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.Stimulus(stim_pos_thresh_ind),'rx')
-%         plot(handles.stim_plot,handles.Time(stim_neg_thresh_ind),handles.Stimulus(stim_neg_thresh_ind),'bx')
-
+        %         plot(handles.stim_plot,handles.Time(stim_neg_thresh_ind),handles.Stimulus(stim_neg_thresh_ind),'bx')
+        
     case 2
         inds = [1:length(handles.Stimulus)];
         
@@ -323,15 +346,15 @@ switch handles.params.detect_method
         % occurs, starting with the the FIRST stimulus index.
         stim_inds_new = [1 inds([false diff(handles.Stimulus(1,:))>handles.params.btwn_stim_dur])];
         
-        if length(stim_inds_new)>1        
-        handles.stim_ind = [stim_inds_new' [stim_inds_new(2:end)' ;  stim_inds_new(end)]];
+        if length(stim_inds_new)>1
+            handles.stim_ind = [stim_inds_new' [stim_inds_new(2:end)' ;  stim_inds_new(end)]];
             
         else
             
             handles.stim_ind = [stim_inds_new' 0];
-        
+            
         end
-        plot_stim_trace(hObject, eventdata, handles) 
+        plot_stim_trace(hObject, eventdata, handles)
         
     case 3
         [stim_ind_temp] = voma__find_stim_ind(handles.Stimulus,handles.CurrData.VOMA_data.Fs,handles.Time,'n');
@@ -584,7 +607,7 @@ function pre_stim_dur_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 input = get(hObject,'String');
 
-handles.params.pre_stim_dur = str2double(input);
+handles.params.pre_stim_dur = str2double(input)/1000;
 
 
 guidata(hObject,handles)
