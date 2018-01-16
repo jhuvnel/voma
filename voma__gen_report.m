@@ -669,9 +669,9 @@ folder_name = uigetdir(pwd,'Choose the folder location to save the report printo
 reportname = [folder_name '\' plotname '_CRF'];
 switch handles.lr_xy_flag
     case 1
-        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Repord_CRF_Template_LRZ');
+        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Report_CRF_Template_LRZ');
     case 2
-        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Repord_CRF_Template_XYZ');
+        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Report_CRF_Template_XYZ');
 end
 rpt.subj_ID = file_params{2,1};
 rpt.date = file_params{2,2};
