@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 20-Dec-2017 15:38:43
+% Last Modified by GUIDE v2.5 08-Jan-2018 00:14:09
 
 
 % Begin initialization code - DO NOT EDIT
@@ -88,6 +88,20 @@ handles.individual.RightData = [];
 handles.L = 0;
 handles.R = 0;
 handles.params.user.savefile_suffix = '';
+handles.lr_xy_flag = 1;
+
+% Save color codes for plotting
+handles.colors.l_x = [237,150,33]/255;
+handles.colors.l_y = [125,46,143]/255;
+handles.colors.l_z = [1 0 0];
+handles.colors.l_l = [0,128,0]/255;
+handles.colors.l_r = [0 0 1];
+
+handles.colors.r_x = [237,204,33]/255;
+handles.colors.r_y = [125,46,230]/255;
+handles.colors.r_z = [255,0,255]/255;
+handles.colors.r_l = [0 1 0];
+handles.colors.r_r = [64,224,208]/255;
 
 % The 'voma__stim_analysis' GUI offers the option to upsample the processed
 % Eye and Stimulus data traces, and save them in parallel to the processed
@@ -154,16 +168,24 @@ if handles.upsamp_flag
     handles.Final_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_LARP;
     handles.Final_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_RALP;
     handles.Final_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_Z;
+    handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_X;
+    handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_Y;
     handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_LARP;
     handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_RALP;
     handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_Z;
+    handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_X;
+    handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_Y;
     
     handles.Raw_Data.Data_LE_Vel_LARP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_LARP,handles.Final_Data.Eye_t);
     handles.Raw_Data.Data_LE_Vel_RALP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_RALP,handles.Final_Data.Eye_t);
     handles.Raw_Data.Data_LE_Vel_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_Z,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_LE_Vel_X = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_X,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_LE_Vel_Y = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_LE_Vel_Y,handles.Final_Data.Eye_t);
     handles.Raw_Data.Data_RE_Vel_LARP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_LARP,handles.Final_Data.Eye_t);
     handles.Raw_Data.Data_RE_Vel_RALP = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_RALP,handles.Final_Data.Eye_t);
     handles.Raw_Data.Data_RE_Vel_Z = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_Z,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_RE_Vel_X = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_X,handles.Final_Data.Eye_t);
+    handles.Raw_Data.Data_RE_Vel_Y = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Data_RE_Vel_Y,handles.Final_Data.Eye_t);
     
     
 else
@@ -176,16 +198,24 @@ else
     handles.Final_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP;
     handles.Final_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP;
     handles.Final_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
+    handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
+    handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
     handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP;
     handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP;
     handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
+    handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
+    handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
     
     handles.Raw_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
     handles.Raw_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
     handles.Raw_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
+    handles.Raw_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+    handles.Raw_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
     handles.Raw_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP;
     handles.Raw_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP;
     handles.Raw_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
+    handles.Raw_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+    handles.Raw_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
     
 end
 
@@ -866,24 +896,50 @@ if handles.params.lefteye_flag == 1
     % Plot Smooth Cycle Data
     plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
     hold on
-    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[0,128,0]/255,'LineWidth',1)
-    plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
+    switch handles.lr_xy_flag
+        case 1
+            plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[0,128,0]/255,'LineWidth',1)
+            plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
+        case 2
+            plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_X(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color',handles.colors.l_x,'LineWidth',1)
+            plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_Y(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color',handles.colors.l_y,'LineWidth',1)
+    end
+    
     plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
     
     try
-        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',[0,128,0]/255,'LineWidth',0.05,'edgealpha',0.5);
-        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','b','LineWidth',0.05,'edgealpha',0.5);
         patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','r','LineWidth',0.05,'edgealpha',0.5);
         
+        
+        switch handles.lr_xy_flag
+            
+            case 1
+                patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',[0,128,0]/255,'LineWidth',0.05,'edgealpha',0.5);
+                patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','b','LineWidth',0.05,'edgealpha',0.5);
+                
+            case 2
+                patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_X(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',handles.colors.l_x,'LineWidth',0.05,'edgealpha',0.5);
+                patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_Y(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',handles.colors.l_y,'LineWidth',0.05,'edgealpha',0.5);
+        end
         
         
         
     catch
-        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[0,128,0]/255,'LineWidth',1)
-        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
+        
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
         
         
+        switch handles.lr_xy_flag
+            case 1
+                plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[0,128,0]/255,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'b','LineWidth',1)
+        
+            case 2
+                
+                plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_X(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',handles.colors.l_x,'LineWidth',1)
+                plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_LE_Vel_Y(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',handles.colors.l_y,'LineWidth',1)
+        
+        end
         
     end
 end
@@ -891,21 +947,59 @@ end
 if handles.params.righteye_flag == 1
     plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[255,0,255]/255,'LineWidth',1)
     hold on
+    switch handles.lr_xy_flag
+        
+        case 1
     plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
     plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color' ,[64,224,208]/255,'LineWidth',1)
+    
+        case 2
+            
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',handles.colors.r_x,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'color',handles.colors.r_y,'LineWidth',1)
+    
+            
+    end
+    
     plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),zeros(1,handles.len+1),'k--','LineWidth',0.5)
     
     try
         
+        
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor', [255,0,255]/255,'LineWidth',0.05,'edgealpha',0.5);
+        
+        switch handles.lr_xy_flag
+            
+            case 1
+                
+                
         patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor','g','LineWidth',0.05,'edgealpha',0.5);
         patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',[64,224,208]/255,'LineWidth',0.05,'edgealpha',0.5);
-        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor', [255,0,255]/255,'LineWidth',0.05,'edgealpha',0.5);
+        
+            case 2
+         
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_X(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',handles.colors.r_x,'LineWidth',0.05,'edgealpha',0.5);
+        patchline(handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_Y(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'edgecolor',handles.colors.r_y,'LineWidth',0.05,'edgealpha',0.5);
+        end
         
     catch
         
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[255,0,255]/255,'LineWidth',1)
+        
+        switch handles.lr_xy_flag
+            
+            case 1
+                
+               
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_LARP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'g','LineWidth',1)
         plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_RALP(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[64,224,208]/255,'LineWidth',1)
-        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_LE_Vel_LARP.Data_RE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',[255,0,255]/255,'LineWidth',1)
+        
+            case 2
+           
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_X(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',handles.colors.r_x,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Raw_Data.Data_RE_Vel_Y(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'Color',handles.colors.r_y,'LineWidth',1)     
+                
+        end
         
     end
     
@@ -1068,10 +1162,15 @@ if button_state == high
     ll_cyc = [];
     lr_cyc = [];
     lz_cyc = [];
+    lx_cyc = [];
+    ly_cyc = [];
+
     
     rl_cyc = [];
     rr_cyc = [];
     rz_cyc = [];
+    rx_cyc = [];
+    ry_cyc = [];
     
     stim = [];
     
@@ -1080,10 +1179,14 @@ if button_state == high
         ll_cyc = [ll_cyc ; handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         lr_cyc = [lr_cyc ; handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         lz_cyc = [lz_cyc ; handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        lx_cyc = [lx_cyc ; handles.Final_Data.Data_LE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        ly_cyc = [ly_cyc ; handles.Final_Data.Data_LE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         
         rl_cyc = [rl_cyc ; handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+        ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         
         stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)'];
     end
@@ -1092,19 +1195,27 @@ if button_state == high
     ll_cycavg = mean(ll_cyc,1);
     lr_cycavg = mean(lr_cyc,1);
     lz_cycavg = mean(lz_cyc,1);
+    lx_cycavg = mean(lx_cyc,1);
+    ly_cycavg = mean(ly_cyc,1);
     
     rl_cycavg = mean(rl_cyc,1);
     rr_cycavg = mean(rr_cyc,1);
     rz_cycavg = mean(rz_cyc,1);
+    rx_cycavg = mean(rx_cyc,1);
+    ry_cycavg = mean(ry_cyc,1);
     
     % Compute the standard deviation
     ll_cycstd = std(ll_cyc,0,1);
     lr_cycstd = std(lr_cyc,0,1);
     lz_cycstd = std(lz_cyc,0,1);
+    lx_cycstd = std(lx_cyc,0,1);
+    ly_cycstd = std(ly_cyc,0,1);
     
     rl_cycstd = std(rl_cyc,0,1);
     rr_cycstd = std(rr_cyc,0,1);
     rz_cycstd = std(rz_cyc,0,1);
+    rx_cycstd = std(rx_cyc,0,1);
+    ry_cycstd = std(ry_cyc,0,1);
     
     % Save the data in a structure called 'Results'
     handles.Results.ll_cyc = ll_cyc;
@@ -1132,6 +1243,22 @@ if button_state == high
     handles.Results.rz_cyc = rz_cyc;
     handles.Results.rz_cycavg = rz_cycavg;
     handles.Results.rz_cycstd = rz_cycstd;
+    
+    handles.Results.lx_cyc = lx_cyc;
+    handles.Results.lx_cycavg = lx_cycavg;
+    handles.Results.lx_cycstd = lx_cycstd;
+    
+    handles.Results.rx_cyc = rx_cyc;
+    handles.Results.rx_cycavg = rx_cycavg;
+    handles.Results.rx_cycstd = rx_cycstd;
+    
+    handles.Results.ly_cyc = ly_cyc;
+    handles.Results.ly_cycavg = ly_cycavg;
+    handles.Results.ly_cycstd = ly_cycstd;
+    
+    handles.Results.ry_cyc = ry_cyc;
+    handles.Results.ry_cycavg = ry_cycavg;
+    handles.Results.ry_cycstd = ry_cycstd;
     
     handles.Results.stim = stim;
     
@@ -1369,14 +1496,26 @@ if handles.params.plot_saved_cycles_flag == 1
         hold on
         
         if handles.params.lefteye_flag == 1
+            switch handles.lr_xy_flag
+                case 1
             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[0,128,0]/255,'LineWidth',1)
             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'b','LineWidth',1)
+                case 2
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,handles.colors.l_x,'LineWidth',1)
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color',handles.colors.l_y,'LineWidth',1)
+            end
             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'r','LineWidth',1)
         end
         
         if handles.params.righteye_flag == 1
-            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'g','LineWidth',1)
-            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[64,224,208]/255,'LineWidth',1)
+            switch handles.lr_xy_flag
+                case 1
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'g','LineWidth',1)
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[64,224,208]/255,'LineWidth',1)
+                case 2
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'Color',handles.colors.r_x,'LineWidth',1)
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,handles.colors.r_y,'LineWidth',1)
+            end
             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len),'color' ,[255,0,255]/255,'LineWidth',1)
         end
         
@@ -1405,39 +1544,91 @@ if handles.params.plot_cycleavg_flag == 1
     
     SDplot = 1;
     
+    
     % Plot the cycle average
     if handles.params.lefteye_flag == 1
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg,'Color',[0,128,0]/255,'LineWidth',2)
-        hold on
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg,'b','LineWidth',2)
+        switch handles.lr_xy_flag
+            case 1
+                
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg,'Color',[0,128,0]/255,'LineWidth',2)
+                hold on
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg + SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg - SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
+                
+                
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg,'b','LineWidth',2)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg + SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg - SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
+                
+            case 2
+                
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg,'Color',handles.colors.l_x,'LineWidth',2)
+                hold on
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg + SDplot*handles.Results.lx_cycstd,'LineStyle','--','Color',handles.colors.l_x,'LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg - SDplot*handles.Results.lx_cycstd,'LineStyle','--','Color',handles.colors.l_x,'LineWidth',0.5)
+                
+                
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg,'Color',handles.colors.l_y,'LineWidth',2)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg + SDplot*handles.Results.ly_cycstd,'LineStyle','--','Color',handles.colors.l_y,'LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg - SDplot*handles.Results.ly_cycstd,'LineStyle','--','Color',handles.colors.l_y,'LineWidth',0.5)
+                
+        end
+        
         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg,'r','LineWidth',2)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg + SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg - SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+        
         
         % Plot the mean + 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg + SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg + SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg + SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+        
+        
+        
         
         % Plot the mean - 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg - SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg - SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg - SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+        
+        
+        
     end
     
     if handles.params.righteye_flag == 1
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg,'g','LineWidth',2)
-        hold on
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg,'Color',[64,224,208]/255,'LineWidth',2)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg,'Color',[255,0,255]/255,'LineWidth',2)
         
-        % Plot the mean + 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg + SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg + SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+        switch handles.lr_xy_flag
+            
+            case 1
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg,'g','LineWidth',2)
+                hold on
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg + SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg - SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
+                
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg,'Color',[64,224,208]/255,'LineWidth',2)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg + SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg - SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+                
+            case 2
+                
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg,'Color',handles.colors.r_x,'LineWidth',2)
+                hold on
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg + SDplot*handles.Results.rx_cycstd,'LineStyle','--','Color',handles.colors.r_x,'LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg - SDplot*handles.Results.rx_cycstd,'LineStyle','--','Color',handles.colors.r_x,'LineWidth',0.5)
+                
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg,'Color',handles.colors.r_y,'LineWidth',2)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg + SDplot*handles.Results.ry_cycstd,'LineStyle','--','Color',handles.colors.r_y,'LineWidth',0.5)
+                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg - SDplot*handles.Results.ry_cycstd,'LineStyle','--','Color',handles.colors.r_y,'LineWidth',0.5)
+                
+        end
+        
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg,'Color',[255,0,255]/255,'LineWidth',2)
         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg + SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg - SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
+        % Plot the mean + 2*standard deviations
+        
+        
+        
         
         % Plot the mean - 2*standard deviations
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg - SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg - SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg - SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
+        
+        
+        
     end
     
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code
@@ -1513,10 +1704,14 @@ if handles.params.plot_final_trace == 1
     ll_cyc = [];
     lr_cyc = [];
     lz_cyc = [];
+    lx_cyc = [];
+    ly_cyc = [];
     
     rl_cyc = [];
     rr_cyc = [];
     rz_cyc = [];
+    rx_cyc = [];
+    ry_cyc = [];
     
     stim = [ ];
     t_cyc = [];
@@ -1526,10 +1721,14 @@ if handles.params.plot_final_trace == 1
         ll_cyc = [ll_cyc ; handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         lr_cyc = [lr_cyc ; handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         lz_cyc = [lz_cyc ; handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        lx_cyc = [lx_cyc ; handles.Final_Data.Data_LE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        ly_cyc = [ly_cyc ; handles.Final_Data.Data_LE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
         rl_cyc = [rl_cyc ; handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
         stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)];
         
@@ -1539,17 +1738,32 @@ if handles.params.plot_final_trace == 1
     
     % Plot the cycle average
     if handles.params.lefteye_flag == 1
-        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ll_cyc,'color' ,[0,128,0]/255,'LineWidth',1)
-        hold on
-        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lr_cyc,'b','LineWidth',1)
         plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lz_cyc,'r','LineWidth',1)
+
+        
+        hold on
+        
+        switch handles.lr_xy_flag
+            case 1
+                plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lr_cyc,'b','LineWidth',1)
+                plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ll_cyc,'color' ,[0,128,0]/255,'LineWidth',1)
+            case 2
+                plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lx_cyc,'color' ,handles.colors.l_x,'LineWidth',1)
+                plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ly_cyc,'color' ,handles.colors.l_y,'LineWidth',1)
+        end
     end
     
     if handles.params.righteye_flag == 1
-        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rl_cyc,'g','LineWidth',1)
-        hold on
-        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rr_cyc,'color' ,[64,224,208]/255,'LineWidth',1)
         plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rz_cyc,'color' ,[255,0,255]/255,'LineWidth',1)
+        hold on
+        switch handles.lr_xy_flag
+            case 1
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rl_cyc,'g','LineWidth',1)
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rr_cyc,'color' ,[64,224,208]/255,'LineWidth',1)
+            case 2
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,rx_cyc,'color',handles.colors.r_x,'LineWidth',1)
+        plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ry_cyc,'color' ,handles.colors.r_y,'LineWidth',1)
+        end
     end
     
     plot(handles.main_plot,[1:length(stim)]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim,'color' ,'k','LineWidth',1)
@@ -1583,9 +1797,19 @@ if handles.params.plot_sinefit_flag == 1
     lzsinphase = handles.Results.SineFit.lz_sinphase;
     lz_mag = handles.Results.SineFit.lz_mag;
     
+    lx_offset = handles.Results.SineFit.lx_offset;
+    lxsinphase = handles.Results.SineFit.lx_sinphase;
+    lx_mag = handles.Results.SineFit.lx_mag;
+    
+    ly_offset = handles.Results.SineFit.ly_offset;
+    lysinphase = handles.Results.SineFit.ly_sinphase;
+    ly_mag = handles.Results.SineFit.ly_mag;
+    
     ll_sine = ll_offset + ll_mag*sin(2*pi*F*t + llsinphase);
     lr_sine = lr_offset + lr_mag*sin(2*pi*F*t + lrsinphase);
     lz_sine = lz_offset + lz_mag*sin(2*pi*F*t + lzsinphase);
+    lx_sine = lx_offset + lx_mag*sin(2*pi*F*t + lxsinphase);
+    ly_sine = ly_offset + ly_mag*sin(2*pi*F*t + lysinphase);
     
     % right eye
     rl_offset = handles.Results.SineFit.rl_offset;
@@ -1600,22 +1824,48 @@ if handles.params.plot_sinefit_flag == 1
     rzsinphase = handles.Results.SineFit.rz_sinphase;
     rz_mag = handles.Results.SineFit.rz_mag;
     
+    rx_offset = handles.Results.SineFit.rx_offset;
+    rxsinphase = handles.Results.SineFit.rx_sinphase;
+    rx_mag = handles.Results.SineFit.rx_mag;
+    
+    ry_offset = handles.Results.SineFit.ry_offset;
+    rysinphase = handles.Results.SineFit.ry_sinphase;
+    ry_mag = handles.Results.SineFit.ry_mag;
+    
     rl_sine = rl_offset + rl_mag*sin(2*pi*F*t + rlsinphase);
     rr_sine = rr_offset + rr_mag*sin(2*pi*F*t + rrsinphase);
     rz_sine = rz_offset + rz_mag*sin(2*pi*F*t + rzsinphase);
+    rx_sine = rx_offset + rx_mag*sin(2*pi*F*t + rxsinphase);
+    ry_sine = ry_offset + ry_mag*sin(2*pi*F*t + rysinphase);
     
     if handles.params.lefteye_flag == 1
-        plot(handles.main_plot,t,ll_sine,'LineStyle',':','color' ,[0,128,0]/255,'LineWidth',2)
-        hold on
-        plot(handles.main_plot,t,lr_sine,'LineStyle',':','color' ,'b','LineWidth',2)
         plot(handles.main_plot,t,lz_sine,'LineStyle',':','color' ,'r','LineWidth',2)
+        hold on
+        switch handles.lr_xy_flag
+            case 1
+                plot(handles.main_plot,t,ll_sine,'LineStyle',':','color' ,[0,128,0]/255,'LineWidth',2)
+                plot(handles.main_plot,t,lr_sine,'LineStyle',':','color' ,'b','LineWidth',2)
+                
+            case 2
+                plot(handles.main_plot,t,lx_sine,'LineStyle',':','color' ,handles.colors.l_x,'LineWidth',2)
+                plot(handles.main_plot,t,ly_sine,'LineStyle',':','color' ,handles.colors.l_y,'LineWidth',2)
+        end
+        
     end
     
     if handles.params.righteye_flag == 1
-        plot(handles.main_plot,t,rl_sine,'LineStyle',':','color' ,'g','LineWidth',2)
-        hold on
-        plot(handles.main_plot,t,rr_sine,'LineStyle',':','color' ,[64,224,208]/255,'LineWidth',2)
         plot(handles.main_plot,t,rz_sine,'LineStyle',':','color' ,[255,0,255]/255,'LineWidth',2)
+        
+        hold on
+
+        switch handles.lr_xy_flag
+            case 1
+                plot(handles.main_plot,t,rl_sine,'LineStyle',':','color' ,'g','LineWidth',2)
+                plot(handles.main_plot,t,rr_sine,'LineStyle',':','color' ,[64,224,208]/255,'LineWidth',2)
+            case 2
+                plot(handles.main_plot,t,rx_sine,'LineStyle',':','color' ,handles.colors.r_x,'LineWidth',2)
+                plot(handles.main_plot,t,ry_sine,'LineStyle',':','color' ,handles.colors.r_y,'LineWidth',2)
+        end
     end
     
     
@@ -1651,10 +1901,14 @@ if button_state == get(hObject,'Max')
     ll_cyc = [];
     lr_cyc = [];
     lz_cyc = [];
+    lx_cyc = [];
+    ly_cyc = [];
     
     rl_cyc = [];
     rr_cyc = [];
     rz_cyc = [];
+    rx_cyc = [];
+    ry_cyc = [];
     
     
     % Extract data
@@ -1662,10 +1916,14 @@ if button_state == get(hObject,'Max')
         ll_cyc = [ll_cyc ; handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         lr_cyc = [lr_cyc ; handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         lz_cyc = [lz_cyc ; handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        lx_cyc = [lx_cyc ; handles.Final_Data.Data_LE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        ly_cyc = [ly_cyc ; handles.Final_Data.Data_LE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
         rl_cyc = [rl_cyc ; handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
+        ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
     end
     
     % Make a time vector
@@ -1682,10 +1940,14 @@ if button_state == get(hObject,'Max')
             [ll_offset,ll_mag,ll_sinphase,ll_cosphase,ll_THD] = SingleFreqDFT(tt,ll_cyc,freq);
             [lr_offset,lr_mag,lr_sinphase,lr_cosphase,lr_THD] = SingleFreqDFT(tt,lr_cyc,freq);
             [lz_offset,lz_mag,lz_sinphase,lz_cosphase,lz_THD] = SingleFreqDFT(tt,lz_cyc,freq);
+            [lx_offset,lx_mag,lx_sinphase,lx_cosphase,lx_THD] = SingleFreqDFT(tt,lx_cyc,freq);
+            [ly_offset,ly_mag,ly_sinphase,ly_cosphase,ly_THD] = SingleFreqDFT(tt,ly_cyc,freq);
             
             [rl_offset,rl_mag,rl_sinphase,rl_cosphase,rl_THD] = SingleFreqDFT(tt,rl_cyc,freq);
             [rr_offset,rr_mag,rr_sinphase,rr_cosphase,rr_THD] = SingleFreqDFT(tt,rr_cyc,freq);
             [rz_offset,rz_mag,rz_sinphase,rz_cosphase,rz_THD] = SingleFreqDFT(tt,rz_cyc,freq);
+            [rx_offset,rx_mag,rx_sinphase,rx_cosphase,rx_THD] = SingleFreqDFT(tt,rx_cyc,freq);
+            [ry_offset,ry_mag,ry_sinphase,ry_cosphase,ry_THD] = SingleFreqDFT(tt,ry_cyc,freq);
             
             % Display results
             set(handles.l_larp_sin_offset,'String',num2str(ll_offset));
@@ -1740,6 +2002,18 @@ if button_state == get(hObject,'Max')
             handles.Results.SineFit.lz_cosphase = lz_cosphase;
             handles.Results.SineFit.lz_THD = lz_THD;
             
+            handles.Results.SineFit.lx_offset = lx_offset;
+            handles.Results.SineFit.lx_mag = lx_mag;
+            handles.Results.SineFit.lx_sinphase = lx_sinphase;
+            handles.Results.SineFit.lx_cosphase = lx_cosphase;
+            handles.Results.SineFit.lx_THD = lx_THD;
+            
+            handles.Results.SineFit.ly_offset = ly_offset;
+            handles.Results.SineFit.ly_mag = ly_mag;
+            handles.Results.SineFit.ly_sinphase = ly_sinphase;
+            handles.Results.SineFit.ly_cosphase = ly_cosphase;
+            handles.Results.SineFit.ly_THD = ly_THD;
+            
             % Right Eye
             handles.Results.SineFit.rl_offset = rl_offset;
             handles.Results.SineFit.rl_mag = rl_mag;
@@ -1759,6 +2033,17 @@ if button_state == get(hObject,'Max')
             handles.Results.SineFit.rz_cosphase = rz_cosphase;
             handles.Results.SineFit.rz_THD = rz_THD;
             
+            handles.Results.SineFit.rx_offset = rx_offset;
+            handles.Results.SineFit.rx_mag = rx_mag;
+            handles.Results.SineFit.rx_sinphase = rx_sinphase;
+            handles.Results.SineFit.rx_cosphase = rx_cosphase;
+            handles.Results.SineFit.rx_THD = rx_THD;
+            
+            handles.Results.SineFit.ry_offset = ry_offset;
+            handles.Results.SineFit.ry_mag = ry_mag;
+            handles.Results.SineFit.ry_sinphase = ry_sinphase;
+            handles.Results.SineFit.ry_cosphase = ry_cosphase;
+            handles.Results.SineFit.ry_THD = ry_THD;
             
             handles.Results.SineFit.Freq = freq;
             
@@ -2316,3 +2601,23 @@ function user_savefile_suffix_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in lr_xy_toggle.
+function lr_xy_toggle_Callback(hObject, eventdata, handles)
+% hObject    handle to lr_xy_toggle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+button_state = get(hObject,'Value');
+if button_state == get(hObject,'Max')
+	%display('down');
+    handles.lr_xy_flag = 2;
+elseif button_state == get(hObject,'Min')
+	%display('up');
+    handles.lr_xy_flag = 1;
+end
+
+plot_cycle_Callback(hObject, eventdata, handles)
+
+
+guidata(hObject,handles)

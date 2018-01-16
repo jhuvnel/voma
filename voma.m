@@ -22,7 +22,7 @@ function varargout = voma(varargin)
 
 % Edit the above text to modify the response to help voma
 % Testing
-% Last Modified by GUIDE v2.5 03-Jan-2017 13:22:07
+% Last Modified by GUIDE v2.5 10-Jan-2018 10:47:15
 
 % Begin initialization code - DO NOT EDIT
 % Brian M test
@@ -95,3 +95,11 @@ function convert_raw2qpr_open_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 voma__convert_raw2qpr
+
+
+% --- Executes on button press in gen_report_open.
+function gen_report_open_Callback(hObject, eventdata, handles)
+% hObject    handle to gen_report_open (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+voma__gen_report

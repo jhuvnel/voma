@@ -1420,7 +1420,7 @@ switch handles.params.file_format
                     headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
                     switch raw{n,9}
                         
-                        case {'Electrical Only','ElectricOnly*','ElectricalOnly*'}
+                        case {'Electrical Only','*ElectricOnly*','ElectricalOnly*'}
                             Stimulus{n-1} = {Data.Stim_Trig};
                             Stim_t{n-1} = {Data.Time_Stim(:,1)};
                             
@@ -1447,113 +1447,119 @@ switch handles.params.file_format
                     Parameters(n-1).DAQ = 'LDVOG';
                     Parameters(n-1).DAQ_code = 5;
                     
-                    switch raw{n,9}
+                    if ~isempty(strfind(raw{n,9},'ElectricalOnly')) || ~isempty(strfind(raw{n,9},'ElectricOnly')) || ~isempty(strfind(raw{n,9},'Electrical Only')) || ~isempty(strfind(raw{n,9},'Electric Only'))
                         
-                        case {'Electrical Only','ElectricOnly','ElectricalOnly'}
-                            
-                            % Create sinusoidal stimulus file
-                            Transitions = abs(diff(Data.Stim_Trig));
-                            inds = [1:length(Data.Stim_Trig)];
-                            transition_inds = inds(Transitions==1);
-                            transition_inds = transition_inds(1:end-1);
-                            
-                            A = raw{n,13};
-                            mean_period = mean(diff(transition_inds))/(Data.Fs);
-                            f = 1/(mean_period);
-                            phi = 0;
-                            t_sine = [0:1/(Data.Fs):((transition_inds(end)-transition_inds(1))/(Data.Fs))+mean_period];
-                            
-                            sine = A*sin(2*pi*f*t_sine + phi);
-                            VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
-                            
-                            Stimulus{n-1} = {VirtSine};
-                            stim_ind{n-1} = {transition_inds'};
-                            % For Elec. Only stimuli w/ the MVI LD goggles,
-                            % the GPIO line is collected w/ the VOG data.
-                            % Thus, we will overwrite the 'Stim_t' time
-                            % vector w/ the VOG time vector.
-                            Stim_t{n-1} = {Data.Time_Eye};
-                            
-                        case 'Pulse Train'
-                            
-                            Stimulus{n-1} = {Data.Stim_Trig};
-                            
-                            inds = [1:length(Data.Stim_Trig)]';
-                            on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
-                            off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
-                            %    stim_ind{n-1} = {[on_inds off_inds]};
-                            stim_ind{n-1} ={[]};
-                            % For Elec. Only stimuli w/ the MVI LD goggles,
-                            % the GPIO line is collected w/ the VOG data.
-                            % Thus, we will overwrite the 'Stim_t' time
-                            % vector w/ the VOG time vector.
-                            Stim_t{n-1} = {Data.Time_Eye};
-                        case 'Current Fitting'
-                            
-                            Stimulus{n-1} = {Data.Stim_Trig};
-                            
-                            inds = [1:length(Data.Stim_Trig)]';
-                            on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
-                            off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
-                            %    stim_ind{n-1} = {[on_inds off_inds]};
-                            stim_ind{n-1} ={[]};
-                            % For Elec. Only stimuli w/ the MVI LD goggles,
-                            % the GPIO line is collected w/ the VOG data.
-                            % Thus, we will overwrite the 'Stim_t' time
-                            % vector w/ the VOG time vector.
-                            Stim_t{n-1} = {Data.Time_Eye};
-                        
-                        case {'Activation','Adaptation'}
-                            
-                            Stimulus{n-1} = {Data.Stim_Trig};
-                            Stim_t{n-1} = {Data.Time_Eye};
-                            stim_ind{n-1} ={[]};
-                        
-                        otherwise
-                            
-                            
-                            headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
-                            
-                            headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
-                            
-                            % NOTE: The data acquired on the
-                            % MPU9250 is not time stamped
-                            % identically with the VOG data. Thus,
-                            % the 'Time_Eye' and 'Time_Stim' traces
-                            % are NOT identicle for these files. The user
-                            % has the option to interpolate the MPU data to
-                            % the VOG time stamps.
-                            
-                            if handles.params.interp_ldvog_mpu
+                        % Create sinusoidal stimulus file
+                                Transitions = abs(diff(Data.Stim_Trig));
+                                inds = [1:length(Data.Stim_Trig)];
+                                transition_inds = inds(Transitions==1);
+                                transition_inds = transition_inds(1:end-1);
                                 
-                                switch raw{n,10}
-                                    case {'LARP-Axis','LA','LARP','RP'}
-                                        Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye)};
-                                        
-                                    case {'RALP-Axis','LP','RALP','RA'}
-                                        Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye)};
-                                        
-                                    case {'LHRH-Axis','LH','LHRH','RH'}
-                                        Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye)};
-                                        
+                                A = raw{n,13};
+                                mean_period = mean(diff(transition_inds))/(Data.Fs);
+                                f = 1/(mean_period);
+                                phi = 0;
+                                t_sine = [0:1/(Data.Fs):((transition_inds(end)-transition_inds(1))/(Data.Fs))+mean_period];
+                                
+                                sine = A*sin(2*pi*f*t_sine + phi);
+                                VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
+                                
+                                Stimulus{n-1} = {VirtSine};
+                                stim_ind{n-1} = {transition_inds'};
+                                % For Elec. Only stimuli w/ the MVI LD goggles,
+                                % the GPIO line is collected w/ the VOG data.
+                                % Thus, we will overwrite the 'Stim_t' time
+                                % vector w/ the VOG time vector.
+                                Stim_t{n-1} = {Data.Time_Eye};
+                        
+                    else
+                        
+                        switch raw{n,9}
+                                                            
+                                
+                                
+                            case 'Pulse Train'
+                                
+                                Stimulus{n-1} = {Data.Stim_Trig};
+                                
+                                inds = [1:length(Data.Stim_Trig)]';
+                                on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                                off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                                %    stim_ind{n-1} = {[on_inds off_inds]};
+                                stim_ind{n-1} ={[]};
+                                % For Elec. Only stimuli w/ the MVI LD goggles,
+                                % the GPIO line is collected w/ the VOG data.
+                                % Thus, we will overwrite the 'Stim_t' time
+                                % vector w/ the VOG time vector.
+                                Stim_t{n-1} = {Data.Time_Eye};
+                            case 'Current Fitting'
+                                
+                                Stimulus{n-1} = {Data.Stim_Trig};
+                                
+                                inds = [1:length(Data.Stim_Trig)]';
+                                on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                                off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                                %    stim_ind{n-1} = {[on_inds off_inds]};
+                                stim_ind{n-1} ={[]};
+                                % For Elec. Only stimuli w/ the MVI LD goggles,
+                                % the GPIO line is collected w/ the VOG data.
+                                % Thus, we will overwrite the 'Stim_t' time
+                                % vector w/ the VOG time vector.
+                                Stim_t{n-1} = {Data.Time_Eye};
+                                
+                            case {'Activation','Adaptation'}
+                                
+                                Stimulus{n-1} = {Data.Stim_Trig};
+                                Stim_t{n-1} = {Data.Time_Eye};
+                                stim_ind{n-1} ={[]};
+                                
+                            otherwise
+                                
+                                
+                                headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                                
+                                headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                                
+                                % NOTE: The data acquired on the
+                                % MPU9250 is not time stamped
+                                % identically with the VOG data. Thus,
+                                % the 'Time_Eye' and 'Time_Stim' traces
+                                % are NOT identicle for these files. The user
+                                % has the option to interpolate the MPU data to
+                                % the VOG time stamps.
+                                
+                                if handles.params.interp_ldvog_mpu
+                                    
+                                    switch raw{n,10}
+                                        case {'LARP-Axis','LA','LARP','RP'}
+                                            Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye)};
+                                            
+                                        case {'RALP-Axis','LP','RALP','RA'}
+                                            Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye)};
+                                            
+                                        case {'LHRH-Axis','LH','LHRH','RH'}
+                                            Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye)};
+                                            
+                                    end
+                                    Stim_t{n-1} = {Data.Time_Eye};
+                                else
+                                    
+                                    switch raw{n,10}
+                                        case {'LARP-Axis','LA','LARP','RP'}
+                                            Stimulus{n-1} = {headmpu_lrz(:,1)};
+                                        case {'RALP-Axis','LP','RALP','RA'}
+                                            Stimulus{n-1} = {headmpu_lrz(:,2)};
+                                            
+                                        case {'LHRH-Axis','LH','LHRH','RH'}
+                                            Stimulus{n-1} = {headmpu_lrz(:,3)};
+                                            
+                                    end
+                                    
                                 end
-                               Stim_t{n-1} = {Data.Time_Eye};
-                            else
+                                stim_ind{n-1} = {[]};
                                 
-                                switch raw{n,10}
-                                    case {'LARP-Axis','LA','LARP','RP'}
-                                        Stimulus{n-1} = {headmpu_lrz(:,1)};
-                                    case {'RALP-Axis','LP','RALP','RA'}
-                                        Stimulus{n-1} = {headmpu_lrz(:,2)};
-                                        
-                                    case {'LHRH-Axis','LH','LHRH','RH'}
-                                        Stimulus{n-1} = {headmpu_lrz(:,3)};
-                                        
-                                end
-                                
-                            end
-                            stim_ind{n-1} = {[]};
-                            
+                        end
+                        
                     end
                 case 4 %VNEL Digital Coil System
                     Parameters(n-1).DAQ = 'DigCoilSys';

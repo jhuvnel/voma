@@ -22,7 +22,7 @@ function varargout = voma__gen_report(varargin)
 
 % Edit the above text to modify the response to help voma__gen_report
 
-% Last Modified by GUIDE v2.5 20-Dec-2017 13:09:06
+% Last Modified by GUIDE v2.5 09-Jan-2018 09:35:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -91,6 +91,8 @@ handles.params.plot_type_flag = 1;
 % Initialize invert_stim flag to FALSE
 handles.params.invert_stim = false;
 
+% Initialize the lr vs. xy flag
+handles.lr_xy_flag = 1;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -356,17 +358,38 @@ Fs = CycAvg.Fs;
 
 for cycle_flag=1:2
     
-    switch handles.params.stimaxis
+    switch handles.lr_xy_flag
         
-        case 1 % LHRH
-            Trace_l = CycAvg.lz_cycavg;
-            Trace_r = CycAvg.rz_cycavg;
-        case 2 % LARP
-            Trace_l = CycAvg.ll_cycavg;
-            Trace_r = CycAvg.rl_cycavg;
-        case 3 % RALP
-            Trace_l = CycAvg.lr_cycavg;
-            Trace_r = CycAvg.rr_cycavg;
+        case 1
+            
+            switch handles.params.stimaxis
+                
+                case 1 % LHRH
+                    Trace_l = CycAvg.lz_cycavg;
+                    Trace_r = CycAvg.rz_cycavg;
+                case 2 % LARP
+                    Trace_l = CycAvg.ll_cycavg;
+                    Trace_r = CycAvg.rl_cycavg;
+                case 3 % RALP
+                    Trace_l = CycAvg.lr_cycavg;
+                    Trace_r = CycAvg.rr_cycavg;
+            end
+            
+        case 2
+            
+            switch handles.params.stimaxis
+                
+                case 1 % LHRH
+                    Trace_l = CycAvg.lz_cycavg;
+                    Trace_r = CycAvg.rz_cycavg;
+                case 2 % X
+                    Trace_l = CycAvg.lx_cycavg;
+                    Trace_r = CycAvg.rx_cycavg;
+                case 3 % Y
+                    Trace_l = CycAvg.ly_cycavg;
+                    Trace_r = CycAvg.ry_cycavg;
+            end
+            
     end
     
     Period = length(CycAvg.lr_cycavg)/Fs;
@@ -403,24 +426,46 @@ for cycle_flag=1:2
             file_params{val+1,12} = round(CycAvg.rz_cycstd(Imin_r),1);
             file_params{val+1,13} = size(handles.CycAvg(val).Data.rz_cyc,1);
             
-            % LE, + LARP
-            file_params{val+1,20} = round(CycAvg.ll_cycavg(Imin_l),1);
-            file_params{val+1,21} = round(CycAvg.ll_cycstd(Imin_l),1);
-            file_params{val+1,22} = size(handles.CycAvg(val).Data.ll_cyc,1);
-            % RE, + LARP
-            file_params{val+1,23} = round(CycAvg.rl_cycavg(Imin_r),1);
-            file_params{val+1,24} = round(CycAvg.rl_cycstd(Imin_r),1);
-            file_params{val+1,25} = size(handles.CycAvg(val).Data.rl_cyc,1);
-            
-            % LE, + RALP
-            file_params{val+1,32} = round(CycAvg.lr_cycavg(Imin_l),1);
-            file_params{val+1,33} = round(CycAvg.lr_cycstd(Imin_l),1);
-            file_params{val+1,34} = size(handles.CycAvg(val).Data.lr_cyc,1);
-            % RE, + RALP
-            file_params{val+1,35} = round(CycAvg.rr_cycavg(Imin_r),1);
-            file_params{val+1,36} = round(CycAvg.rr_cycstd(Imin_r),1);
-            file_params{val+1,37} = size(handles.CycAvg(val).Data.rr_cyc,1);
-            
+            switch handles.lr_xy_flag
+                
+                case 1
+                    % LE, + LARP
+                    file_params{val+1,20} = round(CycAvg.ll_cycavg(Imin_l),1);
+                    file_params{val+1,21} = round(CycAvg.ll_cycstd(Imin_l),1);
+                    file_params{val+1,22} = size(handles.CycAvg(val).Data.ll_cyc,1);
+                    % RE, + LARP
+                    file_params{val+1,23} = round(CycAvg.rl_cycavg(Imin_r),1);
+                    file_params{val+1,24} = round(CycAvg.rl_cycstd(Imin_r),1);
+                    file_params{val+1,25} = size(handles.CycAvg(val).Data.rl_cyc,1);
+                    
+                    % LE, + RALP
+                    file_params{val+1,32} = round(CycAvg.lr_cycavg(Imin_l),1);
+                    file_params{val+1,33} = round(CycAvg.lr_cycstd(Imin_l),1);
+                    file_params{val+1,34} = size(handles.CycAvg(val).Data.lr_cyc,1);
+                    % RE, + RALP
+                    file_params{val+1,35} = round(CycAvg.rr_cycavg(Imin_r),1);
+                    file_params{val+1,36} = round(CycAvg.rr_cycstd(Imin_r),1);
+                    file_params{val+1,37} = size(handles.CycAvg(val).Data.rr_cyc,1);
+                case 2
+                    % LE, + X
+                    file_params{val+1,20} = round(CycAvg.lx_cycavg(Imin_l),1);
+                    file_params{val+1,21} = round(CycAvg.lx_cycstd(Imin_l),1);
+                    file_params{val+1,22} = size(handles.CycAvg(val).Data.lx_cyc,1);
+                    % RE, + X
+                    file_params{val+1,23} = round(CycAvg.rx_cycavg(Imin_r),1);
+                    file_params{val+1,24} = round(CycAvg.rx_cycstd(Imin_r),1);
+                    file_params{val+1,25} = size(handles.CycAvg(val).Data.rx_cyc,1);
+                    
+                    % LE, + Y
+                    file_params{val+1,32} = round(CycAvg.ly_cycavg(Imin_l),1);
+                    file_params{val+1,33} = round(CycAvg.ly_cycstd(Imin_l),1);
+                    file_params{val+1,34} = size(handles.CycAvg(val).Data.ly_cyc,1);
+                    % RE, + Y
+                    file_params{val+1,35} = round(CycAvg.ry_cycavg(Imin_r),1);
+                    file_params{val+1,36} = round(CycAvg.ry_cycstd(Imin_r),1);
+                    file_params{val+1,37} = size(handles.CycAvg(val).Data.ry_cyc,1);
+                    
+            end
         case 2
             % LE, - LHRH
             file_params{val+1,14} = round(CycAvg.lz_cycavg(Imax_l),1);
@@ -431,23 +476,48 @@ for cycle_flag=1:2
             file_params{val+1,18} = round(CycAvg.rz_cycstd(Imax_r),1);
             file_params{val+1,19} = size(handles.CycAvg(val).Data.rz_cyc,1);
             
-            % LE, - LARP
-            file_params{val+1,26} = round(CycAvg.ll_cycavg(Imax_l),1);
-            file_params{val+1,27} = round(CycAvg.ll_cycstd(Imax_l),1);
-            file_params{val+1,28} = size(handles.CycAvg(val).Data.ll_cyc,1);
-            % RE, - LARP
-            file_params{val+1,29} = round(CycAvg.rl_cycavg(Imax_r),1);
-            file_params{val+1,30} = round(CycAvg.rl_cycstd(Imax_r),1);
-            file_params{val+1,31} = size(handles.CycAvg(val).Data.rl_cyc,1);
-            
-            % LE, - RALP
-            file_params{val+1,38} = round(CycAvg.lr_cycavg(Imax_l),1);
-            file_params{val+1,39} = round(CycAvg.lr_cycstd(Imax_l),1);
-            file_params{val+1,40} = size(handles.CycAvg(val).Data.lr_cyc,1);
-            % RE, - RALP
-            file_params{val+1,41} = round(CycAvg.rr_cycavg(Imax_r),1);
-            file_params{val+1,42} = round(CycAvg.rr_cycstd(Imax_r),1);
-            file_params{val+1,43} = size(handles.CycAvg(val).Data.rr_cyc,1);
+            switch handles.lr_xy_flag
+                
+                case 1
+                    % LE, - LARP
+                    file_params{val+1,26} = round(CycAvg.ll_cycavg(Imax_l),1);
+                    file_params{val+1,27} = round(CycAvg.ll_cycstd(Imax_l),1);
+                    file_params{val+1,28} = size(handles.CycAvg(val).Data.ll_cyc,1);
+                    % RE, - LARP
+                    file_params{val+1,29} = round(CycAvg.rl_cycavg(Imax_r),1);
+                    file_params{val+1,30} = round(CycAvg.rl_cycstd(Imax_r),1);
+                    file_params{val+1,31} = size(handles.CycAvg(val).Data.rl_cyc,1);
+                    
+                    % LE, - RALP
+                    file_params{val+1,38} = round(CycAvg.lr_cycavg(Imax_l),1);
+                    file_params{val+1,39} = round(CycAvg.lr_cycstd(Imax_l),1);
+                    file_params{val+1,40} = size(handles.CycAvg(val).Data.lr_cyc,1);
+                    % RE, - RALP
+                    file_params{val+1,41} = round(CycAvg.rr_cycavg(Imax_r),1);
+                    file_params{val+1,42} = round(CycAvg.rr_cycstd(Imax_r),1);
+                    file_params{val+1,43} = size(handles.CycAvg(val).Data.rr_cyc,1);
+                    
+                case 2
+                    
+                    % LE, - X
+                    file_params{val+1,26} = round(CycAvg.lx_cycavg(Imax_l),1);
+                    file_params{val+1,27} = round(CycAvg.ll_cycstd(Imax_l),1);
+                    file_params{val+1,28} = size(handles.CycAvg(val).Data.lx_cyc,1);
+                    % RE, - X
+                    file_params{val+1,29} = round(CycAvg.rx_cycavg(Imax_r),1);
+                    file_params{val+1,30} = round(CycAvg.rx_cycstd(Imax_r),1);
+                    file_params{val+1,31} = size(handles.CycAvg(val).Data.rx_cyc,1);
+                    
+                    % LE, - Y
+                    file_params{val+1,38} = round(CycAvg.ly_cycavg(Imax_l),1);
+                    file_params{val+1,39} = round(CycAvg.ly_cycstd(Imax_l),1);
+                    file_params{val+1,40} = size(handles.CycAvg(val).Data.ly_cyc,1);
+                    % RE, - Y
+                    file_params{val+1,41} = round(CycAvg.ry_cycavg(Imax_r),1);
+                    file_params{val+1,42} = round(CycAvg.ry_cycstd(Imax_r),1);
+                    file_params{val+1,43} = size(handles.CycAvg(val).Data.ry_cyc,1);
+                    
+            end
     end
     
     
@@ -467,14 +537,30 @@ function clear_stack_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-file_params = [{'Subject ID'} {'Date'} {'Visit #'} {'Test Name'} {'Test Condition'} {'Raw File Name'} {'Processed File Name'} ...
-    {'LE : +LHRH Peak Amp. [deg/s]'} {'LE : +LHRH STD [deg/s]'} {'LE : +LHRH # of cycles'} {'RE : +LHRH Peak Amp. [deg/s]'} {'RE : +LHRH STD [deg/s]'} {'RE : +LHRH # of cycles'} ...
-    {'LE : -LHRH Peak Amp. [deg/s]'} {'LE : -LHRH STD [deg/s]'} {'LE : -LHRH # of cycles'} {'RE : -LHRH Peak Amp. [deg/s]'} {'RE : -LHRH STD [deg/s]'} {'RE : -LHRH # of cycles'} ...
-    {'LE : +LARP Peak Amp. [deg/s]'} {'LE : +LARP STD [deg/s]'} {'LE : +LARP # of cycles'} {'RE : +LARP Peak Amp. [deg/s]'} {'RE : +LARP STD [deg/s]'} {'RE : +LARP # of cycles'} ...
-    {'LE : -LARP Peak Amp. [deg/s]'} {'LE : -LARP STD [deg/s]'} {'LE : -LARP # of cycles'} {'RE : -LARP Peak Amp. [deg/s]'} {'RE : -LARP STD [deg/s]'} {'RE : -LARP # of cycles'} ...
-    {'LE : +RALP Peak Amp. [deg/s]'} {'LE : +RALP STD [deg/s]'} {'LE : +RALP # of cycles'} {'RE : +RALP Peak Amp. [deg/s]'} {'RE : +RALP STD [deg/s]'} {'RE : +RALP # of cycles'} ...
-    {'LE : -RALP Peak Amp. [deg/s]'} {'LE : -RALP STD [deg/s]'} {'LE : -RALP # of cycles'} {'RE : -RALP Peak Amp. [deg/s]'} {'RE : -RALP STD [deg/s]'} {'RE : -RALP # of cycles'} ...
-    {'Examiner(s)'}];
+switch handles.lr_xy_flag
+    
+    case 1
+        file_params = [{'Subject ID'} {'Date'} {'Visit #'} {'Test Name'} {'Test Condition'} {'Raw File Name'} {'Processed File Name'} ...
+            {'LE : +LHRH Peak Amp. [deg/s]'} {'LE : +LHRH STD [deg/s]'} {'LE : +LHRH # of cycles'} {'RE : +LHRH Peak Amp. [deg/s]'} {'RE : +LHRH STD [deg/s]'} {'RE : +LHRH # of cycles'} ...
+            {'LE : -LHRH Peak Amp. [deg/s]'} {'LE : -LHRH STD [deg/s]'} {'LE : -LHRH # of cycles'} {'RE : -LHRH Peak Amp. [deg/s]'} {'RE : -LHRH STD [deg/s]'} {'RE : -LHRH # of cycles'} ...
+            {'LE : +LARP Peak Amp. [deg/s]'} {'LE : +LARP STD [deg/s]'} {'LE : +LARP # of cycles'} {'RE : +LARP Peak Amp. [deg/s]'} {'RE : +LARP STD [deg/s]'} {'RE : +LARP # of cycles'} ...
+            {'LE : -LARP Peak Amp. [deg/s]'} {'LE : -LARP STD [deg/s]'} {'LE : -LARP # of cycles'} {'RE : -LARP Peak Amp. [deg/s]'} {'RE : -LARP STD [deg/s]'} {'RE : -LARP # of cycles'} ...
+            {'LE : +RALP Peak Amp. [deg/s]'} {'LE : +RALP STD [deg/s]'} {'LE : +RALP # of cycles'} {'RE : +RALP Peak Amp. [deg/s]'} {'RE : +RALP STD [deg/s]'} {'RE : +RALP # of cycles'} ...
+            {'LE : -RALP Peak Amp. [deg/s]'} {'LE : -RALP STD [deg/s]'} {'LE : -RALP # of cycles'} {'RE : -RALP Peak Amp. [deg/s]'} {'RE : -RALP STD [deg/s]'} {'RE : -RALP # of cycles'} ...
+            {'Examiner(s)'}];
+        
+    case 2
+        
+        file_params = [{'Subject ID'} {'Date'} {'Visit #'} {'Test Name'} {'Test Condition'} {'Raw File Name'} {'Processed File Name'} ...
+            {'LE : +Z Peak Amp. [deg/s]'} {'LE : +Z STD [deg/s]'} {'LE : +Z # of cycles'} {'RE : +Z Peak Amp. [deg/s]'} {'RE : +Z STD [deg/s]'} {'RE : +Z # of cycles'} ...
+            {'LE : -Z Peak Amp. [deg/s]'} {'LE : -Z STD [deg/s]'} {'LE : -Z # of cycles'} {'RE : -Z Peak Amp. [deg/s]'} {'RE : -Z STD [deg/s]'} {'RE : -Z # of cycles'} ...
+            {'LE : +X Peak Amp. [deg/s]'} {'LE : +X STD [deg/s]'} {'LE : +X # of cycles'} {'RE : +X Peak Amp. [deg/s]'} {'RE : +X STD [deg/s]'} {'RE : +X # of cycles'} ...
+            {'LE : -X Peak Amp. [deg/s]'} {'LE : -X STD [deg/s]'} {'LE : -X # of cycles'} {'RE : -X Peak Amp. [deg/s]'} {'RE : -X STD [deg/s]'} {'RE : -X # of cycles'} ...
+            {'LE : +Y Peak Amp. [deg/s]'} {'LE : +Y STD [deg/s]'} {'LE : +Y # of cycles'} {'RE : +Y Peak Amp. [deg/s]'} {'RE : +Y STD [deg/s]'} {'RE : +Y # of cycles'} ...
+            {'LE : -Y Peak Amp. [deg/s]'} {'LE : -Y STD [deg/s]'} {'LE : -Y # of cycles'} {'RE : -Y Peak Amp. [deg/s]'} {'RE : -Y STD [deg/s]'} {'RE : -Y # of cycles'} ...
+            {'Examiner(s)'}];
+        
+end
 set(handles.file_params,'Data',file_params);
 
 % Initialize the CycAvg structure
@@ -576,12 +662,17 @@ SCC = handles.params.stimaxis;
 
 Scale = [handles.params.neg_y_scale handles.params.pos_y_scale];
 
-[hx] = MVI_Gen_Cyc_Avg_Plot__inputdata(Data,plotname,save_loc,stim_cond,Stim_trace,legend_flag,SCC,Scale,handles.params.plot_type_flag,handles.params.invert_stim);
+[hx] = MVI_Gen_Cyc_Avg_Plot__inputdata(Data,plotname,save_loc,stim_cond,Stim_trace,legend_flag,SCC,Scale,handles.params.plot_type_flag,handles.params.invert_stim,handles.lr_xy_flag);
 
 folder_name = uigetdir(pwd,'Choose the folder location to save the report printout');
 
 reportname = [folder_name '\' plotname '_CRF'];
-rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Repord_CRF_Template');
+switch handles.lr_xy_flag
+    case 1
+        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Repord_CRF_Template_LRZ');
+    case 2
+        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Repord_CRF_Template_XYZ');
+end
 rpt.subj_ID = file_params{2,1};
 rpt.date = file_params{2,2};
 rpt.visitnum = file_params{2,3};
@@ -625,7 +716,12 @@ rpt.raw_filename = full_rawname_string;
 rpt.examiner = handles.params.examiner;
 
 rpt.cyc_avg_plot = [plotname '.png'];
-rpt.cyc_avg_legend = 'F:\VNEL-Software-Repo\VOMA\CycAvg_LEGEND_20170509.png';
+switch handles.lr_xy_flag
+    case 1
+        rpt.cyc_avg_legend = 'F:\VNEL-Software-Repo\VOMA\CycAvg_LEGEND_LRZ_20170509.png';
+    case 2
+        rpt.cyc_avg_legend = 'F:\VNEL-Software-Repo\VOMA\CycAvg_LEGEND_XYZ_20180109.png';
+end
 rpt.lhrh_data_table = file_params(:,[5 8:19]);
 rpt.larp_data_table = file_params(:,[5 20:31]);
 rpt.ralp_data_table = file_params(:,[5 32:43]);
@@ -760,3 +856,51 @@ end
 % Update handles structure
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of inv_stim_chkbx
+
+
+% --- Executes on button press in lrz_xyz_toggle.
+function lrz_xyz_toggle_Callback(hObject, eventdata, handles)
+% hObject    handle to lrz_xyz_toggle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+button_state = get(hObject,'Value');
+if button_state == get(hObject,'Max')
+    handles.lr_xy_flag = 2;
+    
+    file_param_data = [{'Subject ID'} {'Date'} {'Visit #'} {'Test Name'} {'Test Condition'} {'Raw File Name'} {'Processed File Name'} ...
+        {'LE : +Z Peak Amp. [deg/s]'} {'LE : +Z STD [deg/s]'} {'LE : +Z # of cycles'} {'RE : +Z Peak Amp. [deg/s]'} {'RE : +Z STD [deg/s]'} {'RE : +Z # of cycles'} ...
+        {'LE : -Z Peak Amp. [deg/s]'} {'LE : -Z STD [deg/s]'} {'LE : -Z # of cycles'} {'RE : -Z Peak Amp. [deg/s]'} {'RE : -Z STD [deg/s]'} {'RE : -Z # of cycles'} ...
+        {'LE : +X Peak Amp. [deg/s]'} {'LE : +X STD [deg/s]'} {'LE : +X # of cycles'} {'RE : +X Peak Amp. [deg/s]'} {'RE : +X STD [deg/s]'} {'RE : +X # of cycles'} ...
+        {'LE : -X Peak Amp. [deg/s]'} {'LE : -X STD [deg/s]'} {'LE : -X # of cycles'} {'RE : -X Peak Amp. [deg/s]'} {'RE : -X STD [deg/s]'} {'RE : -X # of cycles'} ...
+        {'LE : +Y Peak Amp. [deg/s]'} {'LE : +Y STD [deg/s]'} {'LE : +Y # of cycles'} {'RE : +Y Peak Amp. [deg/s]'} {'RE : +Y STD [deg/s]'} {'RE : +Y # of cycles'} ...
+        {'LE : -Y Peak Amp. [deg/s]'} {'LE : -Y STD [deg/s]'} {'LE : -Y # of cycles'} {'RE : -Y Peak Amp. [deg/s]'} {'RE : -Y STD [deg/s]'} {'RE : -Y # of cycles'} ...
+        {'Examiner(s)'}];
+    
+    set(handles.larp_radbutton,'String','X')
+    set(handles.ralp_radbutton,'String','Y')
+    
+    set(handles.lrz_xyz_toggle,'String','XYZ')
+elseif button_state == get(hObject,'Min')
+    handles.lr_xy_flag = 1;
+    
+    file_param_data = [{'Subject ID'} {'Date'} {'Visit #'} {'Test Name'} {'Test Condition'} {'Raw File Name'} {'Processed File Name'} ...
+        {'LE : +LHRH Peak Amp. [deg/s]'} {'LE : +LHRH STD [deg/s]'} {'LE : +LHRH # of cycles'} {'RE : +LHRH Peak Amp. [deg/s]'} {'RE : +LHRH STD [deg/s]'} {'RE : +LHRH # of cycles'} ...
+        {'LE : -LHRH Peak Amp. [deg/s]'} {'LE : -LHRH STD [deg/s]'} {'LE : -LHRH # of cycles'} {'RE : -LHRH Peak Amp. [deg/s]'} {'RE : -LHRH STD [deg/s]'} {'RE : -LHRH # of cycles'} ...
+        {'LE : +LARP Peak Amp. [deg/s]'} {'LE : +LARP STD [deg/s]'} {'LE : +LARP # of cycles'} {'RE : +LARP Peak Amp. [deg/s]'} {'RE : +LARP STD [deg/s]'} {'RE : +LARP # of cycles'} ...
+        {'LE : -LARP Peak Amp. [deg/s]'} {'LE : -LARP STD [deg/s]'} {'LE : -LARP # of cycles'} {'RE : -LARP Peak Amp. [deg/s]'} {'RE : -LARP STD [deg/s]'} {'RE : -LARP # of cycles'} ...
+        {'LE : +RALP Peak Amp. [deg/s]'} {'LE : +RALP STD [deg/s]'} {'LE : +RALP # of cycles'} {'RE : +RALP Peak Amp. [deg/s]'} {'RE : +RALP STD [deg/s]'} {'RE : +RALP # of cycles'} ...
+        {'LE : -RALP Peak Amp. [deg/s]'} {'LE : -RALP STD [deg/s]'} {'LE : -RALP # of cycles'} {'RE : -RALP Peak Amp. [deg/s]'} {'RE : -RALP STD [deg/s]'} {'RE : -RALP # of cycles'} ...
+        {'Examiner(s)'}];
+    
+    set(handles.larp_radbutton,'String','LARP')
+    set(handles.ralp_radbutton,'String','RALP')
+    
+    set(handles.lrz_xyz_toggle,'String','LRZ')
+    
+end
+
+set(handles.file_params,'Data',file_param_data);
+
+% Update handles structure
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of lrz_xyz_toggle
