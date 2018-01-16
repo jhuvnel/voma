@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 30-Aug-2017 13:49:24
+% Last Modified by GUIDE v2.5 16-Jan-2018 13:39:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,7 @@ function voma__seg_data_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for voma__seg_data
 handles.output = hObject;
+
 
 % The following from subj_id to stim_intensity will be used to save the
 % values entered in the boxes to make the file name
@@ -112,8 +113,23 @@ set(handles.LaskerSystPanel,'Visible','Off')
 set(handles.mpuoffsetpanel,'Visible','On')
 handles.params.upper_trigLev = str2double(get(handles.upper_trigLev,'String'));
 handles.params.lower_trigLev = str2double(get(handles.lower_trigLev,'String'));
-[handles] = update_seg_filename(hObject, eventdata, handles);
-
+%[handles] = update_seg_filename(hObject, eventdata, handles);
+[FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the initialization file containing the information for the experiment parameters.');
+handles.initializePathName = PathName;
+cd(handles.initializePathName)
+handles.initialize = load('initialize.mat');
+handles.initialize = handles.initialize.initialize;
+handles.subj_id.String = handles.initialize.ID;
+handles.visit_number.String = handles.initialize.visit;
+handles.exp_type.String = handles.initialize.expType;
+handles.exp_condition.String = handles.initialize.expCond;
+handles.stim_axis.String = handles.initialize.stimAxis;
+handles.stim_type.String = handles.initialize.stimType;
+handles.stim_frequency.String = handles.initialize.stimFreq;
+handles.stim_intensity.String = handles.initialize.stimInt;
+handles.implant.String = handles.initialize.implant;
+handles.eye_rec.String = handles.initialize.eye;
+setappdata(handles.paramList,'handles',handles);
 % Update handles structure
 guidata(hObject, handles);
 
@@ -1171,8 +1187,8 @@ function stim_axis_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_type (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.params.stim_axis = get(hObject,'String');
-setappdata(hObject,'ax',get(hObject,'String'))
+handles.params.stim_axis = handles.stim_axis.String{handles.stim_axis.Value};
+setappdata(hObject,'ax',handles.stim_axis.String{handles.stim_axis.Value})
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
@@ -1197,8 +1213,8 @@ function stim_type_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_type (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.params.stim_type = get(hObject,'String');
-setappdata(hObject,'type',get(hObject,'String'))
+handles.params.stim_type = handles.stim_type.String{handles.stim_type.Value};
+setappdata(hObject,'type',handles.stim_type.String{handles.stim_type.Value})
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
@@ -1222,8 +1238,8 @@ function stim_frequency_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_type (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.params.stim_frequency = get(hObject,'String');
-setappdata(hObject,'fq',get(hObject,'String'))
+handles.params.stim_frequency = handles.stim_frequency.String{handles.stim_frequency.Value};
+setappdata(hObject,'fq',handles.stim_frequency.String{handles.stim_frequency.Value})
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
@@ -1247,8 +1263,8 @@ function stim_intensity_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_intensity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.params.stim_intensity = get(hObject,'String');
-setappdata(hObject,'intensity',get(hObject,'String'))
+handles.params.stim_intensity = handles.stim_intensity.String{handles.stim_intensity.Value};
+setappdata(hObject,'intensity',handles.stim_intensity.String{handles.stim_intensity.Value})
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
@@ -1269,11 +1285,11 @@ end
 end
 
 function [handles] = update_seg_filename(hObject, eventdata, handles)
-handles.params.subj_id = handles.subj_id.String;
-handles.params.visit_number = handles.visit_number.String;
+handles.params.subj_id = handles.subj_id.String{handles.subj_id.Value};
+handles.params.visit_number = handles.visit_number.String{handles.visit_number.Value};
 handles.params.date = handles.date.String;
-handles.params.exp_type = handles.exp_type.String;
-handles.params.exp_condition = handles.exp_condition.String;
+handles.params.exp_type = handles.exp_type.String{handles.exp_type.Value};
+handles.params.exp_condition = handles.exp_condition.String{handles.exp_condition.Value};
 handles.params.stim_axis = getappdata(handles.stim_axis,'ax');
 handles.params.stim_type = getappdata(handles.stim_type,'type');
 handles.params.stim_frequency = getappdata(handles.stim_frequency,'fq');
@@ -2627,15 +2643,15 @@ for plots = 1:length(end_inds_final)
 %x_val = sum(handles.Segment.HeadMPUVel_X((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
 
 
-handles.stim_axis_confirm = uicontrol(handles.seg_plots,'Style','edit','String',handles.params.stim_axis,'fontsize',8,'Position',[990 200 60 30],'CallBack',{@stim_axis_confirm_Callback ,handles});
+handles.stim_axis_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_axis.String,'Value',handles.stim_axis.Value,'fontsize',8,'Position',[990 200 100 30],'CallBack',{@stim_axis_confirm_Callback ,handles});
 handles.stim_axis_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Axis','fontsize',10,'Position',[910 195 60 30]);
 %setappdata(handles.stim_axis,'ax',axis);
 %handles.stim_axis.String = axis;
-handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','edit','String',handles.params.stim_type,'fontsize',8,'Position',[990 165 60 30],'CallBack',{@stim_type_confirm_Callback ,handles});
+handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_type.String,'Value',handles.stim_type.Value,'fontsize',8,'Position',[990 165 100 30],'CallBack',{@stim_type_confirm_Callback ,handles});
 handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
-handles.stim_freq_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 130 60 30],'CallBack',{@stim_freq_confirm_Callback ,handles});
+handles.stim_freq_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_frequency.String,'Value',handles.stim_frequency.Value,'fontsize',8,'Position',[990 130 100 30],'CallBack',{@stim_freq_confirm_Callback ,handles});
 handles.stim_freq_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Freq','fontsize',10,'Position',[910 125 70 30]);
-handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 95 60 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
+handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
 handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
 
 guidata(hObject,handles)
@@ -2707,8 +2723,8 @@ function [handles] = stim_axis_confirm_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_intensity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.stim_axis.String = get(hObject,'String');
-setappdata(handles.stim_axis,'ax',get(hObject,'String'));
+handles.stim_axis.Value = get(hObject,'Value');
+setappdata(handles.stim_axis,'ax',hObject.String{hObject.Value});
 guidata(hObject,handles)
 [handles] = update_seg_filename(hObject, eventdata, handles);
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
@@ -2720,8 +2736,8 @@ function [handles] = stim_type_confirm_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles.stim_type.String = get(hObject,'String');
-setappdata(handles.stim_type,'type',get(hObject,'String'));
+handles.stim_type.Value = get(hObject,'Value');
+setappdata(handles.stim_type,'type',hObject.String{hObject.Value});
 %if strcmp(get(hObject,'String'),'Gaussian')
  %   handles.stim_frequency.String = 'NA';
   %  handles.stim_freq_confirm.String ='NA';
@@ -2742,8 +2758,8 @@ function [handles] = stim_freq_confirm_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_intensity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.stim_frequency.String = get(hObject,'String');
-setappdata(handles.stim_frequency,'fq',get(hObject,'String'));
+handles.stim_frequency.Value = get(hObject,'Value');
+setappdata(handles.stim_frequency,'fq',hObject.String{hObject.Value});
 guidata(hObject,handles)
 [handles] = update_seg_filename(hObject, eventdata, handles);
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
@@ -2754,8 +2770,8 @@ function [handles] = stim_intensity_confirm_Callback(hObject, eventdata, handles
 % hObject    handle to stim_intensity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.stim_intensity.String = get(hObject,'String');
-setappdata(handles.stim_intensity,'intensity',get(hObject,'String'));
+handles.stim_intensity.Value = get(hObject,'Value');
+setappdata(handles.stim_intensity,'intensity',hObject.String{hObject.Value});
 guidata(hObject,handles)
 [handles] = update_seg_filename(hObject, eventdata, handles);
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
@@ -2923,4 +2939,199 @@ function [handles] = update_thresh_val(hObject, eventdata, handles)
 thresh_line = ones(1,length(handles.gyro_mag));
 thresh_line(1:end) = str2num(handles.threshold_Value);
 handles.h.YData = thresh_line;
+end
+
+
+
+% --- Executes on button press in paramList.
+function paramList_Callback(hObject, eventdata, handles)
+% hObject    handle to paramList (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles = getappdata(handles.paramList,'handles');
+handles.editParams = figure('Name','Edit Parameter List', 'NumberTitle','off');
+    handles.editParams.OuterPosition = [50   300   1300   300];
+id = table(handles.initialize.ID,'VariableNames',{'Subject_ID'});
+    visit = table(handles.initialize.visit,'VariableNames',{'Visit_Number'});
+    expType = table(handles.initialize.expType,'VariableNames',{'Expirement_Type'});
+    expCond = table(handles.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+    stimAxis = table(handles.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+    stimType = table(handles.initialize.stimType,'VariableNames',{'Stim_Type'});
+    stimFreq = table(handles.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+    stimInt = table(handles.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+    implant = table(handles.initialize.implant,'VariableNames',{'Implant'});
+    eye = table(handles.initialize.eye,'VariableNames',{'Eye'});
+    
+    handles.table.id = uitable(handles.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.ID)));
+    handles.table.visit = uitable(handles.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.visit)));
+    handles.table.expType = uitable(handles.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.expType)));
+    handles.table.expCond = uitable(handles.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.initialize.expCond)));
+    handles.table.stimAxis = uitable(handles.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimAxis)));
+    handles.table.stimType = uitable(handles.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimType)));
+    handles.table.stimFreq = uitable(handles.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimFreq)));
+    handles.table.stimInt = uitable(handles.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimInt)));
+    handles.table.implant = uitable(handles.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.implant)));
+    handles.table.eye = uitable(handles.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.eye)));
+handles.table.addEntry = uicontrol(handles.editParams,'Style','pushbutton','String','Add Parameter','fontsize',20,'Position',[550 10 200 30],'CallBack',{@addEntry_Callback, handles});
+handles.table.saveEntry = uicontrol(handles.editParams,'Style','pushbutton','String','Save','fontsize',20,'Position',[1200 10 70 30],'CallBack',{@saveEntry_Callback, handles});
+setappdata(hObject,'handles',handles);
+guidata(hObject,handles)
+end
+
+function addEntry_Callback(hObject, eventdata, handles)
+handles = getappdata(handles.paramList,'handles')
+handles.initialize.ID{end+1} = '';
+handles.initialize.visit{end+1} = '';
+handles.initialize.expType{end+1} = '';
+handles.initialize.expCond{end+1} = '';
+handles.initialize.stimAxis{end+1} = '';
+handles.initialize.stimType{end+1} = '';
+handles.initialize.stimFreq{end+1} = '';
+handles.initialize.stimInt{end+1} = '';
+handles.initialize.implant{end+1} = '';
+handles.initialize.eye{end+1} = '';
+id = table(handles.initialize.ID,'VariableNames',{'Subject_ID'});
+    visit = table(handles.initialize.visit,'VariableNames',{'Visit_Number'});
+    expType = table(handles.initialize.expType,'VariableNames',{'Expirement_Type'});
+    expCond = table(handles.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+    stimAxis = table(handles.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+    stimType = table(handles.initialize.stimType,'VariableNames',{'Stim_Type'});
+    stimFreq = table(handles.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+    stimInt = table(handles.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+    implant = table(handles.initialize.implant,'VariableNames',{'Implant'});
+    eye = table(handles.initialize.eye,'VariableNames',{'Eye'});
+    
+    handles.table.id = uitable(handles.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.ID)));
+    handles.table.visit = uitable(handles.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.visit)));
+    handles.table.expType = uitable(handles.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.expType)));
+    handles.table.expCond = uitable(handles.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.initialize.expCond)));
+    handles.table.stimAxis = uitable(handles.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimAxis)));
+    handles.table.stimType = uitable(handles.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimType)));
+    handles.table.stimFreq = uitable(handles.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimFreq)));
+    handles.table.stimInt = uitable(handles.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimInt)));
+    handles.table.implant = uitable(handles.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.implant)));
+    handles.table.eye = uitable(handles.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.eye)));
+setappdata(handles.paramList,'handles',handles);
+guidata(hObject,handles)
+end
+
+function saveEntry_Callback(hObject, eventdata, handles)
+handles = getappdata(handles.paramList,'handles')
+    if (isempty(handles.table.id.Data{end}))
+        empty = find(cellfun('isempty',handles.table.id.Data));
+        handles.table.id.Data(empty(find(empty>1))) = [];
+        handles.initialize.ID = handles.table.id.Data;
+    else
+        handles.initialize.ID = handles.table.id.Data;
+    end
+    
+    if (isempty(handles.table.visit.Data{end}))
+        empty = find(cellfun('isempty',handles.table.visit.Data));
+        handles.table.visit.Data(empty(find(empty>1))) = [];
+        handles.initialize.visit = handles.table.visit.Data;
+    else
+        handles.initialize.visit = handles.table.visit.Data;
+    end
+    
+    if (isempty(handles.table.expType.Data{end}))
+        empty = find(cellfun('isempty',handles.table.expType.Data));
+        handles.table.expType.Data(empty(find(empty>1))) = [];
+        handles.initialize.expType = handles.table.expType.Data;
+    else
+        handles.initialize.expType = handles.table.expType.Data;
+    end
+    
+    if (isempty(handles.table.expCond.Data{end}))
+        empty = find(cellfun('isempty',handles.table.expCond.Data));
+        handles.table.expCond.Data(empty(find(empty>1))) = [];
+        handles.initialize.expCond = handles.table.expCond.Data;
+    else
+        handles.initialize.expCond = handles.table.expCond.Data;
+    end
+    
+    if (isempty(handles.table.stimAxis.Data{end}))
+        empty = find(cellfun('isempty',handles.table.stimAxis.Data));
+        handles.table.stimAxis.Data(empty(find(empty>1))) = [];
+        handles.initialize.stimAxis = handles.table.stimAxis.Data;
+    else
+        handles.initialize.stimAxis = handles.table.stimAxis.Data;
+    end
+    
+        
+    if (isempty(handles.table.stimType.Data{end}))
+        empty = find(cellfun('isempty',handles.table.stimType.Data));
+        handles.table.stimType.Data(empty(find(empty>1))) = [];
+        handles.initialize.stimType = handles.table.stimType.Data;
+    else
+        handles.initialize.stimType = handles.table.stimType.Data;
+    end
+    
+    if (isempty(handles.table.stimFreq.Data{end}))
+        empty = find(cellfun('isempty',handles.table.stimFreq.Data));
+        handles.table.stimFreq.Data(empty(find(empty>1))) = [];
+        handles.initialize.stimFreq = handles.table.stimFreq.Data;
+    else
+        handles.initialize.stimFreq = handles.table.stimFreq.Data;
+    end
+    
+    if (isempty(handles.table.stimInt.Data{end}))
+        empty = find(cellfun('isempty',handles.table.stimInt.Data));
+        handles.table.stimInt.Data(empty(find(empty>1))) = [];
+        handles.initialize.stimInt = handles.table.stimInt.Data;
+    else
+        handles.initialize.stimInt = handles.table.stimInt.Data;
+    end
+    
+    if (isempty(handles.table.implant.Data{end}))
+        empty = find(cellfun('isempty',handles.table.implant.Data));
+        handles.table.implant.Data(empty(find(empty>1))) = [];
+        handles.initialize.implant = handles.table.implant.Data;
+    else
+        handles.initialize.implant = handles.table.implant.Data;
+    end
+    
+    if (isempty(handles.table.eye.Data{end}))
+        mpty = find(cellfun('isempty',handles.table.eye.Data));
+        handles.table.eye.Data(empty(find(empty>1))) = [];
+        handles.initialize.eye = handles.table.eye.Data;
+    else
+        handles.initialize.eye = handles.table.eye.Data;
+    end
+    cd(handles.initializePathName)
+initialize = handles.initialize;
+save('initialize.mat','initialize')
+
+handles.subj_id.String = handles.initialize.ID;
+handles.visit_number.String = handles.initialize.visit;
+handles.exp_type.String = handles.initialize.expType;
+handles.exp_condition.String = handles.initialize.expCond;
+handles.stim_axis.String = handles.initialize.stimAxis;
+handles.stim_type.String = handles.initialize.stimType;
+handles.stim_frequency.String = handles.initialize.stimFreq;
+handles.stim_intensity.String = handles.initialize.stimInt;
+handles.implant.String = handles.initialize.implant;
+handles.eye_rec.String = handles.initialize.eye;
+setappdata(handles.paramList,'handles',handles);
+    guidata(hObject,handles)
+    close(handles.editParams);
 end
