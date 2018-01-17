@@ -407,22 +407,22 @@ if ~isfield(handles,'skip_excel_fill_flag')
 
 segments = segments + 1;
 handles.experimentdata = getappdata(handles.export_data,'data');
-set(handles.worksheet_name,'String',[handles.visit_number.String,'-',handles.date.String,'-',handles.exp_type.String]);
+set(handles.worksheet_name,'String',[handles.visit_number.String{handles.visit_number.Value},'-',handles.date.String,'-',handles.exp_type.String{handles.exp_type.Value}]);
 handles.experimentdata{segments,1} = handles.seg_filename.String;
 handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
-handles.experimentdata{segments,3} = handles.subj_id.String;
-handles.experimentdata{segments,4} = handles.implant.String;
-handles.experimentdata{segments,5} = handles.eye_rec.String;
-handles.experimentdata{segments,9} = [handles.exp_type.String,'-',handles.exp_condition.String,'-',handles.stim_type.String];
-handles.experimentdata{segments,10} = handles.stim_axis.String;
-stim_freq = handles.stim_frequency.String;
+handles.experimentdata{segments,3} = handles.subj_id.String{handles.subj_id.Value};
+handles.experimentdata{segments,4} = handles.implant.String{handles.implant.Value};
+handles.experimentdata{segments,5} = handles.eye_rec.String{handles.eye_rec.Value};
+handles.experimentdata{segments,9} = [handles.exp_type.String{handles.exp_type.Value},'-',handles.exp_condition.String{handles.exp_condition.Value},'-',handles.stim_type.String{handles.stim_type.Value}];
+handles.experimentdata{segments,10} = handles.stim_axis.String{handles.stim_axis.Value};
+stim_freq = handles.stim_frequency.String{handles.stim_frequency.Value};
 hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
 stim_freq(hs:end) = [];
 pt = find(stim_freq == 'p');
 stim_freq(pt) = '.';
 handles.experimentdata{segments,12} = str2double(stim_freq);
-stim_int = handles.stim_intensity.String;
-dps = find(handles.stim_intensity.String == 'd');
+stim_int = handles.stim_intensity.String{handles.stim_intensity.Value};
+dps = find(handles.stim_intensity.String{handles.stim_intensity.Value} == 'd');
 stim_int(dps:end) = [];
 handles.experimentdata{segments,13} = str2num(stim_int);
 setappdata(handles.export_data,'data',handles.experimentdata);
@@ -2466,20 +2466,20 @@ handles.gyro_mag = sqrt((handles.Segment.HeadMPUVel_X.^2) + (handles.Segment.Hea
 trace = handles.gyro_mag;
 mask = zeros(length(trace),1);
 handles.thresh_plot = figure('Name','Choose Threshold', 'NumberTitle','off');
-    handles.thresh_plot.OuterPosition = [512   600   700   520];
-    ax1 = axes;
-    ax1.Position = [0.06 0.2 0.9 0.75];
+handles.thresh_plot.OuterPosition = [512   600   700   520];
+ax1 = axes;
+ax1.Position = [0.06 0.2 0.9 0.75];
 
-    handles.xVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X');
+handles.xVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X');
 hold on
-    handles.yVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y');
+handles.yVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y');
 
-    handles.zVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-GYRO-Z');
+handles.zVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-GYRO-Z');
 
-    plot(ax1,handles.Segment.Time_Stim(:,1),handles.gyro_mag,'color','k','DisplayName','MPU-Vel Magnitude');
+plot(ax1,handles.Segment.Time_Stim(:,1),handles.gyro_mag,'color','k','DisplayName','MPU-Vel Magnitude');
 
 handles.h = plot(ax1,handles.Segment.Time_Stim(:,1),zeros(1,length(handles.gyro_mag)),'g','DisplayName','Threshold Value');
- 
+
 
 hold off
 legend('show')
@@ -2496,7 +2496,7 @@ close(handles.thresh_plot);
 
 mask(trace > saved_thresh) = ones(length(mask(trace > saved_thresh)),1); % All of the indicies where the magnitudes is greater than 20 will be changed from zero to 1
 inds = [1:length(mask)];
-onset_inds = inds([false ; diff(mask)>0]); % take the backward difference but keep the values greater than zero, disregard the first index, find the index value which corresponds to those positive differences 
+onset_inds = inds([false ; diff(mask)>0]); % take the backward difference but keep the values greater than zero, disregard the first index, find the index value which corresponds to those positive differences
 
 end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep the values less than zero, disregard the first index, find the index value which corresponds to those negative differences
 
@@ -2509,76 +2509,76 @@ lengthCheck = [];
 end_del = [];
 onset_del = [];
 go = 1;
-    if length(onset_inds_final) ~= length(end_inds_final)
-        uneven = max([length(onset_inds_final) length(end_inds_final)]);
-        if uneven == length(onset_inds_final)
-            check = 1;
+if length(onset_inds_final) ~= length(end_inds_final)
+    uneven = max([length(onset_inds_final) length(end_inds_final)]);
+    if uneven == length(onset_inds_final)
+        check = 1;
         while go
             
-             if check == length(onset_inds_final)
-                    go = 0;
-             end
-
-                if check > length(end_inds_final)
-                    onset_inds_final(check) = [];
-                        check = check - 1;
-                elseif check > 1
-                    if (onset_inds_final(check) - end_inds_final(check-1)) < 0
-                    onset_inds_final(check) = [];
-                        check = check - 1;
-                end            
-            elseif onset_inds_final(check) > end_inds_final(check)
-                    onset_inds_final(check) = [];
-                        check = check - 1;
-
-                end
-                check = check +1;
-        end
-
-        end
-        
-        if uneven == length(end_inds_final)
-            check = 1;
-         while go
-                if check == length(end_inds_final)
-                    go = 0;
-                end
-
-                if check > length(onset_inds_final)
-                    end_inds_final(check) = [];
-                        check = check - 1;
-                elseif check > 1
-                    if (onset_inds_final(check) - end_inds_final(check-1)) < 0
-                        end_inds_final(check) = [];
-                        check = check - 1;
-                end        
-                elseif onset_inds_final(check) > end_inds_final(check)
-                    end_inds_final(check) = [];
-                        check = check - 1;
-
-                end
-
-                check = check +1;
+            if check == length(onset_inds_final)
+                go = 0;
             end
-        
-        end
-    end
-    check = 1;
-    go = 1;
-    while go
-                if check == length(end_inds_final)
-                    go = 0;
+            
+            if check > length(end_inds_final)
+                onset_inds_final(check) = [];
+                check = check - 1;
+            elseif check > 1
+                if (onset_inds_final(check) - end_inds_final(check-1)) < 0
+                    onset_inds_final(check) = [];
+                    check = check - 1;
                 end
-    if (end_inds_final(check) - onset_inds_final(check)) < 300
-           end_inds_final(check) = [];
-            onset_inds_final(check) = [];
-                        check = check - 1;
-    end
-    check = check +1;
+            elseif onset_inds_final(check) > end_inds_final(check)
+                onset_inds_final(check) = [];
+                check = check - 1;
+                
+            end
+            check = check +1;
+        end
+        
     end
     
+    if uneven == length(end_inds_final)
+        check = 1;
+        while go
+            if check == length(end_inds_final)
+                go = 0;
+            end
+            
+            if check > length(onset_inds_final)
+                end_inds_final(check) = [];
+                check = check - 1;
+            elseif check > 1
+                if (onset_inds_final(check) - end_inds_final(check-1)) < 0
+                    end_inds_final(check) = [];
+                    check = check - 1;
+                end
+            elseif onset_inds_final(check) > end_inds_final(check)
+                end_inds_final(check) = [];
+                check = check - 1;
+                
+            end
+            
+            check = check +1;
+        end
+        
+    end
+end
+check = 1;
+go = 1;
+while go
+    if check == length(end_inds_final)
+        go = 0;
+    end
+    if (end_inds_final(check) - onset_inds_final(check)) < 300
+        end_inds_final(check) = [];
+        onset_inds_final(check) = [];
+        check = check - 1;
+    end
+    check = check +1;
+end
 
-  
+
+
 
 handles.end_inds_final = end_inds_final;
 handles.onset_inds_final = onset_inds_final;
@@ -2596,14 +2596,14 @@ for plots = 1:length(end_inds_final)
     x1 = [-100 -100 600 600];
     y1 = [-400 300 300 -400];
     if (handles.onset_inds_final(plots) - handles.left_extra) < 1
-    a = handles.Segment.Time_Stim(1);
+        a = handles.Segment.Time_Stim(1);
     else
-    a = handles.Segment.Time_Stim((handles.onset_inds_final(plots) - handles.left_extra));
+        a = handles.Segment.Time_Stim((handles.onset_inds_final(plots) - handles.left_extra));
     end
     if (handles.end_inds_final(plots) +  handles.right_extra)>length(handles.Segment.Time_Stim)
         b = handles.Segment.Time_Stim(end);
     else
-    b = handles.Segment.Time_Stim((handles.end_inds_final(plots) +  handles.right_extra));
+        b = handles.Segment.Time_Stim((handles.end_inds_final(plots) +  handles.right_extra));
     end
     v1 = [handles.ax1.XLim(1) handles.ax1.YLim(1); a handles.ax1.YLim(1); a handles.ax1.YLim(2); handles.ax1.XLim(1) handles.ax1.YLim(2)];
     f1 = [1 2 3 4];
@@ -2612,13 +2612,13 @@ for plots = 1:length(end_inds_final)
     handles.seg_patch1 = patch('Faces',f1,'Vertices',v1,'FaceColor','k','FaceAlpha',.3,'EdgeColor','none');
     handles.seg_patch2 = patch('Faces',f2,'Vertices',v2,'FaceColor','k','FaceAlpha',.3,'EdgeColor','none');
     if str2num(handles.segment_number.String) > 0
-    for done = 1:str2num(handles.segment_number.String)
-        patch('Faces',[1 2 3 4], 'Vertices',[handles.Segment.Time_Stim(handles.savedStart(done)) handles.ax1.YLim(1); handles.Segment.Time_Stim(handles.savedEnd(done)) handles.ax1.YLim(1);handles.Segment.Time_Stim(handles.savedEnd(done)) handles.ax1.YLim(2); handles.Segment.Time_Stim(handles.savedStart(done)) handles.ax1.YLim(2)],...
-            'FaceColor','g','FaceAlpha',.3,'EdgeColor','none');
-    end
+        for done = 1:str2num(handles.segment_number.String)
+            patch('Faces',[1 2 3 4], 'Vertices',[handles.Segment.Time_Stim(handles.savedStart(done)) handles.ax1.YLim(1); handles.Segment.Time_Stim(handles.savedEnd(done)) handles.ax1.YLim(1);handles.Segment.Time_Stim(handles.savedEnd(done)) handles.ax1.YLim(2); handles.Segment.Time_Stim(handles.savedStart(done)) handles.ax1.YLim(2)],...
+                'FaceColor','g','FaceAlpha',.3,'EdgeColor','none');
+        end
     end
     hold off
-
+    
     handles.ok_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','OK','fontsize',12,'Position',[975 10 70 30],'CallBack',{@ok_seg_Callback, handles},'KeyPressFcn',{@ok_seg_KeyPressFcn, handles});
     
     handles.reject_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','Reject This Segment','fontsize',12,'Position',[15 10 160 30],'CallBack',{@reject_seg_Callback, handles});
@@ -2632,48 +2632,48 @@ for plots = 1:length(end_inds_final)
     handles.instructions = uicontrol(handles.seg_plots,'Style','text','String','Use the arrows to increase or decrease the buffer zone on the corresponding side. If a segment has a pause, adjust the window to encompass the entire segment, save within the first detected component, reject all following components.','fontsize',12,'Position',[895 365 175 240]);
     handles.inc_right = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25BA;</html>','fontsize',20,'Position',[930 325 30 30],'CallBack',{@inc_right_Callback, handles});
     handles.dec_right = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25C4;</html>','fontsize',20,'Position',[900 325 30 30],'CallBack',{@dec_right_Callback, handles});
-   
-   
+    
+    
     handles.dec_left = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25BA;</html>','fontsize',20,'Position',[45 325 30 30],'CallBack',{@dec_left_Callback, handles});
     handles.inc_left = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25C4;</html>','fontsize',20,'Position',[15 325 30 30],'CallBack',{@inc_left_Callback, handles});
-
- % Future for direction    
-%z_val = sum(handles.Segment.HeadMPUVel_Z((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
-%y_val = sum(handles.Segment.HeadMPUVel_Y((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
-%x_val = sum(handles.Segment.HeadMPUVel_X((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
-
-
-handles.stim_axis_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_axis.String,'Value',handles.stim_axis.Value,'fontsize',8,'Position',[990 200 100 30],'CallBack',{@stim_axis_confirm_Callback ,handles});
-handles.stim_axis_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Axis','fontsize',10,'Position',[910 195 60 30]);
-%setappdata(handles.stim_axis,'ax',axis);
-%handles.stim_axis.String = axis;
-handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_type.String,'Value',handles.stim_type.Value,'fontsize',8,'Position',[990 165 100 30],'CallBack',{@stim_type_confirm_Callback ,handles});
-handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
-handles.stim_freq_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_frequency.String,'Value',handles.stim_frequency.Value,'fontsize',8,'Position',[990 130 100 30],'CallBack',{@stim_freq_confirm_Callback ,handles});
-handles.stim_freq_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Freq','fontsize',10,'Position',[910 125 70 30]);
-handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
-handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
-
-guidata(hObject,handles)
+    
+    % Future for direction
+    %z_val = sum(handles.Segment.HeadMPUVel_Z((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
+    %y_val = sum(handles.Segment.HeadMPUVel_Y((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
+    %x_val = sum(handles.Segment.HeadMPUVel_X((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))./(handles.gyro_mag((handles.onset_inds_final(plots)):(handles.end_inds_final(plots)))))
+    
+    
+    handles.stim_axis_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_axis.String,'Value',handles.stim_axis.Value,'fontsize',8,'Position',[990 200 100 30],'CallBack',{@stim_axis_confirm_Callback ,handles});
+    handles.stim_axis_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Axis','fontsize',10,'Position',[910 195 60 30]);
+    %setappdata(handles.stim_axis,'ax',axis);
+    %handles.stim_axis.String = axis;
+    handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_type.String,'Value',handles.stim_type.Value,'fontsize',8,'Position',[990 165 100 30],'CallBack',{@stim_type_confirm_Callback ,handles});
+    handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
+    handles.stim_freq_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_frequency.String,'Value',handles.stim_frequency.Value,'fontsize',8,'Position',[990 130 100 30],'CallBack',{@stim_freq_confirm_Callback ,handles});
+    handles.stim_freq_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Freq','fontsize',10,'Position',[910 125 70 30]);
+    handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
+    handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
+    
+    guidata(hObject,handles)
     uiwait(gcf)
     if getappdata(handles.ok_seg,'skip') == 0
-handles.savedStart(str2num(handles.segment_number.String)) = getappdata(handles.ok_seg,'l');
-handles.savedEnd(str2num(handles.segment_number.String)) = getappdata(handles.ok_seg,'r');
-
+        handles.savedStart(str2num(handles.segment_number.String)) = getappdata(handles.ok_seg,'l');
+        handles.savedEnd(str2num(handles.segment_number.String)) = getappdata(handles.ok_seg,'r');
+        
     end
-close(handles.seg_plots);
-
+    close(handles.seg_plots);
+    
     handles.right_extra = 300;
     handles.left_extra = 300;
-        handles.stim_frequency.String = '';
+    handles.stim_frequency.String = '';
     handles.params.stim_frequency = '';
-        handles.stim_intensity.String = '';
+    handles.stim_intensity.String = '';
     handles.params.stim_intensity = '';
-setappdata(handles.stim_frequency,'fq','');
-setappdata(handles.stim_intensity,'intensity','');
+    setappdata(handles.stim_frequency,'fq','');
+    setappdata(handles.stim_intensity,'intensity','');
     [handles] = update_seg_filename(hObject, eventdata, handles);
     set(handles.save_indicator,'String','UNSAVED');
-set(handles.save_indicator,'BackgroundColor','r');
+    set(handles.save_indicator,'BackgroundColor','r');
     guidata(hObject,handles)
 end
 
