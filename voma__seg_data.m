@@ -1214,7 +1214,12 @@ function stim_type_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_type = handles.stim_type.String{handles.stim_type.Value};
-setappdata(hObject,'type',handles.stim_type.String{handles.stim_type.Value})
+setappdata(hObject,'type',handles.stim_type.String{handles.stim_type.Value});
+    if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
+        handles.stim_frequency.Value = 2;
+    end
+handles.params.stim_frequency = handles.stim_frequency.String{handles.stim_frequency.Value};
+setappdata(handles.stim_frequency,'fq',handles.stim_frequency.String{handles.stim_frequency.Value})
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
 % Hints: get(hObject,'String') returns contents of stim_type as text
@@ -2645,12 +2650,10 @@ for plots = 1:length(end_inds_final)
     
     handles.stim_axis_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_axis.String,'Value',handles.stim_axis.Value,'fontsize',8,'Position',[990 200 100 30],'CallBack',{@stim_axis_confirm_Callback ,handles});
     handles.stim_axis_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Axis','fontsize',10,'Position',[910 195 60 30]);
-    %setappdata(handles.stim_axis,'ax',axis);
-    %handles.stim_axis.String = axis;
-    handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_type.String,'Value',handles.stim_type.Value,'fontsize',8,'Position',[990 165 100 30],'CallBack',{@stim_type_confirm_Callback ,handles});
-    handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
     handles.stim_freq_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_frequency.String,'Value',handles.stim_frequency.Value,'fontsize',8,'Position',[990 130 100 30],'CallBack',{@stim_freq_confirm_Callback ,handles});
     handles.stim_freq_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Freq','fontsize',10,'Position',[910 125 70 30]);
+    handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_type.String,'Value',handles.stim_type.Value,'fontsize',8,'Position',[990 165 100 30],'CallBack',{@stim_type_confirm_Callback ,handles});
+    handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
     handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
     handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
     
@@ -2665,9 +2668,9 @@ for plots = 1:length(end_inds_final)
     
     handles.right_extra = 300;
     handles.left_extra = 300;
-    handles.stim_frequency.String = '';
+    handles.stim_frequency.Value = 1;
     handles.params.stim_frequency = '';
-    handles.stim_intensity.String = '';
+    handles.stim_intensity.Value = 1;
     handles.params.stim_intensity = '';
     setappdata(handles.stim_frequency,'fq','');
     setappdata(handles.stim_intensity,'intensity','');
@@ -2738,16 +2741,11 @@ function [handles] = stim_type_confirm_Callback(hObject, eventdata, handles)
 
 handles.stim_type.Value = get(hObject,'Value');
 setappdata(handles.stim_type,'type',hObject.String{hObject.Value});
-%if strcmp(get(hObject,'String'),'Gaussian')
- %   handles.stim_frequency.String = 'NA';
-  %  handles.stim_freq_confirm.String ='NA';
-   % setappdata(handles.stim_frequency,'fq','NA');
-%elseif strcmp(get(hObject,'String'),'Trapezoid')
- %       handles.stim_frequency.String = 'NA';
-  %      handles.stim_freq_confirm.String = 'NA';
-   % setappdata(handles.stim_frequency,'fq','NA');
-%else
-%end
+    if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
+        handles.stim_freq_confirm.Value = 2;
+    end
+handles.stim_frequency.Value = handles.stim_freq_confirm.Value;
+setappdata(handles.stim_frequency,'fq',handles.stim_freq_confirm.String{handles.stim_freq_confirm.Value});
 guidata(hObject,handles)
 [handles] = update_seg_filename(hObject, eventdata, handles);
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
