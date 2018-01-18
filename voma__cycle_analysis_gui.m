@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 08-Jan-2018 00:14:09
+% Last Modified by GUIDE v2.5 18-Jan-2018 13:19:13
 
 
 % Begin initialization code - DO NOT EDIT
@@ -159,7 +159,20 @@ end
 
 
 if handles.upsamp_flag
-    
+    if isfield(handles.CurrData.VOMA_data.UpSamp,'Data_LE_Vel_X')
+    else
+        handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_X = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X,handles.CurrData.VOMA_data.UpSamp.Stim_t);
+        handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_Y = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y,handles.CurrData.VOMA_data.UpSamp.Stim_t);
+        handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_X = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X,handles.CurrData.VOMA_data.UpSamp.Stim_t);
+        handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_Y = interp1(handles.CurrData.VOMA_data.Stim_t,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y,handles.CurrData.VOMA_data.UpSamp.Stim_t);
+       RootData = handles.RootData;
+        RootData(handles.curr_file).VOMA_data.UpSamp.Data_LE_Vel_X = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_X;
+       RootData(handles.curr_file).VOMA_data.UpSamp.Data_LE_Vel_Y = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_Y;
+       RootData(handles.curr_file).VOMA_data.UpSamp.Data_RE_Vel_X = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_X;
+       RootData(handles.curr_file).VOMA_data.UpSamp.Data_RE_Vel_Y = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_Y;
+       cd(handles.pathname);
+    eval(['save ' handles.filename ' RootData'])
+    end
     handles.Final_Data.Fs = handles.CurrData.VOMA_data.UpSamp.Fs;
     handles.Final_Data.Stim_t = handles.CurrData.VOMA_data.UpSamp.Stim_t;
     handles.Final_Data.Eye_t = handles.CurrData.VOMA_data.UpSamp.Stim_t;
@@ -2612,10 +2625,10 @@ function lr_xy_toggle_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 button_state = get(hObject,'Value');
 if button_state == get(hObject,'Max')
-	%display('down');
+    handles.lr_xy_toggle.String = 'X/Y/Z';
     handles.lr_xy_flag = 2;
 elseif button_state == get(hObject,'Min')
-	%display('up');
+	handles.lr_xy_toggle.String = 'L/R/Z';
     handles.lr_xy_flag = 1;
 end
 

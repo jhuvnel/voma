@@ -22,7 +22,7 @@ function varargout = voma(varargin)
 
 % Edit the above text to modify the response to help voma
 % Testing
-% Last Modified by GUIDE v2.5 10-Jan-2018 10:47:15
+% Last Modified by GUIDE v2.5 03-Jan-2017 13:22:07
 
 % Begin initialization code - DO NOT EDIT
 % Brian M test
