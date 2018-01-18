@@ -96,6 +96,8 @@ if isrecall
     % Now set the 'reload_flag'
     handles.reload_flag =0;
     
+    handles.params.save_flag = false;
+    
     % Globally save the handles
     guidata(hObject, handles);
     return;
@@ -786,6 +788,27 @@ function analyze_new_voma_file_Callback(hObject, eventdata, handles)
 % hObject    handle to analyze_new_voma_file (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+if handles.params.save_flag
+    
+    % Construct a questdlg with three options
+    choice = questdlg('You haven''t saved any of your work with this file. Continue?', ...
+        'File changes UNSAVED', ...
+        'Yes, Continue','No, let me save my work','No, let me save my work');
+    % Handle response
+    switch choice
+        case 'Yes, Continue'
+            % The user wants to continue. Do nothing.
+            handles.params.save_flag = false;
+        case 'No, let me save my work'
+            % The user wants to revert back to the old file.
+            set(handles.stimuli_files,'Value',handles.curr_file)
+            handles.params.save_flag
+            guidata(hObject,handles)
+            return
+    end
+    
+end
 
 % Prompt the user to choose a file to analyze.
 if handles.reload_flag == 0
@@ -2276,10 +2299,10 @@ switch handles.params.plot_toggle_flag
                 patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_Z,'edgecolor','r','LineWidth',0.05,'edgealpha',0.5);
             end
             if handles.params.L_4==1
-                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_X,'edgecolor',[237,150,33],'LineWidth',0.05,'edgealpha',0.5);
+                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_X,'edgecolor',[237,150,33]/255,'LineWidth',0.05,'edgealpha',0.5);
             end
             if handles.params.L_5==1
-                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_Y,'edgecolor',[125,46,143],'LineWidth',0.05,'edgealpha',0.5);
+                patchline(handles.CurrData.VOMA_data.Eye_t,handles.CurrData.VOMA_data.Data_LE_Vel_Y,'edgecolor',[125,46,143]/255,'LineWidth',0.05,'edgealpha',0.5);
             end
             
             if handles.params.R_1==1
@@ -3072,11 +3095,11 @@ if handles.upsamp_flag
     
     RootData = handles.RootData;
     
-    cd(handles.pathname);
+    cd(handles.pathname); 
     
     eval(['save ' handles.filename ' RootData'])
     
-    
+    handles.params.save_flag = false;
     handles.reload_flag = 1;
     
     analyze_new_voma_file_Callback(hObject, 1, handles)
@@ -3558,6 +3581,9 @@ if button_state == get(hObject,'Max')
         case 3
             set(handles.angpos_param1_txt,'String','Filter Order')
             set(handles.angpos_param2_txt,'String','NOT IN USE')
+        case 4
+            set(handles.angpos_param1_txt,'String','Filter Order')
+            set(handles.angpos_param2_txt,'String','NOT IN USE')
     end
     
 elseif button_state == get(hObject,'Min')
@@ -3697,6 +3723,9 @@ if ~isempty(filt_params{handles.params.pos_filt_trace+1,2})
         case 'Median Filter'
             set(handles.angpos_filt_type,'Value',3)
             handles.params.pos_filt_method = 3;
+        case 'irlssmooth'
+            set(handles.angpos_filt_type,'Value',4)
+            handles.params.pos_filt_method = 4;
     end
     
     try

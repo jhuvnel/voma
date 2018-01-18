@@ -227,10 +227,14 @@ handles.UpSamp.Stim_Trace = interp1(handles.Time,handles.Stimulus,handles.UpSamp
 handles.UpSamp.Data_LE_Vel_LARP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP,handles.UpSamp.Stim_t);
 handles.UpSamp.Data_LE_Vel_RALP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP,handles.UpSamp.Stim_t);
 handles.UpSamp.Data_LE_Vel_Z = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_LE_Vel_X = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_LE_Vel_Y = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y,handles.UpSamp.Stim_t);
 
 handles.UpSamp.Data_RE_Vel_LARP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP,handles.UpSamp.Stim_t);
 handles.UpSamp.Data_RE_Vel_RALP = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP,handles.UpSamp.Stim_t);
 handles.UpSamp.Data_RE_Vel_Z = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_RE_Vel_X = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X,handles.UpSamp.Stim_t);
+handles.UpSamp.Data_RE_Vel_Y = interp1(handles.Time,handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y,handles.UpSamp.Stim_t);
 
 handles.UpSamp.stim_ind = [1];
 
