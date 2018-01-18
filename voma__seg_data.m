@@ -115,10 +115,25 @@ set(handles.mpuoffsetpanel,'Visible','On')
 handles.params.upper_trigLev = str2double(get(handles.upper_trigLev,'String'));
 handles.params.lower_trigLev = str2double(get(handles.lower_trigLev,'String'));
 %[handles] = update_seg_filename(hObject, eventdata, handles);
-[FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the initialization file containing the information for the experiment parameters.');
-handles.initializePathName = PathName;
-cd(handles.initializePathName)
-handles.initialize = load('initialize.mat');
+
+temp_path = mfilename('fullpath');
+temp_pth_ind = strfind(temp_path,'\');
+
+if exist([temp_path(1:temp_pth_ind(end)) 'initialize.mat'],'file')
+    
+    handles.initialize = load([temp_path(1:temp_pth_ind(end)) 'initialize.mat']);
+    handles.initializePathName = temp_path(1:temp_pth_ind(end));
+    
+else
+    
+    [FileName,PathName,FilterIndex] = uigetfile([temp_path(1:temp_pth_ind(end)) '*.mat'],'Please choose the initialization file containing the information for the experiment parameters.');
+    handles.initializePathName = PathName;
+    cd(handles.initializePathName)
+    handles.initialize = load('initialize.mat');
+    
+end
+
+
 handles.initialize = handles.initialize.initialize;
 handles.subj_id.String = handles.initialize.ID;
 handles.visit_number.String = handles.initialize.visit;
@@ -449,6 +464,10 @@ if handles.params.reloadflag == 0
     
 else
     
+end
+
+if strcmp(eventdata.Source.String,'Load New Raw Data File')
+     handles.params.reloadflag = 0;
 end
 
 switch handles.params.system_code
