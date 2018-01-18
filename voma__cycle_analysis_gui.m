@@ -1937,6 +1937,8 @@ if button_state == get(hObject,'Max')
             
             handles.Results.SineFit = [];
             
+            freq = 1/(len/handles.Final_Data.Fs);
+            
             [ll_offset,ll_mag,ll_sinphase,ll_cosphase,ll_THD] = SingleFreqDFT(tt,ll_cyc,freq);
             [lr_offset,lr_mag,lr_sinphase,lr_cosphase,lr_THD] = SingleFreqDFT(tt,lr_cyc,freq);
             [lz_offset,lz_mag,lz_sinphase,lz_cosphase,lz_THD] = SingleFreqDFT(tt,lz_cyc,freq);
