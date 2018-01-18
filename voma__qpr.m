@@ -131,6 +131,8 @@ title('Eye Velocity w/ Stimulis')
 axes(handles.pbp_deriv);
 title('Point-by-Point Derivative')
 
+set(handles.stimuli_files,'Value',1);
+
 % Initialize QPR routine to 'Spline.'
 handles.CurrData.QPparams.qpr_routine = 1;
 handles.params.qpr_routine_string = 'Spline';

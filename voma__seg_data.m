@@ -72,6 +72,7 @@ handles.params.stim_type = '';
 handles.params.stim_frequency = '';
 handles.params.stim_intensity = '';
 handles.folder_name = '';
+handles.params.suffix = '';
 
 handles.right_extra = 300;
 handles.left_extra = 300;
@@ -1294,8 +1295,12 @@ handles.params.stim_axis = getappdata(handles.stim_axis,'ax');
 handles.params.stim_type = getappdata(handles.stim_type,'type');
 handles.params.stim_frequency = getappdata(handles.stim_frequency,'fq');
 handles.params.stim_intensity = getappdata(handles.stim_intensity,'intensity');
+handles.params.suffix = getappdata(handles.stim_intensity,'suf');
 
-handles.params.segment_filename = [handles.params.subj_id '-' handles.params.visit_number '-' handles.params.date '-' handles.params.exp_type '-' handles.params.exp_condition '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_frequency '-' handles.params.stim_intensity '.mat'];
+handles.params.segment_filename = [handles.params.subj_id '-' handles.params.visit_number ...
+    '-' handles.params.date '-' handles.params.exp_type '-' handles.params.exp_condition ...
+    '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_frequency ...
+    '-' handles.params.stim_intensity handles.params.suffix '.mat'];
 
 set(handles.seg_filename,'String',handles.params.segment_filename);
 end
@@ -2655,6 +2660,8 @@ for plots = 1:length(end_inds_final)
     handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
     handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
     handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
+    handles.suffix_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 60 100 30],'CallBack',{@suffix_confirm_Callback ,handles});
+    handles.suffix_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Add Suffix','fontsize',10,'Position',[910 55 70 35]);
     
     guidata(hObject,handles)
     uiwait(gcf)
@@ -2883,6 +2890,8 @@ for plots = 1:length(end_inds_final)
     handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
     handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
     handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
+    handles.suffix_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 60 100 30],'CallBack',{@suffix_confirm_Callback ,handles});
+    handles.suffix_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Add Suffix','fontsize',10,'Position',[910 55 70 35]);
     
     guidata(hObject,handles)
     uiwait(gcf)
@@ -2949,6 +2958,17 @@ setappdata(handles.ok_seg,'l',handles.onset_inds_final(handles.plot_num) - handl
 guidata(hObject,handles)
 end
 
+function [handles] = suffix_confirm_Callback(hObject, eventdata, handles)
+if isempty(hObject.String)
+setappdata(handles.stim_intensity,'suf','');    
+    guidata(hObject,handles)
+    [handles] = update_seg_filename(hObject, eventdata, handles);
+else
+    setappdata(handles.stim_intensity,'suf',['-',hObject.String]);    
+    guidata(hObject,handles)
+    [handles] = update_seg_filename(hObject, eventdata, handles);
+end
+end
 
 function [handles] = stim_axis_confirm_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_intensity (see GCBO)
