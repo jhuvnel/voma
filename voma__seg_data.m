@@ -117,7 +117,7 @@ handles.params.lower_trigLev = str2double(get(handles.lower_trigLev,'String'));
 %[handles] = update_seg_filename(hObject, eventdata, handles);
 
 temp_path = mfilename('fullpath');
-temp_pth_ind = strfind(temp_path,'\');
+temp_pth_ind = [strfind(temp_path,'\') strfind(temp_path,'/')];
 
 if exist([temp_path(1:temp_pth_ind(end)) 'initialize.mat'],'file')
     
@@ -2696,6 +2696,8 @@ for plots = 1:length(end_inds_final)
     handles.params.stim_frequency = '';
     handles.stim_intensity.Value = 1;
     handles.params.stim_intensity = '';
+    handles.params.suffix = '';
+    setappdata(handles.stim_intensity,'suf',''); 
     setappdata(handles.stim_frequency,'fq','');
     setappdata(handles.stim_intensity,'intensity','');
     [handles] = update_seg_filename(hObject, eventdata, handles);
@@ -2926,6 +2928,8 @@ for plots = 1:length(end_inds_final)
     handles.params.stim_frequency = '';
     handles.stim_intensity.Value = 1;
     handles.params.stim_intensity = '';
+    handles.params.suffix = '';
+    setappdata(handles.stim_intensity,'suf',''); 
     setappdata(handles.stim_frequency,'fq','');
     setappdata(handles.stim_intensity,'intensity','');
     [handles] = update_seg_filename(hObject, eventdata, handles);
