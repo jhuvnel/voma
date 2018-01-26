@@ -26,7 +26,7 @@ function varargout = voma__qpr(varargin)
 % Edit the above text to modify the response to help voma__qpr
 
 
-% Last Modified by GUIDE v2.5 05-Dec-2017 11:58:49
+% Last Modified by GUIDE v2.5 25-Jan-2018 17:04:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -480,7 +480,7 @@ else
         
     end
     
-    if (~isfield(handles.CurrData.QPparams,'APAQPRarray')) || (isempty(handles.CurrData.QPparams.APAQPRarray))
+    if (~isfield(handles.CurrData.QPparams,'APAQPR')) || (isempty(handles.CurrData.QPparams.APAQPR.Array))
         
         handles.CurrData.QPparams.APAQPR.Flag.LE_X = false;
         handles.CurrData.QPparams.APAQPR.Flag.LE_Y = false;
@@ -673,9 +673,35 @@ end
 
 if size(filt_params,1)<14
     % If we entered this statement, we may be analyzing a VOMA file that
-    % was analyzed BEFORE we began saving/analyze the Y- and X-component
+    % was analyzed BEFORE we began saving/analyzing the Y- and X-component
     % eye velocity traces. We will make room for saving the filter
     % parameters for those traces here.
+    
+    % First, we need to make sure the HEADER is current:
+    currentheader = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'} {'Removed Ang. Vel. Offset?'} { 'APAQPR Thresh.'} { 'Min. SPV Fit Time [ms]'}];
+    
+    [a,b] = setdiff(currentheader,filt_params(1,:));
+    
+    [b,c] = sort(b);
+    
+    a = a(c);
+    
+    if ~isempty(a)
+        for kk=1:length(a)
+            new_filt_params = filt_params(:,1:b(kk)-1);
+            new_filt_params{1,b(kk)} = a{kk};
+            new_filt_params(:,b(kk)+1:size(filt_params,2) + 1) = filt_params(:,b(kk):size(filt_params,2));
+            
+            filt_params = new_filt_params;
+            
+%             if kk ~=  length(a) 
+%                 if b(kk+1) ~= b(kk) + 1
+%                     b = b+1;
+%                 end
+%             end
+        end
+    end
+    
     filt_params(14:17,:) =   [{'LE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
         {'LE - Y Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
         {'RE - X Vel'} {''} {''} {''} {''} {''} {''} {''} {''} {''} {'N/A'} {'N/A'} {'N/A'} {''} {'N/A'} {''}; ...
@@ -719,18 +745,43 @@ end
 
 
 switch handles.params.pos_filt_trace
+    
     case 1
-        set(handles.APAQPR_table,'Data',handles.CurrData.QPparams.APAQPR.Array.LE_X);
+        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_X) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X));
+        end
     case 2
-        set(handles.APAQPR_table,'Data',handles.CurrData.QPparams.APAQPR.Array.LE_Y);
+        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Y) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y));
+        end
     case 3
-        set(handles.APAQPR_table,'Data',handles.CurrData.QPparams.APAQPR.Array.LE_Z);
+        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Z) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z));
+        end
     case 4
-        set(handles.APAQPR_table,'Data',handles.CurrData.QPparams.APAQPR.Array.RE_X);
+        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_X) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X));
+        end
     case 5
-        set(handles.APAQPR_table,'Data',handles.CurrData.QPparams.APAQPR.Array.RE_Y);
+        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Y) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y));
+        end
     case 6
-        set(handles.APAQPR_table,'Data',handles.CurrData.QPparams.APAQPR.Array.RE_Z);
+        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Z) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z));
+        end
 end
 
 % Plot the raw data
@@ -2534,7 +2585,7 @@ switch handles.params.plot_toggle_flag
             if handles.CurrData.QPparams.APAQPR.Flag.LE_X
                 QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X{end};
                 
-                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts{end}');
                 
                 x_temp = temp(repmat([1:size(temp,1)],2,1),:);
                 
@@ -2553,7 +2604,7 @@ switch handles.params.plot_toggle_flag
             if handles.CurrData.QPparams.APAQPR.Flag.LE_Y
                 QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y{end};
                 
-                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts{end}');
                 
                 x_temp = temp(repmat([1:size(temp,1)],2,1),:);
                 
@@ -2571,7 +2622,7 @@ switch handles.params.plot_toggle_flag
             if handles.CurrData.QPparams.APAQPR.Flag.RE_X
                 QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X{end};
                 
-                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts{end}');
                 
                 x_temp = temp(repmat([1:size(temp,1)],2,1),:);
                 
@@ -2589,7 +2640,7 @@ switch handles.params.plot_toggle_flag
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Y
                 QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
                 
-                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts{end}');
                 
                 x_temp = temp(repmat([1:size(temp,1)],2,1),:);
                 
@@ -2606,7 +2657,7 @@ switch handles.params.plot_toggle_flag
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Z
                 QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Z{end};
                 
-                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts{end}');
                 
                 x_temp = temp(repmat([1:size(temp,1)],2,1),:);
                 
@@ -2623,7 +2674,7 @@ switch handles.params.plot_toggle_flag
             if handles.CurrData.QPparams.APAQPR.Flag.RE_X
                 QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X;
                 
-                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts{end}');
                 
                 x_temp = temp(repmat([1:size(temp,1)],2,1),:);
                 
@@ -2641,7 +2692,7 @@ switch handles.params.plot_toggle_flag
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Y
                 QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
                 
-                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
+                temp = handles.CurrData.VOMA_data.Eye_t(QPRpts{end}');
                 
                 x_temp = temp(repmat([1:size(temp,1)],2,1),:);
                 
@@ -3752,17 +3803,41 @@ end
 switch handles.params.pos_filt_trace
     
     case 1
-        set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X));
+        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_X) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X));
+        end
     case 2
-        set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y));
+        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Y) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y));
+        end
     case 3
-        set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z));
+        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Z) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z));
+        end
     case 4
-        set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X));
+        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_X) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X));
+        end
     case 5
-        set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y));
+        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Y) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y));
+        end
     case 6
-        set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z));
+        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Z) > 0
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
+        else
+            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z));
+        end
 end
 
 guidata(hObject,handles)
@@ -4080,16 +4155,16 @@ handles.params.temp_vel_offset_REZ_method = [];
 
 filt_params = get(handles.filt_params,'Data');
 
-filt_params{8,14} = '';
-filt_params{9,14} = '';
-filt_params{10,14} = '';
-filt_params{11,14} = '';
-filt_params{12,14} = '';
-filt_params{13,14} = '';
-filt_params{14,14} = '';
-filt_params{15,14} = '';
-filt_params{16,14} = '';
-filt_params{17,14} = '';
+filt_params(8,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(9,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(10,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(11,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(12,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(13,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(14,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(15,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(16,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
+filt_params(17,[2 3 4 5 6 7 8 9 10 14]) = {'' , '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' };
 
 
 set(handles.filt_params,'Data',filt_params);
@@ -6045,34 +6120,34 @@ function fit_line_btwn_QPs_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% I noticed that when the subject blinks (causing NaNs in the ddata
+% I noticed that when the subject blinks (causing NaNs in the data
 % record), linear interpolation can be intepreted as a QP. This code may
-% potentially try to fit a line to these interpolated value. This typically
+% potentially try to fit a line to these interpolated values. This typically
 % happens in extreme angular position values (>abs(17deg)). To avoid this,
 % we wont run this routine on angular position values above this threshold.
 % I will monitor this to see if this causes us to exclude data.
-mag_thresh = 11;
+mag_thresh = 20;
 
 
 switch handles.params.pos_filt_trace
     
     case 1
-        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_X{length(handles.CurrData.QPparams.APAQPR.Array.LE_X{end})};
         Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_X;
     case 2
-        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_Y{length(handles.CurrData.QPparams.APAQPR.Array.LE_Y)};
         Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Y;
     case 3
-        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.LE_Z{length(handles.CurrData.QPparams.APAQPR.Array.LE_Z)};
         Trace = handles.CurrData.VOMA_data.Filtered.Data_LE_Pos_Z;
     case 4
-        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_X{length(handles.CurrData.QPparams.APAQPR.Array.RE_X)};
         Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_X;
     case 5
-        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_Y{length(handles.CurrData.QPparams.APAQPR.Array.RE_Y)};
         Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Y;
     case 6
-        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
+        sacc_inds = handles.CurrData.QPparams.APAQPR.Array.RE_Z{length(handles.CurrData.QPparams.APAQPR.Array.RE_Z)};
         Trace = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z;
         
 end
@@ -6158,7 +6233,7 @@ set(handles.filt_params,'Data',filt_params);
 
 
 Trace2(Trace2==0) = nan(length(Trace2(Trace2==0)),1);
-plot(pbp_deriv,handles.CurrData.VOMA_data.Eye_t,Trace2,'k*')
+% plot(handles.pbp_deriv,handles.CurrData.VOMA_data.Eye_t,Trace2,'k*')
 
 guidata(hObject,handles)
 
@@ -7098,4 +7173,62 @@ else
     guidata(hObject,handles)
     
 end
+end
+
+
+% --- Executes on button press in display_qps.
+function display_qps_Callback(hObject, eventdata, handles)
+% hObject    handle to display_qps (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+sacc_inds = handles.params.sacc_inds_temp;
+
+switch handles.params.pos_filt_trace
+    
+    case 1
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_X')
+            handles.CurrData.QPparams.APAQPR.Array.LE_X = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.LE_X{end+1} = sacc_inds;
+        end
+        handles.CurrData.QPparams.APAQPR.Flag.LE_X = true;
+    case 2
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_Y')
+            handles.CurrData.QPparams.APAQPR.Array.LE_Y = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.LE_Y{end+1} = sacc_inds;
+        end
+        handles.CurrData.QPparams.APAQPR.Flag.LE_Y = true;
+    case 3
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_Z')
+            handles.CurrData.QPparams.APAQPR.Array.LE_Z = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.LE_Z{end+1} = sacc_inds;
+        end
+        handles.CurrData.QPparams.APAQPR.Flag.LE_Z = true;
+    case 4
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_X')
+            handles.CurrData.QPparams.APAQPR.Array.RE_X = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.RE_X{end+1} = sacc_inds;
+        end
+        handles.CurrData.QPparams.APAQPR.Flag.RE_X = true;
+    case 5
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_Y')
+            handles.CurrData.QPparams.APAQPR.Array.RE_Y = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.RE_Y{end+1} = sacc_inds;
+        end
+        handles.CurrData.QPparams.APAQPR.Flag.RE_Y = true;
+    case 6
+        if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_Z')
+            handles.CurrData.QPparams.APAQPR.Array.RE_Z = {sacc_inds};
+        else
+            handles.CurrData.QPparams.APAQPR.Array.RE_Z{end+1} = sacc_inds;
+        end
+        handles.CurrData.QPparams.APAQPR.Flag.RE_Z = true;
+end
+plot_smth_data(hObject,eventdata,handles)
+guidata(hObject,handles)
 end

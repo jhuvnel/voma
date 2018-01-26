@@ -273,6 +273,8 @@ function start_conversion_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+save_flag = true;
+
 switch handles.params.file_format
     
     case {1,2,3} % We are processing RAW files
@@ -1472,6 +1474,12 @@ switch handles.params.file_format
                                 % vector w/ the VOG time vector.
                                 Stim_t{n-1} = {Data.Time_Eye};
                         
+                    elseif ~isempty(strfind(raw{n,9},'Activation')) || ~isempty(strfind(raw{n,9},'Adaptation'))
+                        
+                        Stimulus{n-1} = {Data.Stim_Trig};
+                        Stim_t{n-1} = {Data.Time_Eye};
+                        stim_ind{n-1} ={[]};
+                        
                     else
                         
                         switch raw{n,9}
@@ -1507,11 +1515,7 @@ switch handles.params.file_format
                                 % vector w/ the VOG time vector.
                                 Stim_t{n-1} = {Data.Time_Eye};
                                 
-                            case {'Activation','Adaptation'}
-                                
-                                Stimulus{n-1} = {Data.Stim_Trig};
-                                Stim_t{n-1} = {Data.Time_Eye};
-                                stim_ind{n-1} ={[]};
+                            
                                 
                             otherwise
                                 
@@ -1570,23 +1574,43 @@ switch handles.params.file_format
             
             Raw_Filenames{n-1} = Data.raw_filename;
             
+            
+            
+            if ~exist('Stimulus','var')
+                h = questdlg(['ERROR: No stimulus file was extracted for file number: ' num2str(n-1) '. Please check the ''Function''  listed in your experimental record sheet. Please choose how to proceed.'],'Stimulus Error',...
+                    'Exit','Try Next File','Try Next File');
+                
+                switch h
+                    
+                    case 'Exit'
+                        save_flag = false;
+                        break
+                    case 'Try Next File'
+                        continue
+                end
+                
+                
+            end
+            
+            
         end
         
         
-        
-        
-        [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
-        
-        
+        if save_flag
+            
+            [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
+            
+        end
 end
 
 
 
-
-cd(handles.params.output_data_path)
-str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
-
-save([str{1} '.voma'],'Data_QPR')
+if save_flag
+    cd(handles.params.output_data_path)
+    str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
+    
+    save([str{1} '.voma'],'Data_QPR')
+end
 
 % --- Executes on selection change in excel_sheet_list.
 function excel_sheet_list_Callback(hObject, eventdata, handles)

@@ -444,7 +444,7 @@ set(handles.save_indicator,'BackgroundColor','g')
 end
 
 
-guidata(hObject,handles)
+
 end
 
 % --- Executes on button press in load_raw.
@@ -3387,20 +3387,20 @@ handles = getappdata(handles.paramList,'handles')
         handles.initialize.eye = handles.table.eye.Data;
     end
     cd(handles.initializePathName)
-initialize = handles.initialize;
-save('initialize.mat','initialize')
-
-handles.subj_id.String = handles.initialize.ID;
-handles.visit_number.String = handles.initialize.visit;
-handles.exp_type.String = handles.initialize.expType;
-handles.exp_condition.String = handles.initialize.expCond;
-handles.stim_axis.String = handles.initialize.stimAxis;
-handles.stim_type.String = handles.initialize.stimType;
-handles.stim_frequency.String = handles.initialize.stimFreq;
-handles.stim_intensity.String = handles.initialize.stimInt;
-handles.implant.String = handles.initialize.implant;
-handles.eye_rec.String = handles.initialize.eye;
-setappdata(handles.paramList,'handles',handles);
+    initialize = handles.initialize;
+    save('initialize.mat','initialize')
+    
+    handles.subj_id.String = handles.initialize.ID;
+    handles.visit_number.String = handles.initialize.visit;
+    handles.exp_type.String = handles.initialize.expType;
+    handles.exp_condition.String = handles.initialize.expCond;
+    handles.stim_axis.String = handles.initialize.stimAxis;
+    handles.stim_type.String = handles.initialize.stimType;
+    handles.stim_frequency.String = handles.initialize.stimFreq;
+    handles.stim_intensity.String = handles.initialize.stimInt;
+    handles.implant.String = handles.initialize.implant;
+    handles.eye_rec.String = handles.initialize.eye;
+    setappdata(handles.paramList,'handles',handles);
     guidata(hObject,handles)
     close(handles.editParams);
 end
