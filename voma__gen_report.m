@@ -94,6 +94,14 @@ handles.params.invert_stim = false;
 % Initialize the lr vs. xy flag
 handles.lr_xy_flag = 1;
 
+% Initialize Operating system flag
+if ispc
+    handles.ispc.flag = true;
+    handles.ispc.slash = '\';
+else
+    handles.ispc.slash = '/';
+end
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -576,13 +584,18 @@ function load_new_cycavg_Callback(hObject, eventdata, handles)
 % hObject    handle to load_new_cycavg (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
+if isfield(handles,'pathname')
+cd(handles.pathname);
 [filename, pathname, filterindex] =  uigetfile('*.mat');
 handles.filename = filename;
 handles.pathname = pathname;
+else
+   [filename, pathname, filterindex] =  uigetfile('*.mat');
+handles.filename = filename;
+handles.pathname = pathname;
+end
 
-load([handles.pathname '\' handles.filename])
+load([handles.pathname handles.ispc.slash handles.filename])
 
 handles.temp_CycAvg = Results;
 
@@ -645,13 +658,13 @@ function gen_report_Callback(hObject, eventdata, handles)
 % hObject    handle to gen_report (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+cd(handles.pathname)
+folder_name = uigetdir(pwd,'Choose the folder location to save the report printout');
 file_params = get(handles.file_params,'Data');
-
 Data = handles.CycAvg;
 plotname = [file_params{2,1} ' ' file_params{2,2} ' '  file_params{2,3} ' ' ...
     file_params{2,4}];
-save_loc = pwd;
+save_loc = folder_name;
 stim_cond =  {file_params{2:end,5}};
 for k=1:length(Data)
 %     Stim_trace(k).Data = handles.CycAvg(k).Data.stim(2,:);
@@ -664,14 +677,24 @@ Scale = [handles.params.neg_y_scale handles.params.pos_y_scale];
 
 [hx] = MVI_Gen_Cyc_Avg_Plot__inputdata(Data,plotname,save_loc,stim_cond,Stim_trace,legend_flag,SCC,Scale,handles.params.plot_type_flag,handles.params.invert_stim,handles.lr_xy_flag);
 
-folder_name = uigetdir(pwd,'Choose the folder location to save the report printout');
-
-reportname = [folder_name '\' plotname '_CRF'];
+reportname = [folder_name handles.ispc.slash plotname '_CRF'];
+    temp_path = mfilename('fullpath');
+    temp_pth_ind = [strfind(temp_path,handles.ispc.slash)];
 switch handles.lr_xy_flag
     case 1
-        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Report_CRF_Template_LRZ');
+            if exist([temp_path(1:temp_pth_ind(end)) 'MVI_Experiment_Report_CRF_Template_LRZ.dotx'],'file')
+            rpt = MVI_Report(reportname,'docx',[temp_path(1:temp_pth_ind(end)) 'MVI_Experiment_Report_CRF_Template_LRZ']);
+            else
+                [FileName,PathName,FilterIndex] = uigetfile([temp_path(1:temp_pth_ind(end)) '*.dotx'],'Please choose the file MVI_Experiment_Report_CRF_Template_LRZ.docx.');
+                rpt = MVI_Report(reportname,'docx',PathName);
+            end
     case 2
-        rpt = MVI_Report(reportname,'docx','F:\VNEL-Software-Repo\VOMA\MVI_Experiment_Report_CRF_Template_XYZ');
+            if exist([temp_path(1:temp_pth_ind(end)) 'MVI_Experiment_Report_CRF_Template_XYZ.dotx'],'file')
+            rpt = MVI_Report(reportname,'docx',[temp_path(1:temp_pth_ind(end)) 'MVI_Experiment_Report_CRF_Template_XYZ']);
+            else
+            [FileName,PathName,FilterIndex] = uigetfile([temp_path(1:temp_pth_ind(end)) '*.dotx'],'Please choose the file MVI_Experiment_Report_CRF_Template_XYZ.docx.');
+            rpt = MVI_Report(reportname,'docx',PathName);
+            end
 end
 rpt.subj_ID = file_params{2,1};
 rpt.date = file_params{2,2};
@@ -716,11 +739,24 @@ rpt.raw_filename = full_rawname_string;
 rpt.examiner = handles.params.examiner;
 
 rpt.cyc_avg_plot = [plotname '.png'];
+
+    temp_path = mfilename('fullpath');
+    temp_pth_ind = [strfind(temp_path,handles.ispc.slash)];
 switch handles.lr_xy_flag
     case 1
-        rpt.cyc_avg_legend = 'F:\VNEL-Software-Repo\VOMA\CycAvg_LEGEND_LRZ_20170509.png';
+            if exist([temp_path(1:temp_pth_ind(end)) 'CycAvg_LEGEND_LRZ_20170509.png'],'file')
+        rpt.cyc_avg_legend = [temp_path(1:temp_pth_ind(end)) 'CycAvg_LEGEND_LRZ_20170509.png'];
+            else
+                [FileName,PathName,FilterIndex] = uigetfile([temp_path(1:temp_pth_ind(end)) '*.png'],'Please choose the file CycAvg_LEGEND_LRZ_20170509.png.');
+            rpt.cyc_avg_legend = PathName;
+            end
     case 2
-        rpt.cyc_avg_legend = 'F:\VNEL-Software-Repo\VOMA\CycAvg_LEGEND_XYZ_20180109.png';
+            if exist([temp_path(1:temp_pth_ind(end)) 'CycAvg_LEGEND_XYZ_20180109.png'],'file')
+        rpt.cyc_avg_legend = [temp_path(1:temp_pth_ind(end)) 'CycAvg_LEGEND_XYZ_20180109.png'];
+            else
+               [FileName,PathName,FilterIndex] = uigetfile([temp_path(1:temp_pth_ind(end)) '*.png'],'Please choose the file CycAvg_LEGEND_XYZ_20180109.png.'); 
+            rpt.cyc_avg_legend = PathName;
+            end
 end
 rpt.lhrh_data_table = file_params(:,[5 8:19]);
 rpt.larp_data_table = file_params(:,[5 20:31]);
@@ -728,7 +764,7 @@ rpt.ralp_data_table = file_params(:,[5 32:43]);
 
 rpt.file_info_table = file_params(:,[1:7 44]);
 % cd(temp)
-
+%cd(folder_name)
 fill(rpt);
 
 rptview(reportname,'pdf');
