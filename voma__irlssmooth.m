@@ -113,7 +113,7 @@ while ((ill) && (ord>0))
     A=[spdiags(w,0,m,m); Ad];         % sparse matrix
     v=[w.*x; zeros(m-k,1)];           % target vector
     y=A\v;                            % LS solution
-    [lastmsg,lastID]=lastwarn;        % get last warning ID
+    [~,lastID]=lastwarn;        % get last warning ID
     ill=strcmp(lastID,warnID);        % ill if lastID = warnID
     
     % IRLS loop
