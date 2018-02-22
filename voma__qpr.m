@@ -85,7 +85,6 @@ function initialize_gui(hObject, handles, isrecall)
 % we are we are just re-initializing a GUI by calling it from the cmd line
 % while it is up. So, bail out as we dont want to reset the data.
 
-handles.thresholding_qpr_flag = true;
 
 if isrecall
     % i.e. we are reloading this GUI. The user may have just updated the
@@ -112,6 +111,9 @@ if isrecall
 else
     % Don't reload the data and thus do nothing.
     handles.reload_flag =0;
+    
+    handles.thresholding_qpr_flag = true;
+
 end
 
 % Starting flags to NOT plot 'spline' and 'raw' data after quick phase

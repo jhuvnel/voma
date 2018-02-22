@@ -316,6 +316,10 @@ if ThresholdQPRflag
             
             QP_range = QP_range(~ismember(1:size(QP_range,1), ind2remove), :);
             
+            diff_qprange = QP_range(:,2)-QP_range(:,1);
+            
+            %Remove any 'QPs' that are zero samples in length
+            QP_range = QP_range(diff_qprange~=0,:);
             
             [splinefitData] = spline_over_QPs (DataSmth,QP_range,Fs);
             
