@@ -99,6 +99,7 @@ if ispc
     handles.ispc.flag = true;
     handles.ispc.slash = '\';
 else
+    handles.ispc.flag = false;
     handles.ispc.slash = '/';
 end
 
@@ -658,7 +659,7 @@ function gen_report_Callback(hObject, eventdata, handles)
 % hObject    handle to gen_report (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-cd(handles.pathname)
+
 folder_name = uigetdir(pwd,'Choose the folder location to save the report printout');
 file_params = get(handles.file_params,'Data');
 Data = handles.CycAvg;
@@ -683,7 +684,7 @@ reportname = [folder_name handles.ispc.slash plotname '_CRF'];
 switch handles.lr_xy_flag
     case 1
             if exist([temp_path(1:temp_pth_ind(end)) 'MVI_Experiment_Report_CRF_Template_LRZ.dotx'],'file')
-            rpt = MVI_Report(reportname,'docx',[temp_path(1:temp_pth_ind(end)) 'MVI_Experiment_Report_CRF_Template_LRZ']);
+            rpt = MVI_Report(reportname,'docx',[temp_path(1:temp_pth_ind(end)) 'MVI_Experiment_Report_CRF_Template_LRZ.dotx']);
             else
                 [FileName,PathName,FilterIndex] = uigetfile([temp_path(1:temp_pth_ind(end)) '*.dotx'],'Please choose the file MVI_Experiment_Report_CRF_Template_LRZ.docx.');
                 rpt = MVI_Report(reportname,'docx',PathName);
@@ -763,13 +764,18 @@ rpt.larp_data_table = file_params(:,[5 20:31]);
 rpt.ralp_data_table = file_params(:,[5 32:43]);
 
 rpt.file_info_table = file_params(:,[1:7 44]);
-% cd(temp)
-%cd(folder_name)
+
 fill(rpt);
 
-rptview(reportname,'pdf');
+
+if ispc
+rptview([reportname '.html'],'pdf');
 
 save([reportname '.mat'],'file_params');
+else
+    uiwait(msgbox({'                 Opening Word Report' 'Once open please save the report as a PDF'},'Save Report As PDF','modal'));
+    open([reportname,'.docx'])
+end
 
 % Update handles structure
 guidata(hObject, handles);
