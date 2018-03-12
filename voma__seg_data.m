@@ -145,7 +145,8 @@ handles.stim_frequency.String = handles.initialize.stimFreq;
 handles.stim_intensity.String = handles.initialize.stimInt;
 handles.implant.String = handles.initialize.implant;
 handles.eye_rec.String = handles.initialize.eye;
-setappdata(handles.paramList,'handles',handles);
+handles.paramvals.initialize = handles.initialize;
+setappdata(handles.paramList,'handles',handles.paramvals);
 % Update handles structure
 guidata(hObject, handles);
 
@@ -3217,190 +3218,190 @@ function paramList_Callback(hObject, eventdata, handles)
 % hObject    handle to paramList (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = getappdata(handles.paramList,'handles');
-handles.editParams = figure('Name','Edit Parameter List', 'NumberTitle','off');
-    handles.editParams.OuterPosition = [50   300   1300   300];
-id = table(handles.initialize.ID,'VariableNames',{'Subject_ID'});
-    visit = table(handles.initialize.visit,'VariableNames',{'Visit_Number'});
-    expType = table(handles.initialize.expType,'VariableNames',{'Expirement_Type'});
-    expCond = table(handles.initialize.expCond,'VariableNames',{'Expirement_Condition'});
-    stimAxis = table(handles.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
-    stimType = table(handles.initialize.stimType,'VariableNames',{'Stim_Type'});
-    stimFreq = table(handles.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
-    stimInt = table(handles.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
-    implant = table(handles.initialize.implant,'VariableNames',{'Implant'});
-    eye = table(handles.initialize.eye,'VariableNames',{'Eye'});
+handles.paramvals = getappdata(handles.paramList,'handles');
+handles.paramvals.editParams = figure('Name','Edit Parameter List', 'NumberTitle','off');
+    handles.paramvals.editParams.OuterPosition = [50   300   1300   300];
+id = table(handles.paramvals.initialize.ID,'VariableNames',{'Subject_ID'});
+    visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
+    expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
+    expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+    stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+    stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
+    stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+    stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+    implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
+    eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
     
-    handles.table.id = uitable(handles.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.ID)));
-    handles.table.visit = uitable(handles.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.visit)));
-    handles.table.expType = uitable(handles.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.expType)));
-    handles.table.expCond = uitable(handles.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.initialize.expCond)));
-    handles.table.stimAxis = uitable(handles.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimAxis)));
-    handles.table.stimType = uitable(handles.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimType)));
-    handles.table.stimFreq = uitable(handles.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimFreq)));
-    handles.table.stimInt = uitable(handles.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimInt)));
-    handles.table.implant = uitable(handles.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.implant)));
-    handles.table.eye = uitable(handles.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.eye)));
-handles.table.addEntry = uicontrol(handles.editParams,'Style','pushbutton','String','Add Parameter','fontsize',20,'Position',[550 10 200 30],'CallBack',{@addEntry_Callback, handles});
-handles.table.saveEntry = uicontrol(handles.editParams,'Style','pushbutton','String','Save','fontsize',20,'Position',[1200 10 70 30],'CallBack',{@saveEntry_Callback, handles});
-setappdata(hObject,'handles',handles);
+    handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.ID)));
+    handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.visit)));
+    handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expType)));
+    handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expCond)));
+    handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimAxis)));
+    handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimType)));
+    handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimFreq)));
+    handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimInt)));
+    handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.implant)));
+    handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.eye)));
+handles.table.addEntry = uicontrol(handles.paramvals.editParams,'Style','pushbutton','String','Add Parameter','fontsize',20,'Position',[550 10 200 30],'CallBack',{@addEntry_Callback, handles});
+handles.table.saveEntry = uicontrol(handles.paramvals.editParams,'Style','pushbutton','String','Save','fontsize',20,'Position',[1200 10 70 30],'CallBack',{@saveEntry_Callback, handles});
+setappdata(hObject,'handles',handles.paramvals);
 guidata(hObject,handles)
 end
 
 function addEntry_Callback(hObject, eventdata, handles)
-handles = getappdata(handles.paramList,'handles')
-handles.initialize.ID{end+1} = '';
-handles.initialize.visit{end+1} = '';
-handles.initialize.expType{end+1} = '';
-handles.initialize.expCond{end+1} = '';
-handles.initialize.stimAxis{end+1} = '';
-handles.initialize.stimType{end+1} = '';
-handles.initialize.stimFreq{end+1} = '';
-handles.initialize.stimInt{end+1} = '';
-handles.initialize.implant{end+1} = '';
-handles.initialize.eye{end+1} = '';
-id = table(handles.initialize.ID,'VariableNames',{'Subject_ID'});
-    visit = table(handles.initialize.visit,'VariableNames',{'Visit_Number'});
-    expType = table(handles.initialize.expType,'VariableNames',{'Expirement_Type'});
-    expCond = table(handles.initialize.expCond,'VariableNames',{'Expirement_Condition'});
-    stimAxis = table(handles.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
-    stimType = table(handles.initialize.stimType,'VariableNames',{'Stim_Type'});
-    stimFreq = table(handles.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
-    stimInt = table(handles.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
-    implant = table(handles.initialize.implant,'VariableNames',{'Implant'});
-    eye = table(handles.initialize.eye,'VariableNames',{'Eye'});
+handles.paramvals = getappdata(handles.paramList,'handles');
+handles.paramvals.initialize.ID{end+1} = '';
+handles.paramvals.initialize.visit{end+1} = '';
+handles.paramvals.initialize.expType{end+1} = '';
+handles.paramvals.initialize.expCond{end+1} = '';
+handles.paramvals.initialize.stimAxis{end+1} = '';
+handles.paramvals.initialize.stimType{end+1} = '';
+handles.paramvals.initialize.stimFreq{end+1} = '';
+handles.paramvals.initialize.stimInt{end+1} = '';
+handles.paramvals.initialize.implant{end+1} = '';
+handles.paramvals.initialize.eye{end+1} = '';
+id = table(handles.paramvals.initialize.ID,'VariableNames',{'Subject_ID'});
+    visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
+    expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
+    expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+    stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+    stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
+    stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+    stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+    implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
+    eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
     
-    handles.table.id = uitable(handles.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.ID)));
-    handles.table.visit = uitable(handles.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.visit)));
-    handles.table.expType = uitable(handles.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.expType)));
-    handles.table.expCond = uitable(handles.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.initialize.expCond)));
-    handles.table.stimAxis = uitable(handles.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimAxis)));
-    handles.table.stimType = uitable(handles.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.stimType)));
-    handles.table.stimFreq = uitable(handles.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimFreq)));
-    handles.table.stimInt = uitable(handles.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.initialize.stimInt)));
-    handles.table.implant = uitable(handles.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.implant)));
-    handles.table.eye = uitable(handles.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
-    'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.initialize.eye)));
-setappdata(handles.paramList,'handles',handles);
+    handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.ID)));
+    handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.visit)));
+    handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expType)));
+    handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expCond)));
+    handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimAxis)));
+    handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimType)));
+    handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimFreq)));
+    handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimInt)));
+    handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.implant)));
+    handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+    'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.eye)));
+setappdata(handles.paramList,'handles',handles.paramvals);
 guidata(hObject,handles)
 end
 
 function saveEntry_Callback(hObject, eventdata, handles)
-handles = getappdata(handles.paramList,'handles')
-    if (isempty(handles.table.id.Data{end}))
-        empty = find(cellfun('isempty',handles.table.id.Data));
-        handles.table.id.Data(empty(find(empty>1))) = [];
-        handles.initialize.ID = handles.table.id.Data;
+handles.paramvals = getappdata(handles.paramList,'handles');
+    if (isempty(handles.paramvals.table.id.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.id.Data));
+        handles.paramvals.table.id.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
     else
-        handles.initialize.ID = handles.table.id.Data;
+        handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
     end
     
-    if (isempty(handles.table.visit.Data{end}))
-        empty = find(cellfun('isempty',handles.table.visit.Data));
-        handles.table.visit.Data(empty(find(empty>1))) = [];
-        handles.initialize.visit = handles.table.visit.Data;
+    if (isempty(handles.paramvals.table.visit.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.visit.Data));
+        handles.paramvals.table.visit.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
     else
-        handles.initialize.visit = handles.table.visit.Data;
+        handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
     end
     
-    if (isempty(handles.table.expType.Data{end}))
-        empty = find(cellfun('isempty',handles.table.expType.Data));
-        handles.table.expType.Data(empty(find(empty>1))) = [];
-        handles.initialize.expType = handles.table.expType.Data;
+    if (isempty(handles.paramvals.table.expType.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.expType.Data));
+        handles.paramvals.table.expType.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
     else
-        handles.initialize.expType = handles.table.expType.Data;
+        handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
     end
     
-    if (isempty(handles.table.expCond.Data{end}))
-        empty = find(cellfun('isempty',handles.table.expCond.Data));
-        handles.table.expCond.Data(empty(find(empty>1))) = [];
-        handles.initialize.expCond = handles.table.expCond.Data;
+    if (isempty(handles.paramvals.table.expCond.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.expCond.Data));
+        handles.paramvals.table.expCond.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
     else
-        handles.initialize.expCond = handles.table.expCond.Data;
+        handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
     end
     
-    if (isempty(handles.table.stimAxis.Data{end}))
-        empty = find(cellfun('isempty',handles.table.stimAxis.Data));
-        handles.table.stimAxis.Data(empty(find(empty>1))) = [];
-        handles.initialize.stimAxis = handles.table.stimAxis.Data;
+    if (isempty(handles.paramvals.table.stimAxis.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.stimAxis.Data));
+        handles.paramvals.table.stimAxis.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
     else
-        handles.initialize.stimAxis = handles.table.stimAxis.Data;
+        handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
     end
     
         
-    if (isempty(handles.table.stimType.Data{end}))
-        empty = find(cellfun('isempty',handles.table.stimType.Data));
-        handles.table.stimType.Data(empty(find(empty>1))) = [];
-        handles.initialize.stimType = handles.table.stimType.Data;
+    if (isempty(handles.paramvals.table.stimType.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.stimType.Data));
+        handles.paramvals.table.stimType.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
     else
-        handles.initialize.stimType = handles.table.stimType.Data;
+        handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
     end
     
-    if (isempty(handles.table.stimFreq.Data{end}))
-        empty = find(cellfun('isempty',handles.table.stimFreq.Data));
-        handles.table.stimFreq.Data(empty(find(empty>1))) = [];
-        handles.initialize.stimFreq = handles.table.stimFreq.Data;
+    if (isempty(handles.paramvals.table.stimFreq.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.stimFreq.Data));
+        handles.paramvals.table.stimFreq.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
     else
-        handles.initialize.stimFreq = handles.table.stimFreq.Data;
+        handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
     end
     
-    if (isempty(handles.table.stimInt.Data{end}))
-        empty = find(cellfun('isempty',handles.table.stimInt.Data));
-        handles.table.stimInt.Data(empty(find(empty>1))) = [];
-        handles.initialize.stimInt = handles.table.stimInt.Data;
+    if (isempty(handles.paramvals.table.stimInt.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.stimInt.Data));
+        handles.paramvals.table.stimInt.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
     else
-        handles.initialize.stimInt = handles.table.stimInt.Data;
+        handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
     end
     
-    if (isempty(handles.table.implant.Data{end}))
-        empty = find(cellfun('isempty',handles.table.implant.Data));
-        handles.table.implant.Data(empty(find(empty>1))) = [];
-        handles.initialize.implant = handles.table.implant.Data;
+    if (isempty(handles.paramvals.table.implant.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.implant.Data));
+        handles.paramvals.table.implant.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
     else
-        handles.initialize.implant = handles.table.implant.Data;
+        handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
     end
     
-    if (isempty(handles.table.eye.Data{end}))
-        mpty = find(cellfun('isempty',handles.table.eye.Data));
-        handles.table.eye.Data(empty(find(empty>1))) = [];
-        handles.initialize.eye = handles.table.eye.Data;
+    if (isempty(handles.paramvals.table.eye.Data{end}))
+        empty = find(cellfun('isempty',handles.paramvals.table.eye.Data));
+        handles.paramvals.table.eye.Data(empty(find(empty>1))) = [];
+        handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
     else
-        handles.initialize.eye = handles.table.eye.Data;
+        handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
     end
     cd(handles.initializePathName)
-initialize = handles.initialize;
+initialize = handles.paramvals.initialize;
 save('initialize.mat','initialize')
 
-handles.subj_id.String = handles.initialize.ID;
-handles.visit_number.String = handles.initialize.visit;
-handles.exp_type.String = handles.initialize.expType;
-handles.exp_condition.String = handles.initialize.expCond;
-handles.stim_axis.String = handles.initialize.stimAxis;
-handles.stim_type.String = handles.initialize.stimType;
-handles.stim_frequency.String = handles.initialize.stimFreq;
-handles.stim_intensity.String = handles.initialize.stimInt;
-handles.implant.String = handles.initialize.implant;
-handles.eye_rec.String = handles.initialize.eye;
-setappdata(handles.paramList,'handles',handles);
+handles.subj_id.String = handles.paramvals.initialize.ID;
+handles.visit_number.String = handles.paramvals.initialize.visit;
+handles.exp_type.String = handles.paramvals.initialize.expType;
+handles.exp_condition.String = handles.paramvals.initialize.expCond;
+handles.stim_axis.String = handles.paramvals.initialize.stimAxis;
+handles.stim_type.String = handles.paramvals.initialize.stimType;
+handles.stim_frequency.String = handles.paramvals.initialize.stimFreq;
+handles.stim_intensity.String = handles.paramvals.initialize.stimInt;
+handles.implant.String = handles.paramvals.initialize.implant;
+handles.eye_rec.String = handles.paramvals.initialize.eye;
+setappdata(handles.paramList,'handles',handles.paramvals);
     guidata(hObject,handles)
-    close(handles.editParams);
+    close(handles.paramvals.editParams);
 end
