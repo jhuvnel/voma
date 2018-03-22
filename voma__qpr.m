@@ -665,7 +665,7 @@ if size(filt_params,2)==10
     % You are loading a file from an earlier version of voma__qpr, BEFORE
     % the APAQPR routine was added
     
-    filt_params = [filt_params repmat({''},size(filt_params,1),6)];
+    filt_params = [filt_params repmat({''},size(filt_params,1),16-size(filt_params,2))];
     filt_params(1,:) = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'} {'Removed Ang. Vel. Offset?'} { 'APAQPR Thresh.'} { 'Min. SPV Fit Time [ms]'}];
     set(handles.filt_params,'Data',filt_params);
 end
@@ -674,7 +674,7 @@ if size(filt_params,2)<14
     % You are loading a file from an earlier version of voma__qpr, BEFORE
     % the 'remove Ang. Vel. Offset' routine was added
     
-    filt_params = [filt_params repmat({''},size(filt_params,1),3)];
+    filt_params = [filt_params repmat({''},size(filt_params,1),16-size(filt_params,2))];
     filt_params(1,:) = [{'Data Trace'} {'Filt. Type'} {'Param1'} {'Param2'} {'Param3'} {'Param4'} {'Param5'} {'Param6'} {'Velocity Smooth Order Code'} {'Post-QPR Spline Param.'} {'APAQPR?'} {'Detrend?'} {'Detrend Eq.'} {'Removed Ang. Vel. Offset?'} { 'APAQPR Thresh.'} { 'Min. SPV Fit Time [ms]'}];
     set(handles.filt_params,'Data',filt_params);
 end
@@ -755,37 +755,37 @@ end
 switch handles.params.pos_filt_trace
     
     case 1
-        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_X) > 0
+        if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_X) && numel(handles.CurrData.QPparams.APAQPR.Array.LE_X) > 0
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X));
         end
     case 2
-        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Y) > 0
+        if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Y) && numel(handles.CurrData.QPparams.APAQPR.Array.LE_Y) > 0
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y));
         end
     case 3
-        if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Z) > 0
+        if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Z) && numel(handles.CurrData.QPparams.APAQPR.Array.LE_Z) > 0
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z));
         end
     case 4
-        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_X) > 0
+        if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_X) && numel(handles.CurrData.QPparams.APAQPR.Array.RE_X) > 0
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X));
         end
     case 5
-        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Y) > 0
+        if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Y) && numel(handles.CurrData.QPparams.APAQPR.Array.RE_Y) > 0
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y));
         end
     case 6
-        if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Z) > 0
+        if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Z) && numel(handles.CurrData.QPparams.APAQPR.Array.RE_Z) > 0
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z));
@@ -2562,7 +2562,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_X
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2581,7 +2585,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Y)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2598,7 +2606,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_Z
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Z{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Z)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Z{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Z;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2615,7 +2627,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_X
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_X;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2634,7 +2650,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.LE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y{end};
+               if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Y)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.LE_Y;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2652,7 +2672,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_X
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_X)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2670,7 +2694,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Y)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2687,7 +2715,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Z
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Z{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Z)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Z{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Z;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2704,7 +2736,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_X
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_X)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_X;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -2722,7 +2758,11 @@ switch handles.params.plot_toggle_flag
             % Check if there are saved QPs from the APAQPR routine. If QP
             % indices exist, box the data in a transparent PATCH
             if handles.CurrData.QPparams.APAQPR.Flag.RE_Y
-                QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Y)
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y{end};
+                else
+                    QPRpts = handles.CurrData.QPparams.APAQPR.Array.RE_Y;
+                end
                 
                 temp = handles.CurrData.VOMA_data.Eye_t(QPRpts');
                 
@@ -3629,27 +3669,51 @@ if button_state == get(hObject,'Max')
         
         case 1
             if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
-                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
+                else
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X));
+                end
             end
         case 2
-            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
-                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_Y)
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Y)
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
+                else
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y));
+                end
             end
         case 3
-            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
-                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_Z)
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Z)
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
+                else
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z));
+                end
             end
         case 4
-            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
-                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.RE_X)
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_X)
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
+                else
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X));
+                end
             end
         case 5
-            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
-                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.RE_Y)
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Y)
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
+                else
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y));
+                end
             end
         case 6
-            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.LE_X)
-                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
+            if ~isempty(handles.CurrData.QPparams.APAQPR.Array.RE_Z)
+                if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Z)
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
+                else
+                    set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z));
+                end
             end
     end
     
@@ -6468,7 +6532,9 @@ function popout_fig_Callback(hObject, eventdata, handles)
 
 h_new = figure;
 copyobj(handles.vor_plot,h_new)
-
+AxesH = gca
+InSet = get(AxesH, 'TightInset');
+set(AxesH, 'Position', [InSet(1:2), 1-InSet(1)-InSet(3), 1-InSet(2)-InSet(4)])
 end
 
 

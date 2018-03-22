@@ -1451,6 +1451,7 @@ switch handles.params.file_format
                     
                     if ~isempty(strfind(raw{n,9},'ElectricalOnly')) || ~isempty(strfind(raw{n,9},'ElectricOnly')) || ~isempty(strfind(raw{n,9},'Electrical Only')) || ~isempty(strfind(raw{n,9},'Electric Only'))
                         
+                        
                         % Create sinusoidal stimulus file
                                 Transitions = abs(diff(Data.Stim_Trig));
                                 inds = [1:length(Data.Stim_Trig)];
@@ -1479,14 +1480,24 @@ switch handles.params.file_format
                         Stimulus{n-1} = {Data.Stim_Trig};
                         Stim_t{n-1} = {Data.Time_Eye};
                         stim_ind{n-1} ={[]};
+
+                    elseif ~isempty(strfind(raw{n,9},'Current Fitting')) || ~isempty(strfind(raw{n,9},'CurrentFitting'))
+                        Stimulus{n-1} = {Data.Stim_Trig};
                         
-                    else
+                        inds = [1:length(Data.Stim_Trig)]';
+                        on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                        off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                        %    stim_ind{n-1} = {[on_inds off_inds]};
+                        stim_ind{n-1} ={[]};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n-1} = {Data.Time_Eye};
                         
-                        switch raw{n,9}
-                                                            
-                                
-                                
-                            case 'Pulse Train'
+                    elseif ~isempty(strfind(raw{n,9},'Pulse Train')) || ~isempty(strfind(raw{n,9},'PulseTrain'))
+                        
+                     
                                 
                                 Stimulus{n-1} = {Data.Stim_Trig};
                                 
@@ -1500,24 +1511,12 @@ switch handles.params.file_format
                                 % Thus, we will overwrite the 'Stim_t' time
                                 % vector w/ the VOG time vector.
                                 Stim_t{n-1} = {Data.Time_Eye};
-                            case 'Current Fitting'
                                 
-                                Stimulus{n-1} = {Data.Stim_Trig};
                                 
-                                inds = [1:length(Data.Stim_Trig)]';
-                                on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
-                                off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
-                                %    stim_ind{n-1} = {[on_inds off_inds]};
-                                stim_ind{n-1} ={[]};
-                                % For Elec. Only stimuli w/ the MVI LD goggles,
-                                % the GPIO line is collected w/ the VOG data.
-                                % Thus, we will overwrite the 'Stim_t' time
-                                % vector w/ the VOG time vector.
-                                Stim_t{n-1} = {Data.Time_Eye};
                                 
                             
                                 
-                            otherwise
+                    else
                                 
                                 
                                 headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
@@ -1564,7 +1563,6 @@ switch handles.params.file_format
                                 
                         end
                         
-                    end
                 case 4 %VNEL Digital Coil System
                     Parameters(n-1).DAQ = 'DigCoilSys';
                     Parameters(n-1).DAQ_code = 6;
