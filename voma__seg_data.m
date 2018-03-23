@@ -454,7 +454,7 @@ set(handles.save_indicator,'BackgroundColor','g')
 end
 
 
-
+guidata(hObject,handles)
 end
 
 % --- Executes on button press in load_raw.
@@ -3434,7 +3434,6 @@ handles.stim_intensity.String = handles.paramvals.initialize.stimInt;
 handles.implant.String = handles.paramvals.initialize.implant;
 handles.eye_rec.String = handles.paramvals.initialize.eye;
 setappdata(handles.paramList,'handles',handles.paramvals);
-
     guidata(hObject,handles)
     close(handles.paramvals.editParams);
 end
