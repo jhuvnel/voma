@@ -3061,8 +3061,7 @@ if isfield(handles.CurrData.VOMA_data,'UpSamp')
             % Delete the old, upsampled data traces
             handles.CurrData.VOMA_data = rmfield(handles.CurrData.VOMA_data,'UpSamp');
             handles.CurrData.VOMA_data.stim_ind = [];
-            %             handles.CurrData.cyc2plot = 1;
-            handles.CurrData = rmfield(handles.CurrData,'cyc2plot');
+            handles.CurrData.cyc2plot = [];
             % Flag the system to save the data as normal
             handles.upsamp_flag = true;
         case 'Leave everything alone and don''t save!'
