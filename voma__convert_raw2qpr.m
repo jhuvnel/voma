@@ -273,8 +273,6 @@ function start_conversion_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-save_flag = true;
-
 switch handles.params.file_format
     
     case {1,2,3} % We are processing RAW files
@@ -1451,7 +1449,6 @@ switch handles.params.file_format
                     
                     if ~isempty(strfind(raw{n,9},'ElectricalOnly')) || ~isempty(strfind(raw{n,9},'ElectricOnly')) || ~isempty(strfind(raw{n,9},'Electrical Only')) || ~isempty(strfind(raw{n,9},'Electric Only'))
                         
-                        
                         % Create sinusoidal stimulus file
                                 Transitions = abs(diff(Data.Stim_Trig));
                                 inds = [1:length(Data.Stim_Trig)];
@@ -1475,29 +1472,27 @@ switch handles.params.file_format
                                 % vector w/ the VOG time vector.
                                 Stim_t{n-1} = {Data.Time_Eye};
                         
-                    elseif ~isempty(strfind(raw{n,9},'Activation')) || ~isempty(strfind(raw{n,9},'Adaptation'))
+                    else
                         
-                        Stimulus{n-1} = {Data.Stim_Trig};
-                        Stim_t{n-1} = {Data.Time_Eye};
-                        stim_ind{n-1} ={[]};
-
-                    elseif ~isempty(strfind(raw{n,9},'Current Fitting')) || ~isempty(strfind(raw{n,9},'CurrentFitting'))
-                        Stimulus{n-1} = {Data.Stim_Trig};
-                        
-                        inds = [1:length(Data.Stim_Trig)]';
-                        on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
-                        off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
-                        %    stim_ind{n-1} = {[on_inds off_inds]};
-                        stim_ind{n-1} ={[]};
-                        % For Elec. Only stimuli w/ the MVI LD goggles,
-                        % the GPIO line is collected w/ the VOG data.
-                        % Thus, we will overwrite the 'Stim_t' time
-                        % vector w/ the VOG time vector.
-                        Stim_t{n-1} = {Data.Time_Eye};
-                        
-                    elseif ~isempty(strfind(raw{n,9},'Pulse Train')) || ~isempty(strfind(raw{n,9},'PulseTrain'))
-                        
-                     
+                        switch raw{n,9}
+                                                            
+                                
+                                
+                            case 'Pulse Train'
+                                
+                                Stimulus{n-1} = {Data.Stim_Trig};
+                                
+                                inds = [1:length(Data.Stim_Trig)]';
+                                on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                                off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                                %    stim_ind{n-1} = {[on_inds off_inds]};
+                                stim_ind{n-1} ={[]};
+                                % For Elec. Only stimuli w/ the MVI LD goggles,
+                                % the GPIO line is collected w/ the VOG data.
+                                % Thus, we will overwrite the 'Stim_t' time
+                                % vector w/ the VOG time vector.
+                                Stim_t{n-1} = {Data.Time_Eye};
+                            case 'Current Fitting'
                                 
                                 Stimulus{n-1} = {Data.Stim_Trig};
                                 
@@ -1512,11 +1507,13 @@ switch handles.params.file_format
                                 % vector w/ the VOG time vector.
                                 Stim_t{n-1} = {Data.Time_Eye};
                                 
+                            case {'Activation','Adaptation'}
                                 
+                                Stimulus{n-1} = {Data.Stim_Trig};
+                                Stim_t{n-1} = {Data.Time_Eye};
+                                stim_ind{n-1} ={[]};
                                 
-                            
-                                
-                    else
+                            otherwise
                                 
                                 
                                 headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
@@ -1563,6 +1560,7 @@ switch handles.params.file_format
                                 
                         end
                         
+                    end
                 case 4 %VNEL Digital Coil System
                     Parameters(n-1).DAQ = 'DigCoilSys';
                     Parameters(n-1).DAQ_code = 6;
@@ -1572,43 +1570,23 @@ switch handles.params.file_format
             
             Raw_Filenames{n-1} = Data.raw_filename;
             
-            
-            
-            if ~exist('Stimulus','var')
-                h = questdlg(['ERROR: No stimulus file was extracted for file number: ' num2str(n-1) '. Please check the ''Function''  listed in your experimental record sheet. Please choose how to proceed.'],'Stimulus Error',...
-                    'Exit','Try Next File','Try Next File');
-                
-                switch h
-                    
-                    case 'Exit'
-                        save_flag = false;
-                        break
-                    case 'Try Next File'
-                        continue
-                end
-                
-                
-            end
-            
-            
         end
         
         
-        if save_flag
-            
-            [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
-            
-        end
+        
+        
+        [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
+        
+        
 end
 
 
 
-if save_flag
-    cd(handles.params.output_data_path)
-    str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
-    
-    save([str{1} '.voma'],'Data_QPR')
-end
+
+cd(handles.params.output_data_path)
+str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
+
+save([str{1} '.voma'],'Data_QPR')
 
 % --- Executes on selection change in excel_sheet_list.
 function excel_sheet_list_Callback(hObject, eventdata, handles)
