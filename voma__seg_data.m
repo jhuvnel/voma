@@ -55,6 +55,15 @@ function voma__seg_data_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to voma__seg_data (see VARARGIN)
 
+% Initialize Operating system flag
+if ispc
+    handles.ispc.flag = true;
+    handles.ispc.slash = '\';
+else
+    handles.ispc.flag = false;
+    handles.ispc.slash = '/';
+end
+
 % Choose default command line output for voma__seg_data
 handles.output = hObject;
 
@@ -2381,6 +2390,7 @@ function export_data_Callback(hObject, eventdata, handles)
 % hObject    handle to export_data (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.export_data.BackgroundColor = [1    1    0];
 cd(handles.ss_PathName);
 [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
 
@@ -2403,15 +2413,29 @@ if ismember(handles.worksheet_name.String, sheets)
     [num1, txt1, raw1] = xlsread(handles.exp_spread_sheet_name.String, handles.worksheet_name.String,'A:A');
     oldVals = size(txt1);
     newEntry = 0;
-    for rs = 1:segs(1)
-        if ismember([handles.experimentdata(rs,1)],txt1)
-            replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-            xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
-            
-        else
-            xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
-            newEntry = newEntry+1;
+    if handles.ispc.flag
+        for rs = 1:segs(1)
+            if ismember([handles.experimentdata(rs,1)],txt1)
+                replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
+                xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
+
+            else
+                xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
+                newEntry = newEntry+1;
+            end
         end
+    else
+        for rs = 1:segs(1)
+            if ismember([handles.experimentdata(rs,1)],txt1)
+                replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
+                Tdata = cell2table([handles.experimentdata(rs,:)])
+                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false) 
+            else
+                Tdata = cell2table([handles.experimentdata(rs,:)])
+                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false) 
+                newEntry = newEntry+1;
+            end
+        end  
     end
 else
     labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
@@ -2419,9 +2443,17 @@ else
     if length(handles.worksheet_name.String)> 31
         handles.worksheet_name.String = handles.worksheet_name.String(1:31);
     end
+    if handles.ispc.flag
     xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
     segs = size(handles.experimentdata);
     xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
+    else
+    Tlabels = cell2table(labels);
+    Tdata = cell2table([handles.experimentdata]);
+    segs = size(handles.experimentdata);
+    writetable(Tlabels,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range','A1:Q1','WriteVariableNames',false)   
+    writetable(Tdata,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range',['A2:Q',num2str(segs(1)+1)],'WriteVariableNames',false)   
+    end
 end
 handles.export_data.BackgroundColor = [0    1    0];
 pause(1);
