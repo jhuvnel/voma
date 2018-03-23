@@ -2392,6 +2392,7 @@ function export_data_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.export_data.BackgroundColor = [1    1    0];
+pause(0.1);
 cd(handles.ss_PathName);
 [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
 
