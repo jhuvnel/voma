@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 16-Jan-2018 13:39:47
+% Last Modified by GUIDE v2.5 22-May-2018 12:19:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -117,6 +117,22 @@ handles.params.threshold_plot = '';
 handles.Yaxis_MPU_Rot_theta = str2double(get(handles.Yaxis_Rot_Theta,'String'));
 
 handles.params.gpio_trig_opt = 1;
+
+% ARound 2018-04, PJB noticed that the LD VOG system appeared to record the
+% PCU trigger LATE relative to the collected eye movement data. PJB, MR,
+% and NV performed some experiments outlined here:
+% https://docs.google.com/document/d/16EppbHOlsSabjR61xbDi798p7ldrqqTV6tOXjH1KZbI/edit#heading=h.xh2azhw75tvn
+% These experiments resulted in the following trigger recording delay in
+% samples (where positive values indicate the trigger was recorded AFTER
+% the eye movement).
+handles.TriggerDelay.G1 = 3;
+handles.TriggerDelay.G2 = 5;
+handles.TriggerDelay.G3 = 2;
+
+handles.AdjustTrig_flag = false;
+handles.AdjustTrig = handles.TriggerDelay.G1;
+set(handles.AdjustTrig_Control,'String',num2str(handles.TriggerDelay.G1));
+
 
 set(handles.LaskerSystPanel,'Visible','Off')
 
@@ -422,35 +438,35 @@ if strcmp(handles.params.segment_filename(1),'-')
 else
 end
 
-save(handles.params.segment_filename,'Data')
+save([handles.params.segment_filename handles.string_addon '.mat'],'Data')
 
 
 
 if ~isfield(handles,'skip_excel_fill_flag')
-segments = segments + 1;
-handles.experimentdata = getappdata(handles.export_data,'data');
-set(handles.worksheet_name,'String',[handles.visit_number.String{handles.visit_number.Value},'-',handles.date.String,'-',handles.exp_type.String{handles.exp_type.Value}]);
-handles.experimentdata{segments,1} = handles.seg_filename.String;
-handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
-handles.experimentdata{segments,3} = handles.subj_id.String{handles.subj_id.Value};
-handles.experimentdata{segments,4} = handles.implant.String{handles.implant.Value};
-handles.experimentdata{segments,5} = handles.eye_rec.String{handles.eye_rec.Value};
-handles.experimentdata{segments,9} = [handles.exp_type.String{handles.exp_type.Value},'-',handles.exp_condition.String{handles.exp_condition.Value},'-',handles.stim_type.String{handles.stim_type.Value}];
-handles.experimentdata{segments,10} = handles.stim_axis.String{handles.stim_axis.Value};
-stim_freq = handles.stim_frequency.String{handles.stim_frequency.Value};
-hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
-stim_freq(hs:end) = [];
-pt = find(stim_freq == 'p');
-stim_freq(pt) = '.';
-handles.experimentdata{segments,12} = str2double(stim_freq);
-stim_int = handles.stim_intensity.String{handles.stim_intensity.Value};
-dps = find(handles.stim_intensity.String{handles.stim_intensity.Value} == 'd');
-stim_int(dps:end) = [];
-handles.experimentdata{segments,13} = str2num(stim_int);
-setappdata(handles.export_data,'data',handles.experimentdata);
-handles.segment_number.String = num2str(segments);
-set(handles.save_indicator,'String','SAVED!')
-set(handles.save_indicator,'BackgroundColor','g')
+    segments = segments + 1;
+    handles.experimentdata = getappdata(handles.export_data,'data');
+    set(handles.worksheet_name,'String',[handles.visit_number.String{handles.visit_number.Value},'-',handles.date.String,'-',handles.exp_type.String{handles.exp_type.Value}]);
+    handles.experimentdata{segments,1} = handles.seg_filename.String;
+    handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
+    handles.experimentdata{segments,3} = handles.subj_id.String{handles.subj_id.Value};
+    handles.experimentdata{segments,4} = handles.implant.String{handles.implant.Value};
+    handles.experimentdata{segments,5} = handles.eye_rec.String{handles.eye_rec.Value};
+    handles.experimentdata{segments,9} = [handles.exp_type.String{handles.exp_type.Value},'-',handles.exp_condition.String{handles.exp_condition.Value},'-',handles.stim_type.String{handles.stim_type.Value}];
+    handles.experimentdata{segments,10} = handles.stim_axis.String{handles.stim_axis.Value};
+    stim_freq = handles.stim_frequency.String{handles.stim_frequency.Value};
+    hs = [find(stim_freq == 'H') find(stim_freq == 'h')];
+    stim_freq(hs:end) = [];
+    pt = find(stim_freq == 'p');
+    stim_freq(pt) = '.';
+    handles.experimentdata{segments,12} = str2double(stim_freq);
+    stim_int = handles.stim_intensity.String{handles.stim_intensity.Value};
+    dps = find(handles.stim_intensity.String{handles.stim_intensity.Value} == 'd');
+    stim_int(dps:end) = [];
+    handles.experimentdata{segments,13} = str2num(stim_int);
+    setappdata(handles.export_data,'data',handles.experimentdata);
+    handles.segment_number.String = num2str(segments);
+    set(handles.save_indicator,'String','SAVED!')
+    set(handles.save_indicator,'BackgroundColor','g')
 end
 
 
@@ -477,7 +493,7 @@ else
 end
 
 if strcmp(eventdata.Source.String,'Load New Raw Data File')
-     handles.params.reloadflag = 0;
+    handles.params.reloadflag = 0;
 end
 
 switch handles.params.system_code
@@ -554,6 +570,7 @@ switch handles.params.system_code
         % Load Data
         data = dlmread([handles.raw_PathName handles.raw_FileName],' ',1,0);
         
+        
         % Generate Time_Eye vector
         Time = data(:,2);
         % The time vector recorded by the VOG goggles resets after it
@@ -609,6 +626,8 @@ switch handles.params.system_code
                         
                         StimIndex = 35;
                         
+                        
+                        
                     case 2 % The user has chosen to use the software trigger from the MVI fitting software (toggled by the operator
                         
                         
@@ -617,6 +636,47 @@ switch handles.params.system_code
                 end
                 
                 Stim = data(1:length(Time_Eye),StimIndex);
+                
+                
+                % Check if the user wants to adjust the trigger
+                if handles.AdjustTrig_flag
+                    
+                    
+                    
+                    if handles.AdjustTrig>0
+                        
+                        Stim = [Stim(handles.AdjustTrig + 1:end) ; Stim(end)*ones(handles.AdjustTrig,1)];
+                        direction = 'Earlier';
+                    else
+                        
+                        Stim = [Stim(1)*ones(abs(handles.AdjustTrig),1) ; Stim(1:end-handles.AdjustTrig) ];
+                        
+                        direction = 'Later';
+                    end
+                    
+                    
+                    handles.string_addon = ['_UpdatedLDVOGTrigger_Shifted' num2str(handles.AdjustTrig) 'Samples' direction '__UpdatedOn' datestr(now,'yyyy-mm-dd')];
+                    
+                    answer = questdlg('Would you like to save the raw data as a new .txt file?', ...
+                        'Save Updated File', ...
+                        'Yes','No thank you','No thank you');
+                    % Handle response
+                    switch answer
+                        case 'Yes'
+                            data(1:length(Time_Eye),StimIndex) = Stim;
+                            
+                            dlmwrite([PathName FileName(1:end-4) '_UpdatedLDVOGTrigger_Shifted' num2str(handles.AdjustTrig) 'Samples' direction '__UpdatedOn' datestr(now,'yyyy-mm-dd') '.txt'], data, 'delimiter',' ','precision','%.4f');
+                            
+                            
+                        case 'No thank you'
+                            
+                    end
+                    
+                else
+                    
+                    handles.string_addon = [];
+                    
+                end
                 
             case {3}
                 
@@ -1240,9 +1300,9 @@ function stim_type_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_type = handles.stim_type.String{handles.stim_type.Value};
 setappdata(hObject,'type',handles.stim_type.String{handles.stim_type.Value});
-    if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
-        handles.stim_frequency.Value = 2;
-    end
+if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
+    handles.stim_frequency.Value = 2;
+end
 handles.params.stim_frequency = handles.stim_frequency.String{handles.stim_frequency.Value};
 setappdata(handles.stim_frequency,'fq',handles.stim_frequency.String{handles.stim_frequency.Value})
 [handles] = update_seg_filename(hObject, eventdata, handles);
@@ -1329,7 +1389,7 @@ handles.params.suffix = getappdata(handles.stim_intensity,'suf');
 handles.params.segment_filename = [handles.params.subj_id '-' handles.params.visit_number ...
     '-' handles.params.date '-' handles.params.exp_type '-' handles.params.exp_condition ...
     '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_frequency ...
-    '-' handles.params.stim_intensity handles.params.suffix '.mat'];
+    '-' handles.params.stim_intensity handles.params.suffix];
 
 set(handles.seg_filename,'String',handles.params.segment_filename);
 end
@@ -1456,6 +1516,19 @@ function labdev_goggleID_Callback(hObject, eventdata, handles)
 index_selected = get(hObject,'Value');
 
 handles.params.goggleID = index_selected;
+
+switch index_selected
+    
+    case 1
+        temp = handles.TriggerDelay.G1;
+    case 2
+        temp = handles.TriggerDelay.G2;
+    case 3
+        temp = handles.TriggerDelay.G3;
+end
+
+handles.AdjustTrig = temp;
+set(handles.AdjustTrig_Control,'String',num2str(temp));
 
 guidata(hObject,handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns labdev_goggleID contents as cell array
@@ -1865,9 +1938,9 @@ switch choice.stim
             
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
             
-            handles.params.segment_filename = [raw{k,1} '.mat'];
+            handles.params.segment_filename = [raw{k,1}];
             
-            handles.seg_filename.String = [raw{k,1} '.mat'];
+            handles.seg_filename.String = [raw{k,1}];
             
             handles.skip_excel_fill_flag = 1;
             
@@ -2012,7 +2085,7 @@ switch choice.stim
             
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
             
-            handles.params.segment_filename = [raw{k,1} '.mat'];
+            handles.params.segment_filename = [raw{k,1}];
             
             save_segment_Callback(hObject, eventdata, handles);
             
@@ -2420,7 +2493,7 @@ if ismember(handles.worksheet_name.String, sheets)
             if ismember([handles.experimentdata(rs,1)],txt1)
                 replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
                 xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
-
+                
             else
                 xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
                 newEntry = newEntry+1;
@@ -2431,13 +2504,13 @@ if ismember(handles.worksheet_name.String, sheets)
             if ismember([handles.experimentdata(rs,1)],txt1)
                 replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
                 Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false) 
+                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false)
             else
                 Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false) 
+                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false)
                 newEntry = newEntry+1;
             end
-        end  
+        end
     end
 else
     labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
@@ -2446,15 +2519,15 @@ else
         handles.worksheet_name.String = handles.worksheet_name.String(1:31);
     end
     if handles.ispc.flag
-    xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
-    segs = size(handles.experimentdata);
-    xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
+        xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
+        segs = size(handles.experimentdata);
+        xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
     else
-    Tlabels = cell2table(labels);
-    Tdata = cell2table([handles.experimentdata]);
-    segs = size(handles.experimentdata);
-    writetable(Tlabels,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range','A1:Q1','WriteVariableNames',false)   
-    writetable(Tdata,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range',['A2:Q',num2str(segs(1)+1)],'WriteVariableNames',false)   
+        Tlabels = cell2table(labels);
+        Tdata = cell2table([handles.experimentdata]);
+        segs = size(handles.experimentdata);
+        writetable(Tlabels,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range','A1:Q1','WriteVariableNames',false)
+        writetable(Tdata,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range',['A2:Q',num2str(segs(1)+1)],'WriteVariableNames',false)
     end
 end
 handles.export_data.BackgroundColor = [0    1    0];
@@ -2505,8 +2578,8 @@ end
 
 function [handles] = auto_seg_general_Callback(hObject, eventdata, handles)
 
-    switch handles.choice.stim
-        case 3 % Mechanical Sinusoids
+switch handles.choice.stim
+    case 3 % Mechanical Sinusoids
         window = 500;
         b = (1/window)*ones(1,window);
         a = 1;
@@ -2525,34 +2598,34 @@ function [handles] = auto_seg_general_Callback(hObject, eventdata, handles)
         handles.Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z - zVal;
         handles.stim_mag = sqrt((handles.Segment.HeadMPUVel_X.^2) + (handles.Segment.HeadMPUVel_Y.^2) + (handles.Segment.HeadMPUVel_Z.^2)); % Calculating the magnitude of the X Y and Z velocities
         trace = handles.stim_mag;
-
-        case 4 % Electrical Only
+        
+    case 4 % Electrical Only
         handles.stim_mag = handles.Segment.Stim_Trig;
         trace = handles.Segment.Stim_Trig;
-    end
-    
+end
+
 mask = zeros(length(trace),1);
 handles.thresh_plot = figure('Name','Choose Threshold', 'NumberTitle','off');
 handles.thresh_plot.OuterPosition = [512   600   700   520];
 ax1 = axes;
 ax1.Position = [0.06 0.2 0.9 0.75];
 
-    switch handles.choice.stim
-        case 3 % Mechanical Sinusoids
+switch handles.choice.stim
+    case 3 % Mechanical Sinusoids
         handles.xVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X');
         hold on
         handles.yVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y');
         handles.zVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-GYRO-Z');
         plot(ax1,handles.Segment.Time_Stim(:,1),trace,'color','k','DisplayName','MPU-Vel Magnitude');
         handles.h = plot(ax1,handles.Segment.Time_Stim(:,1),zeros(1,length(trace)),'g','DisplayName','Threshold Value');
-        case 4 % Electrical Only
+    case 4 % Electrical Only
         plot(ax1,handles.Segment.Time_Stim(:,1),trace,'color','k','DisplayName','MPU-Vel Magnitude');
         hold on
         handles.h = plot(ax1,handles.Segment.Time_Stim(:,1),zeros(1,length(trace)),'g','DisplayName','Threshold Value');
-    end
-    
+end
+
 hold off
-legend('show')    
+legend('show')
 handles.thresh_value = uicontrol(handles.thresh_plot,'Style','edit','Position',[210 13 70 30],'fontsize',12,'CallBack',{@thresh_value_Callback, handles});
 thresh_prompt = uicontrol(handles.thresh_plot,'Style','text','String','Enter a Threshold Value:','Position',[15 18 190 20],'FontSize',12);
 thresh_instruct = uicontrol(handles.thresh_plot,'Style','text','String','(Click enter after entering a value to adjust the threshold line and click "ok" when complete)','Position',[290 13 250 30],'FontSize',8);
@@ -2566,21 +2639,21 @@ inds = [1:length(mask)];
 onset_inds = inds([false ; diff(mask)>0]); % take the backward difference but keep the values greater than zero, disregard the first index, find the index value which corresponds to those positive differences
 
 end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep the values less than zero, disregard the first index, find the index value which corresponds to those negative differences
-    
-    switch handles.choice.stim
-        case 3 % Mechanical Sinusoids
+
+switch handles.choice.stim
+    case 3 % Mechanical Sinusoids
         onset_inds_final = onset_inds([true  diff(onset_inds)>300]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
         % Keeping the first index allows for the initial onset to be selected
         end_inds_final = end_inds([diff(end_inds)>300 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
         % Keeping the last index allows for the last end to be selected
-        case 4 % Electrical Only
+    case 4 % Electrical Only
         [a,b] = findpeaks(diff(onset_inds),'Threshold',5);
         onset_inds_final = onset_inds([1 b+1]);
-
+        
         [c,d] = findpeaks(diff(end_inds),'Threshold',5);
         end_inds_final = end_inds([d length(end_inds)]);
-    end
-    
+end
+
 lengthCheck = [];
 end_del = [];
 onset_del = [];
@@ -2667,17 +2740,17 @@ for plots = 1:length(end_inds_final)
     
     switch handles.choice.stim
         case 3 % Mechanical Sinusoids
-        handles.HeadMPUVel_Z_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':');
-        hold on
-        handles.HeadMPUVel_Y_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':');
-        handles.HeadMPUVel_X_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':');
+            handles.HeadMPUVel_Z_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':');
+            hold on
+            handles.HeadMPUVel_Y_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':');
+            handles.HeadMPUVel_X_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':');
         case 4 % Electrical Only
-        handles.stim_mag = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.Stim_Trig,'color','k','LineWidth',2);
+            handles.stim_mag = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.Stim_Trig,'color','k','LineWidth',2);
     end
     
     x1 = [-100 -100 600 600];
     y1 = [-400 300 300 -400];
-        if (handles.onset_inds_final(plots) - handles.left_extra) < 1
+    if (handles.onset_inds_final(plots) - handles.left_extra) < 1
         a = handles.Segment.Time_Stim(1);
     else
         a = handles.Segment.Time_Stim((handles.onset_inds_final(plots) - handles.left_extra));
@@ -2744,14 +2817,14 @@ for plots = 1:length(end_inds_final)
     handles.stim_intensity.Value = 1;
     handles.params.stim_intensity = '';
     handles.params.suffix = '';
-    setappdata(handles.stim_intensity,'suf',''); 
+    setappdata(handles.stim_intensity,'suf','');
     setappdata(handles.stim_frequency,'fq','');
     setappdata(handles.stim_intensity,'intensity','');
     [handles] = update_seg_filename(hObject, eventdata, handles);
     set(handles.save_indicator,'String','UNSAVED');
     set(handles.save_indicator,'BackgroundColor','r');
     guidata(hObject,handles)
-end 
+end
 end
 
 function inc_right_Callback(hObject, eventdata, handles)
@@ -2798,11 +2871,11 @@ end
 
 function [handles] = suffix_confirm_Callback(hObject, eventdata, handles)
 if isempty(hObject.String)
-setappdata(handles.stim_intensity,'suf','');    
+    setappdata(handles.stim_intensity,'suf','');
     guidata(hObject,handles)
     [handles] = update_seg_filename(hObject, eventdata, handles);
 else
-    setappdata(handles.stim_intensity,'suf',['-',hObject.String]);    
+    setappdata(handles.stim_intensity,'suf',['-',hObject.String]);
     guidata(hObject,handles)
     [handles] = update_seg_filename(hObject, eventdata, handles);
 end
@@ -2827,9 +2900,9 @@ function [handles] = stim_type_confirm_Callback(hObject, eventdata, handles)
 
 handles.stim_type.Value = get(hObject,'Value');
 setappdata(handles.stim_type,'type',hObject.String{hObject.Value});
-    if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
-        handles.stim_freq_confirm.Value = 2;
-    end
+if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
+    handles.stim_freq_confirm.Value = 2;
+end
 handles.stim_frequency.Value = handles.stim_freq_confirm.Value;
 setappdata(handles.stim_frequency,'fq',handles.stim_freq_confirm.String{handles.stim_freq_confirm.Value});
 guidata(hObject,handles)
@@ -3034,37 +3107,37 @@ function paramList_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.paramvals = getappdata(handles.paramList,'handles');
 handles.paramvals.editParams = figure('Name','Edit Parameter List', 'NumberTitle','off');
-    handles.paramvals.editParams.OuterPosition = [50   300   1300   300];
+handles.paramvals.editParams.OuterPosition = [50   300   1300   300];
 id = table(handles.paramvals.initialize.ID,'VariableNames',{'Subject_ID'});
-    visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
-    expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
-    expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
-    stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
-    stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
-    stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
-    stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
-    implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
-    eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
-    
-    handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
+expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
+expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
+stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
+eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
+
+handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.ID)));
-    handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.visit)));
-    handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expType)));
-    handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expCond)));
-    handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimAxis)));
-    handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimType)));
-    handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimFreq)));
-    handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimInt)));
-    handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.implant)));
-    handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.eye)));
 handles.table.addEntry = uicontrol(handles.paramvals.editParams,'Style','pushbutton','String','Add Parameter','fontsize',20,'Position',[550 10 200 30],'CallBack',{@addEntry_Callback, handles});
 handles.table.saveEntry = uicontrol(handles.paramvals.editParams,'Style','pushbutton','String','Save','fontsize',20,'Position',[1200 10 70 30],'CallBack',{@saveEntry_Callback, handles});
@@ -3085,35 +3158,35 @@ handles.paramvals.initialize.stimInt{end+1} = '';
 handles.paramvals.initialize.implant{end+1} = '';
 handles.paramvals.initialize.eye{end+1} = '';
 id = table(handles.paramvals.initialize.ID,'VariableNames',{'Subject_ID'});
-    visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
-    expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
-    expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
-    stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
-    stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
-    stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
-    stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
-    implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
-    eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
-    
-    handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
+expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
+expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
+stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
+eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
+
+handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.ID)));
-    handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.visit)));
-    handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expType)));
-    handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expCond)));
-    handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimAxis)));
-    handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimType)));
-    handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimFreq)));
-    handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimInt)));
-    handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.implant)));
-    handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.eye)));
 setappdata(handles.paramList,'handles',handles.paramvals);
 guidata(hObject,handles)
@@ -3121,87 +3194,87 @@ end
 
 function saveEntry_Callback(hObject, eventdata, handles)
 handles.paramvals = getappdata(handles.paramList,'handles');
-    if (isempty(handles.paramvals.table.id.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.id.Data));
-        handles.paramvals.table.id.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
-    else
-        handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.visit.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.visit.Data));
-        handles.paramvals.table.visit.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
-    else
-        handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.expType.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.expType.Data));
-        handles.paramvals.table.expType.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
-    else
-        handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.expCond.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.expCond.Data));
-        handles.paramvals.table.expCond.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
-    else
-        handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.stimAxis.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimAxis.Data));
-        handles.paramvals.table.stimAxis.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
-    else
-        handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
-    end
-    
-        
-    if (isempty(handles.paramvals.table.stimType.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimType.Data));
-        handles.paramvals.table.stimType.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
-    else
-        handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.stimFreq.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimFreq.Data));
-        handles.paramvals.table.stimFreq.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
-    else
-        handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.stimInt.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimInt.Data));
-        handles.paramvals.table.stimInt.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
-    else
-        handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.implant.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.implant.Data));
-        handles.paramvals.table.implant.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
-    else
-        handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.eye.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.eye.Data));
-        handles.paramvals.table.eye.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
-    else
-        handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
-    end
-    cd(handles.initializePathName)
+if (isempty(handles.paramvals.table.id.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.id.Data));
+    handles.paramvals.table.id.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
+else
+    handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
+end
+
+if (isempty(handles.paramvals.table.visit.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.visit.Data));
+    handles.paramvals.table.visit.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
+else
+    handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
+end
+
+if (isempty(handles.paramvals.table.expType.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.expType.Data));
+    handles.paramvals.table.expType.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
+else
+    handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
+end
+
+if (isempty(handles.paramvals.table.expCond.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.expCond.Data));
+    handles.paramvals.table.expCond.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
+else
+    handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
+end
+
+if (isempty(handles.paramvals.table.stimAxis.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimAxis.Data));
+    handles.paramvals.table.stimAxis.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
+else
+    handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
+end
+
+
+if (isempty(handles.paramvals.table.stimType.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimType.Data));
+    handles.paramvals.table.stimType.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
+else
+    handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
+end
+
+if (isempty(handles.paramvals.table.stimFreq.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimFreq.Data));
+    handles.paramvals.table.stimFreq.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
+else
+    handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
+end
+
+if (isempty(handles.paramvals.table.stimInt.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimInt.Data));
+    handles.paramvals.table.stimInt.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
+else
+    handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
+end
+
+if (isempty(handles.paramvals.table.implant.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.implant.Data));
+    handles.paramvals.table.implant.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
+else
+    handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
+end
+
+if (isempty(handles.paramvals.table.eye.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.eye.Data));
+    handles.paramvals.table.eye.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
+else
+    handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
+end
+cd(handles.initializePathName)
 initialize = handles.paramvals.initialize;
 save('initialize.mat','initialize')
 
@@ -3216,6 +3289,52 @@ handles.stim_intensity.String = handles.paramvals.initialize.stimInt;
 handles.implant.String = handles.paramvals.initialize.implant;
 handles.eye_rec.String = handles.paramvals.initialize.eye;
 setappdata(handles.paramList,'handles',handles.paramvals);
-    guidata(hObject,handles)
-    close(handles.paramvals.editParams);
+guidata(hObject,handles)
+close(handles.paramvals.editParams);
+end
+
+
+% --- Executes on button press in AdjustTrigCheckBox.
+function AdjustTrigCheckBox_Callback(hObject, eventdata, handles)
+% hObject    handle to AdjustTrigCheckBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (get(hObject,'Value') == get(hObject,'Max'))
+    handles.AdjustTrig_flag = true;
+else
+    handles.AdjustTrig_flag = false;
+end
+% Hint: get(hObject,'Value') returns toggle state of AdjustTrigCheckBox
+
+guidata(hObject,handles)
+
+end
+
+
+function AdjustTrig_Control_Callback(hObject, eventdata, handles)
+% hObject    handle to AdjustTrig_Control (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = get(hObject,'String');
+
+handles.AdjustTrig = str2double(input);
+% Hints: get(hObject,'String') returns contents of AdjustTrig_Control as text
+%        str2double(get(hObject,'String')) returns contents of AdjustTrig_Control as a double
+
+guidata(hObject,handles)
+
+
+end
+
+% --- Executes during object creation, after setting all properties.
+function AdjustTrig_Control_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to AdjustTrig_Control (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end
