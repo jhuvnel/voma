@@ -211,14 +211,23 @@ else
     handles.Final_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP;
     handles.Final_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP;
     handles.Final_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
-    handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
-    handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+    try
+        handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
+        handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+    catch
+        handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+        handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
+    end
     handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP;
     handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP;
     handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
-    handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
-    handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
-    
+    try
+        handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
+        handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
+    catch
+        handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+        handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
+    end
     handles.Raw_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
     handles.Raw_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
     handles.Raw_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
@@ -1354,9 +1363,9 @@ Results.cyclist = get(handles.stim_table,'Data');
 
 
 if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) handles.params.user.savefile_suffix '_CycleAvg'],'Results')
+    save([handles.CurrData.name(1:end-4) handles.params.user.savefile_suffix '_CycleAvg.mat'],'Results')
 else
-    save([handles.CurrData.name handles.params.user.savefile_suffix '_CycleAvg'],'Results')
+    save([handles.CurrData.name handles.params.user.savefile_suffix '_CycleAvg.mat'],'Results')
 end
 handles.individualSave = 2;
 guidata(hObject, handles);
@@ -2274,14 +2283,14 @@ RootData = handles.RootData;
 RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
 RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;
 RootData(handles.curr_file).QPparams = handles.CurrData.QPparams;
-if (handles.singleEyeSwitch.Value == 0) 
-RootData(handles.curr_file).cyc2plot = get(handles.stim_table,'Data');
-        RootData(handles.curr_file).L_cyc2plot = [];
-        RootData(handles.curr_file).R_cyc2plot = [];
+if (handles.singleEyeSwitch.Value == 0)
+    RootData(handles.curr_file).cyc2plot = get(handles.stim_table,'Data');
+    RootData(handles.curr_file).L_cyc2plot = [];
+    RootData(handles.curr_file).R_cyc2plot = [];
 elseif (handles.singleEyeSwitch.Value == 1)
-        RootData(handles.curr_file).L_cyc2plot = handles.l_cyclist;
-        RootData(handles.curr_file).R_cyc2plot = handles.r_cyclist;
-        RootData(handles.curr_file).cyc2plot = [];
+    RootData(handles.curr_file).L_cyc2plot = handles.l_cyclist;
+    RootData(handles.curr_file).R_cyc2plot = handles.r_cyclist;
+    RootData(handles.curr_file).cyc2plot = [];
 end
 RootData(handles.curr_file).VOMA_data.stim_ind = handles.CurrData.VOMA_data.stim_ind;
 
@@ -2327,9 +2336,9 @@ Results.QPparams = handles.CurrData.QPparams;
 
 
 if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) '_CycleAvg'],'Results')
+    save([handles.CurrData.name(1:end-4) '_CycleAvg.mat'],'Results')
 else
-    save([handles.CurrData.name '_CycleAvg'],'Results')
+    save([handles.CurrData.name '_CycleAvg.mat'],'Results')
 end
 
 guidata(hObject, handles);

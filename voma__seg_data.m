@@ -2755,13 +2755,13 @@ onset_inds = inds([false ; diff(mask)>0]); % take the backward difference but ke
 
 end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep the values less than zero, disregard the first index, find the index value which corresponds to those negative differences
 
-[a,b] = findpeaks(diff(onset_inds),'Threshold',5);
+[a,b] = findpeaks(diff(onset_inds),'Threshold',30);
 onset_inds_final = onset_inds([1 b+1]);
 
 % onset_inds_final = onset_inds([true  diff(onset_inds)>500]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
 % Keeping the first index allows for the initial onset to be selected
 
-[c,d] = findpeaks(diff(end_inds),'Threshold',5);
+[c,d] = findpeaks(diff(end_inds),'Threshold',30);
 end_inds_final = end_inds([d length(end_inds)]);
 
 

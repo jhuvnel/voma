@@ -1453,28 +1453,55 @@ switch handles.params.file_format
                         
                         
                         % Create sinusoidal stimulus file
-                                Transitions = abs(diff(Data.Stim_Trig));
-                                inds = [1:length(Data.Stim_Trig)];
-                                transition_inds = inds(Transitions==1);
-                                transition_inds = transition_inds(1:end-1);
-                                
-                                A = raw{n,13};
-                                mean_period = mean(diff(transition_inds))/(Data.Fs);
-                                f = 1/(mean_period);
-                                phi = 0;
-                                t_sine = [0:1/(Data.Fs):((transition_inds(end)-transition_inds(1))/(Data.Fs))+mean_period];
-                                
-                                sine = A*sin(2*pi*f*t_sine + phi);
-                                VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
-                                
-                                Stimulus{n-1} = {VirtSine};
-                                stim_ind{n-1} = {transition_inds'};
-                                % For Elec. Only stimuli w/ the MVI LD goggles,
-                                % the GPIO line is collected w/ the VOG data.
-                                % Thus, we will overwrite the 'Stim_t' time
-                                % vector w/ the VOG time vector.
-                                Stim_t{n-1} = {Data.Time_Eye};
+                        Transitions = abs(diff(Data.Stim_Trig));
+                        inds = [1:length(Data.Stim_Trig)];
+                        transition_inds = inds(Transitions==1);
+                        transition_inds = transition_inds(1:end-1);
                         
+                        A = raw{n,13};
+                        mean_period = mean(diff(transition_inds))/(Data.Fs);
+                        f = 1/(mean_period);
+                        phi = 0;
+                        t_sine = [0:1/(Data.Fs):((transition_inds(end)-transition_inds(1))/(Data.Fs))+mean_period];
+                        
+                        sine = A*sin(2*pi*f*t_sine + phi);
+                        VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
+                        
+                        Stimulus{n-1} = {VirtSine};
+                        stim_ind{n-1} = {transition_inds'};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n-1} = {Data.Time_Eye};
+                    
+                    elseif ~isempty(strfind(raw{n,9},'65Vector'))
+                        
+                        inds = [1:length(Data.Stim_Trig)];
+                        
+                        temp_inds = [0 ; diff(Data.Stim_Trig)];
+                        
+                        start_ramp = inds(temp_inds > 0);
+                        start_onramp = start_ramp(1:2:end);
+                        start_offramp = start_ramp(2:2:end);
+                        
+                        stop_ramp = inds(temp_inds < 0);
+                        stop_onramp = stop_ramp(1:2:end);
+                        stop_offramp = stop_ramp(2:2:end);
+                        
+                        A = raw{n,13};
+                        
+                        stimwaveform = zeros(length(Data.Stim_Trig),1);
+                        for jjj = 1:length(start_onramp)
+                            stimwaveform(start_onramp(jjj):stop_onramp(jjj)) = linspace(0,A,length(stimwaveform(start_onramp(jjj):stop_onramp(jjj))));
+                            stimwaveform(stop_onramp(jjj):start_offramp(jjj)) = A*ones(length(stimwaveform(stop_onramp(jjj):start_offramp(jjj))),1);
+                            stimwaveform(start_offramp(jjj):stop_offramp(jjj)) = linspace(A,0,length(stimwaveform(start_offramp(jjj):stop_offramp(jjj))));
+                        end
+                        
+                        Stimulus{n-1} = {stimwaveform};
+                        Stim_t{n-1} = {Data.Time_Eye};
+                        stim_ind{n-1} ={start_onramp'};
+                    
                     elseif ~isempty(strfind(raw{n,9},'Activation')) || ~isempty(strfind(raw{n,9},'Adaptation'))
                         
                         Stimulus{n-1} = {Data.Stim_Trig};
