@@ -59,9 +59,15 @@ function voma__qpr_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for voma__qpr
 handles.output = hObject;
 
+if strcmp(get(handles.e_vel_param1,'Enable'),'off')
+    handles.params.e_vel_param1 = 5;
+end
+
 if strcmp(get(handles.e_vel_param2,'Enable'),'off')
     handles.params.e_vel_param2 = 5000;
 end
+
+
 
 % Update handles structure
 guidata(hObject, handles);
@@ -135,7 +141,7 @@ axes(handles.vor_plot);
 title('Eye Velocity w/ Stimulis')
 
 axes(handles.pbp_deriv);
-title('Point-by-Point Derivative')
+title('Point-by-Point Backwards Difference')
 
 set(handles.stimuli_files,'Value',1);
 
@@ -2165,7 +2171,7 @@ if handles.thresholding_qpr_flag
 end
 
 xlabel('Time [s]')
-ylabel('Point-by-point Derivative magnitude')
+ylabel('Point-by-Point Backwards Difference Magnitude')
 
 % Set the 'smooth_flag' to true
 handles.params.smooth_flag = 1;
@@ -2530,7 +2536,7 @@ else
 end
 
 xlabel('Time [s]')
-ylabel('Point-by-point Derivative magnitude')
+ylabel('Point-by-Point Backwards Difference Magnitude')
 end
 
 
@@ -3645,6 +3651,7 @@ if button_state == get(hObject,'Max')
     axes(handles.vor_plot);
     ylabel('Ang. Eye Position [\circ]')
     cla
+    title('Eye Position w/ Stimulis')
     plot_raw_data(hObject,eventdata,handles)
     
     % Change plot legend
@@ -3751,7 +3758,9 @@ elseif button_state == get(hObject,'Min')
     handles.params.plot_toggle_flag = 2;
     
     axes(handles.vor_plot);
-    ylabel('Ang. Eye Position [\circ/s]')
+    ylabel('Ang. Eye Velocity [\circ/s]')
+    title('Eye Velocity w/ Stimulis')
+
     cla
     plot_raw_data(hObject,eventdata,handles)
     
