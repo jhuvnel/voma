@@ -2647,10 +2647,10 @@ switch handles.choice.stim
         end_inds_final = end_inds([diff(end_inds)>300 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
         % Keeping the last index allows for the last end to be selected
     case 4 % Electrical Only
-        [a,b] = findpeaks(diff(onset_inds),'Threshold',5);
+        [a,b] = findpeaks(diff(onset_inds),'Threshold',10);
         onset_inds_final = onset_inds([1 b+1]);
         
-        [c,d] = findpeaks(diff(end_inds),'Threshold',5);
+        [c,d] = findpeaks(diff(end_inds),'Threshold',10);
         end_inds_final = end_inds([d length(end_inds)]);
 end
 
