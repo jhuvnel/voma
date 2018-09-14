@@ -55,6 +55,10 @@ function voma__seg_data_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to voma__seg_data (see VARARGIN)
 
+% Force all GUI objects to be normalized
+normalize(hObject)
+
+
 % Initialize Operating system flag
 if ispc
     handles.ispc.flag = true;
@@ -188,6 +192,20 @@ function varargout = voma__seg_data_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+end
+
+function [] = normalize(obj)
+%sets to normal if it can
+prop = properties(obj);
+if(sum(ismember(prop,'Units')))
+    obj.Units = 'normalized';
+end
+%recurses on all the children
+if(~isempty(obj.Children))
+    for i = 1:length(obj.Children)
+        normalize(obj.Children(i));
+    end
+end
 end
 
 % --- Executes on button press in new_segment.
