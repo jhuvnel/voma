@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 22-May-2018 12:19:38
+% Last Modified by GUIDE v2.5 17-Sep-2018 17:39:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,10 +54,6 @@ function voma__seg_data_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to voma__seg_data (see VARARGIN)
-
-% Force all GUI objects to be normalized
-normalize(hObject)
-
 
 % Initialize Operating system flag
 if ispc
@@ -194,19 +190,6 @@ function varargout = voma__seg_data_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 end
 
-function [] = normalize(obj)
-%sets to normal if it can
-prop = properties(obj);
-if(sum(ismember(prop,'Units')))
-    obj.Units = 'normalized';
-end
-%recurses on all the children
-if(~isempty(obj.Children))
-    for i = 1:length(obj.Children)
-        normalize(obj.Children(i));
-    end
-end
-end
 
 % --- Executes on button press in new_segment.
 function [handles] = new_segment_Callback(hObject, eventdata, handles,user_seg_flag)
@@ -464,7 +447,7 @@ if ~isfield(handles,'skip_excel_fill_flag')
     segments = segments + 1;
     handles.experimentdata = getappdata(handles.export_data,'data');
     set(handles.worksheet_name,'String',[handles.visit_number.String{handles.visit_number.Value},'-',handles.date.String,'-',handles.exp_type.String{handles.exp_type.Value}]);
-    handles.experimentdata{segments,1} = handles.seg_filename.String;
+    handles.experimentdata{segments,1} = [handles.seg_filename.String handles.string_addon];
     handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
     handles.experimentdata{segments,3} = handles.subj_id.String{handles.subj_id.Value};
     handles.experimentdata{segments,4} = handles.implant.String{handles.implant.Value};
