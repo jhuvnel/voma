@@ -769,7 +769,7 @@ fill(rpt);
 
 
 if ispc
-rptview([reportname ],'pdf');
+rptview([reportname '.docx'],'pdf');
 
 save([reportname '.mat'],'file_params');
 else
