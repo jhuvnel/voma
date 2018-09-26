@@ -3229,7 +3229,7 @@ if handles.save_flag
     
     cd(handles.pathname); 
     
-    eval(['save ' handles.filename ' RootData'])
+    save(handles.filename,'RootData')
     
     handles.params.save_flag = false;
     handles.reload_flag = 1;
