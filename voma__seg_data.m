@@ -885,6 +885,125 @@ switch handles.params.system_code
         Data.HeadMPUAccel_Y = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUAccel_Z = zeros(length(Data.Time_Eye),1);
         
+        
+        
+        
+        
+    case 3 % Pupil Labs
+        % Check if the user requested to start segmenting a new file, or a
+        % 'reload' of the same file.
+        if handles.params.reloadflag == 0
+            % If requesting a new file, prompt the user to choose the file.
+            [FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the data file for analysis');
+            
+            handles.raw_PathName = PathName;
+            handles.raw_FileName = FileName;
+            
+            set(handles.raw_name,'String',FileName);
+        else
+            % If we are reloading a file, don't prompt the user and reset
+            % the 'reload' flag.
+            FileName = handles.raw_FileName;
+            PathName = handles.raw_PathName;
+            handles.params.reloadflag = 0;
+        end
+        
+        
+        % Load Data
+        data = load([handles.raw_PathName handles.raw_FileName]);
+        Time_Eye = data.plTime;
+        Time_Stim = data.shimmerTime;
+
+        Horizontal_LE_Position = data.plangX;
+        Vertical_LE_Position = data.plangY;
+        Torsion_LE_Position = data.plangZ;
+        Horizontal_RE_Position = zeros(length(Time_Eye),1);
+        Vertical_RE_Position = zeros(length(Time_Eye),1);
+        Torsion_RE_Position = zeros(length(Time_Eye),1);
+        
+        % We will use PJB's 'processeyemovements' routine to process the RAW
+        % position data into 3D angular velocities. Note that this will be
+        % an angular velocity calculation with NO filtering.
+         psi =  Horizontal_LE_Position;
+            phi = Vertical_LE_Position;
+            theta = Torsion_LE_Position;
+            Fs = 200;
+            % Computing angular velocity from Fick angular position angles
+            angvel_dps_b = [diff([eps; data.plangX(:)])./diff([eps; data.plTime(:)]) ...
+                diff([eps; data.plangY(:)])./diff([eps; data.plTime(:)]) ...
+                zeros(length(Time_Eye),1)];
+            
+            
+            
+            
+
+
+            LE_Vel_X = angvel_dps_b(:,1);
+            LE_Vel_Y = angvel_dps_b(:,2);
+            LE_Vel_Z = angvel_dps_b(:,3);
+            LE_Vel_LARP = zeros(length(angvel_dps_b(:,1)),1);
+            LE_Vel_RALP = zeros(length(angvel_dps_b(:,1)),1);
+
+            RE_Vel_X = zeros(length(angvel_dps_b(:,1)),1);
+            RE_Vel_Y = zeros(length(angvel_dps_b(:,1)),1);
+            RE_Vel_Z = zeros(length(angvel_dps_b(:,1)),1);
+            RE_Vel_LARP = zeros(length(angvel_dps_b(:,1)),1);
+            RE_Vel_RALP = zeros(length(angvel_dps_b(:,1)),1);
+        
+        
+
+                
+                Stim = zeros(1,length(Time_Eye));
+                
+       
+        
+        
+        set(handles.Xoffset_txt,'String',0)
+        set(handles.Yoffset_txt,'String',0)
+        set(handles.Zoffset_txt,'String',0)
+        
+        
+        
+        
+        
+        Data.segment_code_version = mfilename;
+        Data.raw_filename = handles.raw_FileName;
+        Data.LE_Position_X = Torsion_LE_Position;
+        Data.LE_Position_Y = Vertical_LE_Position;
+        Data.LE_Position_Z = Horizontal_LE_Position;
+        
+        Data.RE_Position_X = Torsion_RE_Position;
+        Data.RE_Position_Y = Vertical_RE_Position;
+        Data.RE_Position_Z = Horizontal_RE_Position;
+        
+        
+        Data.LE_Velocity_X = LE_Vel_X;
+        Data.LE_Velocity_Y = LE_Vel_Y;
+        Data.LE_Velocity_LARP = LE_Vel_LARP;
+        Data.LE_Velocity_RALP = LE_Vel_RALP;
+        Data.LE_Velocity_Z = LE_Vel_Z;
+        
+        Data.RE_Velocity_X = RE_Vel_X;
+        Data.RE_Velocity_Y = RE_Vel_Y;
+        Data.RE_Velocity_LARP = RE_Vel_LARP;
+        Data.RE_Velocity_RALP = RE_Vel_RALP;
+        Data.RE_Velocity_Z = RE_Vel_Z;
+        
+        
+        Data.HeadMPUVel_X = data.shimmerX;
+        Data.HeadMPUVel_Y = data.shimmerY;
+        Data.HeadMPUVel_Z = data.shimmerZ;
+        
+        Data.HeadMPUAccel_X = zeros(length(data.shimmerX),1);
+        Data.HeadMPUAccel_Y = zeros(length(data.shimmerX),1);
+        Data.HeadMPUAccel_Z = zeros(length(data.shimmerX),1);
+        
+        Data.Fs = 200;
+        
+        Data.Time_Eye = Time_Eye;
+        Data.Time_Stim = Time_Stim;
+        
+        Data.Stim_Trig = Stim;
     otherwise
         
         
@@ -1027,6 +1146,13 @@ switch handles.params.system_code
         set(handles.LaskerSystPanel,'Visible','On')
         set(handles.mpuoffsetpanel,'Visible','Off')
         set(handles.LabDevVOG,'Visible','Off')
+    case 3 % Pupil Labs
+                
+        set(handles.LabDevVOG,'Visible','On')
+        
+        set(handles.LaskerSystPanel,'Visible','Off')
+        
+        set(handles.mpuoffsetpanel,'Visible','On')
         
     otherwise
         set(handles.LabDevVOG,'Visible','Off')
@@ -2037,6 +2163,8 @@ switch choice.stim
         
     case 4 % Electrical Only
         [handles] = auto_seg_general_Callback(hObject, eventdata, handles);
+    case 5 % Pupil Labs
+        [handles] = auto_seg_general_Callback(hObject, eventdata, handles);
 end
 end
 
@@ -2054,7 +2182,7 @@ txt = uicontrol('Parent',d,...
 popup = uicontrol('Parent',d,...
     'Style','popup',...
     'Position',[75 70 225 25],...
-    'String',{'Pulse Train';'Electric Only Sinusoid [CED]';'Mechanical Sinusoid';'LD VOG Electrical Only'},...
+    'String',{'Pulse Train';'Electric Only Sinusoid [CED]';'Mechanical Sinusoid';'LD VOG Electrical Only';'Pupil Labs'},...
     'Callback',@choose_stimuli_callback);
 %             'Callback',{@popup_callback,hObject, eventdata, handles});
 
@@ -2093,6 +2221,8 @@ switch choice
         
     case 'LD VOG Electrical Only'
         options.stim = 4;
+    case 'Pupil Labs'
+        options.stim = 5;
 end
 
 
@@ -2529,6 +2659,25 @@ function [handles] = auto_seg_general_Callback(hObject, eventdata, handles)
         case 4 % Electrical Only
         handles.stim_mag = handles.Segment.Stim_Trig;
         trace = handles.Segment.Stim_Trig;
+        case 5 % Pupil Labs
+        window = 500;
+        b = (1/window)*ones(1,window);
+        a = 1;
+        x = filter(b,a,handles.Segment.HeadMPUVel_X);
+        y = filter(b,a,handles.Segment.HeadMPUVel_Y);
+        z = filter(b,a,handles.Segment.HeadMPUVel_Z);
+        t = handles.Segment.Time_Stim(:,1);
+        threshPTx = find(abs(gradient(x)<0.02));
+        threshPTy = find(abs(gradient(y)<0.02));
+        threshPTz = find(abs(gradient(z)<0.02));
+        xVal =  mean(x(threshPTx));
+        yVal =  mean(y(threshPTy));
+        zVal =  mean(z(threshPTz));
+        handles.Segment.HeadMPUVel_X = handles.Segment.HeadMPUVel_X - xVal;
+        handles.Segment.HeadMPUVel_Y = handles.Segment.HeadMPUVel_Y - yVal;
+        handles.Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z - zVal;
+        handles.stim_mag = sqrt((handles.Segment.HeadMPUVel_X.^2) + (handles.Segment.HeadMPUVel_Y.^2) + (handles.Segment.HeadMPUVel_Z.^2)); % Calculating the magnitude of the X Y and Z velocities
+        trace = handles.stim_mag;
     end
     
 mask = zeros(length(trace),1);
@@ -2538,7 +2687,7 @@ ax1 = axes;
 ax1.Position = [0.06 0.2 0.9 0.75];
 
     switch handles.choice.stim
-        case 3 % Mechanical Sinusoids
+        case {3,5} % Mechanical Sinusoids
         handles.xVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X');
         hold on
         handles.yVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y');
@@ -2579,6 +2728,11 @@ end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep
 
         [c,d] = findpeaks(diff(end_inds),'Threshold',5);
         end_inds_final = end_inds([d length(end_inds)]);
+        case 5 % Mechanical Sinusoids
+        onset_inds_final = onset_inds([true  diff(onset_inds)>3000]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
+        % Keeping the first index allows for the initial onset to be selected
+        end_inds_final = end_inds([diff(end_inds)>3000 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
+        % Keeping the last index allows for the last end to be selected
     end
     
 lengthCheck = [];
@@ -2641,19 +2795,23 @@ if length(onset_inds_final) ~= length(end_inds_final)
 end
 check = 1;
 go = 1;
+if handles.choice.stim == 5
+    bound = 9000;
+else
+bound = 300;
+end
+
 while go
     if check == length(end_inds_final)
         go = 0;
     end
-    if (end_inds_final(check) - onset_inds_final(check)) < 300
+    if (end_inds_final(check) - onset_inds_final(check)) < bound
         end_inds_final(check) = [];
         onset_inds_final(check) = [];
         check = check - 1;
     end
     check = check +1;
 end
-
-
 
 
 handles.end_inds_final = end_inds_final;
@@ -2666,7 +2824,7 @@ for plots = 1:length(end_inds_final)
     handles.ax1.Position = [0.09 0.1 0.72 0.85];
     
     switch handles.choice.stim
-        case 3 % Mechanical Sinusoids
+        case {3,5} % Mechanical Sinusoids
         handles.HeadMPUVel_Z_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':');
         hold on
         handles.HeadMPUVel_Y_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':');
@@ -2674,7 +2832,12 @@ for plots = 1:length(end_inds_final)
         case 4 % Electrical Only
         handles.stim_mag = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.Stim_Trig,'color','k','LineWidth',2);
     end
-    
+    if handles.choice.stim == 5
+handles.left_extra = 3000;
+handles.right_extra = 3000;
+handles.mult = 1000;
+    else handles.mult = 100;
+end
     x1 = [-100 -100 600 600];
     y1 = [-400 300 300 -400];
         if (handles.onset_inds_final(plots) - handles.left_extra) < 1
@@ -2705,8 +2868,8 @@ for plots = 1:length(end_inds_final)
     
     handles.reject_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','Reject This Segment','fontsize',12,'Position',[15 10 160 30],'CallBack',{@reject_seg_Callback, handles});
     
-    handles.right_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.right_extra/100,'fontsize',12,'Position',[900 295 60 30]);
-    handles.left_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.left_extra/100,'fontsize',12,'Position',[15 295 60 30]);
+    handles.right_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.right_extra/handles.mult,'fontsize',12,'Position',[900 295 60 30]);
+    handles.left_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.left_extra/handles.mult,'fontsize',12,'Position',[15 295 60 30]);
     
     setappdata(handles.ok_seg,'r',handles.end_inds_final(plots) +  handles.right_extra);
     setappdata(handles.ok_seg,'l',handles.onset_inds_final(plots) - handles.left_extra);
@@ -2739,6 +2902,12 @@ for plots = 1:length(end_inds_final)
     
     handles.right_extra = 300;
     handles.left_extra = 300;
+        if handles.choice.stim == 5
+handles.left_extra = 3000;
+handles.right_extra = 3000;
+handles.mult = 1000;
+    else handles.mult = 100;
+end
     handles.stim_frequency.Value = 1;
     handles.params.stim_frequency = '';
     handles.stim_intensity.Value = 1;

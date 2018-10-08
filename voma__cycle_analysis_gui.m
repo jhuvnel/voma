@@ -184,7 +184,8 @@ if handles.upsamp_flag
     handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_X;
     handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.UpSamp.Data_LE_Vel_Y;
     handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_LARP;
-    handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_RALP;
+    handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.
+    Samp.Data_RE_Vel_RALP;
     handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_Z;
     handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_X;
     handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.UpSamp.Data_RE_Vel_Y;
