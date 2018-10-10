@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 19-Sep-2018 14:41:24
+% Last Modified by GUIDE v2.5 09-Oct-2018 23:30:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -510,7 +510,7 @@ switch handles.params.system_code
             handles.raw_PathName = PathName;
             handles.raw_FileName = FileName;
             
-            set(handles.raw_name,'String',FileName);
+            
         else
             % If we are reloading a file, don't prompt the user and reset
             % the 'reload' flag.
@@ -518,6 +518,8 @@ switch handles.params.system_code
             PathName = handles.raw_PathName;
             handles.params.reloadflag = 0;
         end
+        
+        set(handles.raw_name,'String',FileName);
         
         switch handles.params.vog_data_acq_version
             
@@ -570,7 +572,7 @@ switch handles.params.system_code
         
         % Load Data
         data = dlmread([handles.raw_PathName handles.raw_FileName],' ',1,0);
-        
+        handles.raw_data = data;
         
         % Generate Time_Eye vector
         Time = data(:,2);
@@ -3379,246 +3381,222 @@ function recalibrateVOG_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
- warning('You wish this worked!')
 
-% cd(FileFold)
-% cd ..
-% ExpFolder = pwd;
-% a = strfind(ExpFolder,'\');
-% ExpType = ExpFolder(a(end)+1:end);
-% 
-% cd ..
-% VisitFolder = pwd;
-% a = strfind(VisitFolder,'\');
-% VisitNum = VisitFolder(a(end)+1:end);
-% 
-% cd ..
-% SubjectFolder = pwd;
-% a = strfind(SubjectFolder,'\');
-% Subject = SubjectFolder(a(end)+1:end);
-% 
-% a = strfind(Subject,'_');
-% Subject_shrt = Subject;
-% Subject_shrt(a) = [];
-% 
-% RawName = list(k).name;
-% RawName(strfind(RawName,'.txt'):end) = [];
-% 
-% %% Recalibrate VOG data
-% 
-% cd([ExpFolder '\Raw LD VOG Files'])
-% 
-% Calib_Table_Dir = strcat(Base_Dir, 'Recalib Old Files\Filename_Calib_Tables\');
-% Calib_File_Dir = strcat(Base_Dir, 'Recalib Old Files\Calibration\');
-% str_year = RawName(9:12);
-% str_month_name = RawName(13:15);
-% str_day = RawName(16:17);
-% 
-% if (str_month_name == 'Jan')
-%     str_month = '01';
-% elseif (str_month_name == 'Feb')
-%     str_month = '02';
-% elseif (str_month_name == 'Mar')
-%     str_month = '03';
-% elseif (str_month_name == 'Apr')
-%     str_month = '04';
-% elseif (str_month_name == 'May')
-%     str_month = '05';
-% elseif (str_month_name == 'Jun')
-%     str_month = '06';
-% elseif (str_month_name == 'Jul')
-%     str_month = '07';
-% elseif (str_month_name == 'Aug')
-%     str_month = '08';
-% elseif (str_month_name == 'Sep')
-%     str_month = '09';
-% elseif (str_month_name == 'Oct')
-%     str_month = '10';
-% elseif (str_month_name == 'Nov')
-%     str_month = '11';
-% elseif (str_month_name == 'Dec')
-%     str_month = '12';
-% end
-% 
-% Subject_Dir = strcat(Base_Dir,'__MVI-Server-Sync-Folder\', Subject, '\');
-% Date = strcat(str_year, '-', str_month, '-', str_day);
-% Data_Dir = strcat(Subject_Dir, VisitNum, '\',ExpType, '\','Raw LD VOG Files', '\');
-% 
-% % Load table that links data file with calibration file
-% Calib_Table_File = strcat(Calib_Table_Dir, Subject_shrt, '_Calib.txt');
-% fileID = fopen(Calib_Table_File);
-% Calibration_Table = textscan(fileID,'%q %q %q', 'delimiter','\t');
-% fclose(fileID);
-% 
-% r = find(strcmp(Calibration_Table{1},RawName));
-% calib_file_left = Calibration_Table{2}{r};
-% calib_file_right = Calibration_Table{3}{r};
-% 
-% % % Did this as a sanity check before to make sure the data was ~same
-% % DistanceToWall = 75;
-% % MultiplicationFactorOnOriginalData = 1;
-% 
-% %     % Color Definitions
-% %     Orange = [1 0.65 0];
-% %     Brown = [0.55 0.27 0.07];
-% %     DarkGreen = [0 0.5 0];
-% %     DarkBlue = [0 0 0.8];
-% %     DarkRed = [0.5430 0 0];
-% %
-% fname_data = strcat(Data_Dir, RawName, '.txt');
-% 
-% calib_file_fullpath_left = strcat(Calib_File_Dir, calib_file_left, '.txt');
-% calib_file_fullpath_right = strcat(Calib_File_Dir, calib_file_right, '.txt');
+ 
+ % Check if a file is loaded
+ if (~isfield(handles,'raw_FileName')) || isempty(handles.raw_FileName)
+     
+     [handles] = load_raw_Callback(hObject, eventdata, handles)
+     
+ end
+ 
+
+
+% Load LE and RE calibration files
+
+answer = questdlg(['You will be prompted to choose the LEFT and RIGHT eye calibration files for file: ' handles.raw_FileName], ...
+	'Recalibration Menu', ...
+	'OK','EXIT','EXIT');
+% Handle response
+switch answer
+    case 'OK'
+        
+        [LEcalibFileName,LEcalibPathName] = uigetfile('.txt','Select LEFT EYE calibration file.')
+        [REcalibFileName,REcalibPathName] = uigetfile('.txt','Select RIGHT EYE calibration file.')
+        
+        prompt = {'Enter the distance from the subject to the calibration grid [in]'};
+        title = 'Distance To Wall (in.)';
+        definput = {'55'};
+        opts.Interpreter = 'tex';
+        answer = inputdlg(prompt,title,[1 40],definput,opts);
+        
+        DistanceToWall = str2double(answer);
+        
+        flag = true;
+    case {'EXIT',''}
+        flag = false;
+    
+end
+
+if flag
+    
+end
+
+fname_data = strcat(handles.raw_PathName, handles.raw_FileName);
+
+calib_file_fullpath_left = strcat(LEcalibPathName, LEcalibFileName);
+calib_file_fullpath_right = strcat(REcalibPathName, REcalibFileName);
 % 
 % matlab_calib_left = strcat(Base_Dir, 'Calib_Polynomial_Left.txt');
 % matlab_calib_right = strcat(Base_Dir, 'Calib_Polynomial_Right.txt');
-% 
-% %     Python_Calib_Dir = strcat(Base_Dir, 'Python\Calib');
-% %     python_calib_left = strcat(Base_Dir, 'Python\Calib_Polynomial_Left.txt');
-% %     python_calib_right = strcat(Base_Dir, 'Python\Calib_Polynomial_Right.txt');
-% %
-% 
-% % Load Data from File
-% vogdata = dlmread(fname_data,' ',1,0);
-% % These are the column indices of the relevant parameters saved to file
-% TIndex = 2;
-% HLeftIndex_Pix = 3;
-% VLeftIndex_Pix = 4;
-% TLeftIndex_Pix = 9;
-% HRightIndex_Pix = 15;
-% VRightIndex_Pix = 16;
-% TRightIndex_Pix = 21;
-% HLeftIndex_Deg = 40;
-% VLeftIndex_Deg = 41;
-% TLeftIndex_Deg = 42;
-% HRightIndex_Deg = 43;
-% VRightIndex_Deg = 44;
-% TRightIndex_Deg = 45;
-% 
-% % load eye positions in degrees
-% H_LE_pix = vogdata(:,HLeftIndex_Pix);
-% V_LE_pix = vogdata(:,VLeftIndex_Pix);
-% T_LE_pix = vogdata(:,TLeftIndex_Pix);
-% H_RE_pix = vogdata(:,HRightIndex_Pix);
-% V_RE_pix = vogdata(:,VRightIndex_Pix);
-% T_RE_pix = vogdata(:,TRightIndex_Pix);
-% H_LE_deg = vogdata(:,HLeftIndex_Deg);
-% V_LE_deg = vogdata(:,VLeftIndex_Deg);
-% T_LE_deg = vogdata(:,TLeftIndex_Deg);
-% H_RE_deg = vogdata(:,HRightIndex_Deg);
-% V_RE_deg = vogdata(:,VRightIndex_Deg);
-% T_RE_deg = vogdata(:,TRightIndex_Deg);
-% count = 0;
-% 
-% N = length(vogdata(:,TIndex));
-% %
-% %     time = zeros(N,1);
-% %     for i = 1:length(data(:,TIndex))-1
-% %         time(i+1) = (data(i,TIndex)+128*count-data(1,TIndex));
-% %         if (data(i+1,TIndex)-data(i,TIndex)) < 0
-% %             count = count + 1;
-% %         end
-% %     end
-% 
-% % Generate Time_Eye vector
-% Time = vogdata(:,2);
-% % The time vector recorded by the VOG goggles resets after it
-% % reaches a value of 128. We will find those transitions, and
-% % correct the time value.
-% inds =[1:length(Time)];
-% overrun_inds = inds([false ; (diff(Time) < -20)]);
-% Time_Eye = Time;
-% % Loop over each Time vector reset and add '128' to all data points
-% % following each transition.
-% for n =1:length(overrun_inds)
-%     Time_Eye(overrun_inds(n):end) = Time_Eye(overrun_inds(n):end)+128;
-% end
-% % Subtract the first time point
-% Time_Eye = Time_Eye - Time_Eye(1);
-% 
-% 
-% 
-% %     if (Calibration_Script_Type == MATLAB)
-% 
-% Eye = 'Left';
-% Polynomials_Left = VOG_Calibration_9_Points(Eye, DistanceToWall, calib_file_fullpath_left);
-% 
-% H_Left_Coeffs = Polynomials_Left(:,1);
-% V_Left_Coeffs = Polynomials_Left(:,2);
-% 
-% Eye = 'Right';
-% Polynomials_Right = VOG_Calibration_9_Points(Eye, DistanceToWall, calib_file_fullpath_right);
-% 
-% H_Right_Coeffs = Polynomials_Right(:,1);
-% V_Right_Coeffs = Polynomials_Right(:,2);
-% 
-% %     elseif (Calibration_Script_Type == PYTHON)
-% %         Eye = 'Left';
-% %         systemCommand = ['python GridCalibration.py ', calib_file_fullpath_left, ' ', num2str(DistanceToWall), ' ', Python_Calib_Dir, ' ', Eye];
-% %         [status, result] = system(systemCommand)
-% %
-% %         Eye = 'Right';
-% %         systemCommand = ['python GridCalibration.py ', calib_file_fullpath_right, ' ', num2str(DistanceToWall), ' ', Python_Calib_Dir, ' ', Eye];
-% %         [status, result] = system(systemCommand)
-% %
-% %         % Load left eye calib params from file
-% %         fileID = fopen(python_calib_left);
-% %         C = textscan(fileID,'%q %q', 'delimiter','\t');
-% %         H_Left_Coeffs = cellfun(@str2num,C{1});
-% %         V_Left_Coeffs = cellfun(@str2num,C{2});
-% %         fclose(fileID);
-% %
-% %         % Load right eye calib params from file
-% %         fileID = fopen(python_calib_right);
-% %         C = textscan(fileID,'%q %q', 'delimiter','\t');
-% %         H_Right_Coeffs = cellfun(@str2num,C{1});
-% %         V_Right_Coeffs = cellfun(@str2num,C{2});
-% %         fclose(fileID);
-% %     end
-% 
-% close all
-% 
-% H_LE_deg_new = zeros(size(H_LE_deg));
-% V_LE_deg_new = zeros(size(H_LE_deg));
-% T_LE_deg_new = T_LE_deg;
-% H_RE_deg_new = zeros(size(H_LE_deg));
-% V_RE_deg_new = zeros(size(H_LE_deg));
-% T_RE_deg_new = T_RE_deg;
-% 
-% 
-% 
-% for i = 1:N
-%     H_LE_deg_new(i) = Polynomial_Surface_Mult(H_Left_Coeffs, H_LE_pix(i), V_LE_pix(i));
-%     V_LE_deg_new(i) = Polynomial_Surface_Mult(V_Left_Coeffs, H_LE_pix(i), V_LE_pix(i));
-%     H_RE_deg_new(i) = Polynomial_Surface_Mult(H_Right_Coeffs, H_RE_pix(i), V_RE_pix(i));
-%     V_RE_deg_new(i) = Polynomial_Surface_Mult(V_Right_Coeffs, H_RE_pix(i), V_RE_pix(i));
-% end
-% % The raw data in pixels will saturate when the subject blinks/tracking
-% % is lost. The VOG software will replace these data points w/ NaNs
-% % since there is no real tracking measurements. We will replace these
-% % saturated values in our newly calibrated data with NaNs.
-% H_LE_deg_new(isnan(H_LE_deg)) = nan(length(H_LE_deg_new(isnan(H_LE_deg))),1);
-% V_LE_deg_new(isnan(V_LE_deg)) = nan(length(V_LE_deg_new(isnan(V_LE_deg))),1);
-% H_RE_deg_new(isnan(H_RE_deg)) = nan(length(H_RE_deg_new(isnan(H_RE_deg))),1);
-% V_RE_deg_new(isnan(V_RE_deg)) = nan(length(V_RE_deg_new(isnan(V_RE_deg))),1);
-% 
-% vogdata(:,HLeftIndex_Deg) = H_LE_deg_new;
-% vogdata(:,VLeftIndex_Deg) = V_LE_deg_new;
-% vogdata(:,HRightIndex_Deg) = H_RE_deg_new;
-% vogdata(:,VRightIndex_Deg) = V_RE_deg_new;
-% 
-% %     HLeftIndex_Deg = 40;
-% %     VLeftIndex_Deg = 41;
-% %     TLeftIndex_Deg = 42;
-% %     HRightIndex_Deg = 43;
-% %     VRightIndex_Deg = 44;
-% %     TRightIndex_Deg = 45;
-% 
-% %     if sum(cell2mat(strfind(Raw_file_names,RawName)))<1
-% %         Raw_file_names{end+1} = RawName;
-% 
-% part_txt = 'Saving Re-Calibrated LD VOG File';
-% waitbar((k-1)/length(list),h_wb,sprintf(['File ' num2str(k) ' of ' num2str(length(list))]))
-% dlmwrite([Data_Dir RawName '_UpdatedVOGCalib_' date '_' num2str(DistanceToWall) 'in' '.txt'], vogdata, 'delimiter',' ','precision','%.4f');
 
+%     Python_Calib_Dir = strcat(Base_Dir, 'Python\Calib');
+%     python_calib_left = strcat(Base_Dir, 'Python\Calib_Polynomial_Left.txt');
+%     python_calib_right = strcat(Base_Dir, 'Python\Calib_Polynomial_Right.txt');
+%
+
+
+
+% Load Data from File
+vogdata = handles.raw_data;
+% These are the column indices of the relevant parameters saved to file
+TIndex = 2;
+HLeftIndex_Pix = 3;
+VLeftIndex_Pix = 4;
+TLeftIndex_Pix = 9;
+HRightIndex_Pix = 15;
+VRightIndex_Pix = 16;
+TRightIndex_Pix = 21;
+HLeftIndex_Deg = 40;
+VLeftIndex_Deg = 41;
+TLeftIndex_Deg = 42;
+HRightIndex_Deg = 43;
+VRightIndex_Deg = 44;
+TRightIndex_Deg = 45;
+
+% load eye positions in degrees
+H_LE_pix = vogdata(:,HLeftIndex_Pix);
+V_LE_pix = vogdata(:,VLeftIndex_Pix);
+T_LE_pix = vogdata(:,TLeftIndex_Pix);
+H_RE_pix = vogdata(:,HRightIndex_Pix);
+V_RE_pix = vogdata(:,VRightIndex_Pix);
+T_RE_pix = vogdata(:,TRightIndex_Pix);
+H_LE_deg = vogdata(:,HLeftIndex_Deg);
+V_LE_deg = vogdata(:,VLeftIndex_Deg);
+T_LE_deg = vogdata(:,TLeftIndex_Deg);
+H_RE_deg = vogdata(:,HRightIndex_Deg);
+V_RE_deg = vogdata(:,VRightIndex_Deg);
+T_RE_deg = vogdata(:,TRightIndex_Deg);
+count = 0;
+
+N = length(vogdata(:,TIndex));
+%
+%     time = zeros(N,1);
+%     for i = 1:length(data(:,TIndex))-1
+%         time(i+1) = (data(i,TIndex)+128*count-data(1,TIndex));
+%         if (data(i+1,TIndex)-data(i,TIndex)) < 0
+%             count = count + 1;
+%         end
+%     end
+
+% Generate Time_Eye vector
+Time = vogdata(:,2);
+% The time vector recorded by the VOG goggles resets after it
+% reaches a value of 128. We will find those transitions, and
+% correct the time value.
+inds =[1:length(Time)];
+overrun_inds = inds([false ; (diff(Time) < -20)]);
+Time_Eye = Time;
+% Loop over each Time vector reset and add '128' to all data points
+% following each transition.
+for n =1:length(overrun_inds)
+    Time_Eye(overrun_inds(n):end) = Time_Eye(overrun_inds(n):end)+128;
+end
+% Subtract the first time point
+Time_Eye = Time_Eye - Time_Eye(1);
+
+
+
+%     if (Calibration_Script_Type == MATLAB)
+
+Eye = 'Left';
+Polynomials_Left = VOG_Calibration_9_Points(Eye, DistanceToWall, calib_file_fullpath_left,handles.raw_FileName(1:end-4));
+
+H_Left_Coeffs = Polynomials_Left(:,1);
+V_Left_Coeffs = Polynomials_Left(:,2);
+
+Eye = 'Right';
+Polynomials_Right = VOG_Calibration_9_Points(Eye, DistanceToWall, calib_file_fullpath_right,handles.raw_FileName(1:end-4));
+
+H_Right_Coeffs = Polynomials_Right(:,1);
+V_Right_Coeffs = Polynomials_Right(:,2);
+
+%     elseif (Calibration_Script_Type == PYTHON)
+%         Eye = 'Left';
+%         systemCommand = ['python GridCalibration.py ', calib_file_fullpath_left, ' ', num2str(DistanceToWall), ' ', Python_Calib_Dir, ' ', Eye];
+%         [status, result] = system(systemCommand)
+%
+%         Eye = 'Right';
+%         systemCommand = ['python GridCalibration.py ', calib_file_fullpath_right, ' ', num2str(DistanceToWall), ' ', Python_Calib_Dir, ' ', Eye];
+%         [status, result] = system(systemCommand)
+%
+%         % Load left eye calib params from file
+%         fileID = fopen(python_calib_left);
+%         C = textscan(fileID,'%q %q', 'delimiter','\t');
+%         H_Left_Coeffs = cellfun(@str2num,C{1});
+%         V_Left_Coeffs = cellfun(@str2num,C{2});
+%         fclose(fileID);
+%
+%         % Load right eye calib params from file
+%         fileID = fopen(python_calib_right);
+%         C = textscan(fileID,'%q %q', 'delimiter','\t');
+%         H_Right_Coeffs = cellfun(@str2num,C{1});
+%         V_Right_Coeffs = cellfun(@str2num,C{2});
+%         fclose(fileID);
+%     end
+
+
+
+H_LE_deg_new = zeros(size(H_LE_deg));
+V_LE_deg_new = zeros(size(H_LE_deg));
+T_LE_deg_new = T_LE_deg;
+H_RE_deg_new = zeros(size(H_LE_deg));
+V_RE_deg_new = zeros(size(H_LE_deg));
+T_RE_deg_new = T_RE_deg;
+
+
+
+for i = 1:N
+    H_LE_deg_new(i) = Polynomial_Surface_Mult(H_Left_Coeffs, H_LE_pix(i), V_LE_pix(i));
+    V_LE_deg_new(i) = Polynomial_Surface_Mult(V_Left_Coeffs, H_LE_pix(i), V_LE_pix(i));
+    H_RE_deg_new(i) = Polynomial_Surface_Mult(H_Right_Coeffs, H_RE_pix(i), V_RE_pix(i));
+    V_RE_deg_new(i) = Polynomial_Surface_Mult(V_Right_Coeffs, H_RE_pix(i), V_RE_pix(i));
+end
+% The raw data in pixels will saturate when the subject blinks/tracking
+% is lost. The VOG software will replace these data points w/ NaNs
+% since there is no real tracking measurements. We will replace these
+% saturated values in our newly calibrated data with NaNs.
+H_LE_deg_new(isnan(H_LE_deg)) = nan(length(H_LE_deg_new(isnan(H_LE_deg))),1);
+V_LE_deg_new(isnan(V_LE_deg)) = nan(length(V_LE_deg_new(isnan(V_LE_deg))),1);
+H_RE_deg_new(isnan(H_RE_deg)) = nan(length(H_RE_deg_new(isnan(H_RE_deg))),1);
+V_RE_deg_new(isnan(V_RE_deg)) = nan(length(V_RE_deg_new(isnan(V_RE_deg))),1);
+
+vogdata(:,HLeftIndex_Deg) = H_LE_deg_new;
+vogdata(:,VLeftIndex_Deg) = V_LE_deg_new;
+vogdata(:,HRightIndex_Deg) = H_RE_deg_new;
+vogdata(:,VRightIndex_Deg) = V_RE_deg_new;
+
+%     HLeftIndex_Deg = 40;
+%     VLeftIndex_Deg = 41;
+%     TLeftIndex_Deg = 42;
+%     HRightIndex_Deg = 43;
+%     VRightIndex_Deg = 44;
+%     TRightIndex_Deg = 45;
+
+%     if sum(cell2mat(strfind(Raw_file_names,RawName)))<1
+%         Raw_file_names{end+1} = RawName;
+
+% answer = questdlg('Would you like to save the recalibrated LDVOG  file?', ...
+%     'Recalibration Menu', ...
+%     'YES','NO','NO');
+% % Handle response
+% switch answer
+%     case 'YES'
+
+str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 100],{[handles.raw_FileName(1:end-4) '_UpdatedVOGCalib_' num2str(DistanceToWall) 'in' '__' datestr(now,'yyyy-mm-dd') '.txt']});
+
+
+handles.recalibrateVOG.BackgroundColor = [1    1    0];
+drawnow
+dlmwrite([handles.raw_PathName str{1}], vogdata, 'delimiter',' ','precision','%.4f');
+handles.recalibrateVOG.BackgroundColor = [0    1    0];
+pause(1)
+handles.recalibrateVOG.BackgroundColor = [0.9400    0.9400    0.9400];
+%     case 'NO'
+
+handles.raw_FileName = str{1};
+
+[handles] = reload_raw_Callback(hObject, eventdata, handles)
+% end
+guidata(hObject,handles)
 end
