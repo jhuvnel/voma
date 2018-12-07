@@ -891,32 +891,572 @@ switch handles.params.system_code
         
     case 3 % Pupil Labs
         % Check if the user requested to start segmenting a new file, or a
-        % 'reload' of the same file.
+        % 'reload' of the same file.            
+        data = struct();
         if handles.params.reloadflag == 0
             % If requesting a new file, prompt the user to choose the file.
+                handles.pl = [];
+                handles.shimmer = [];
+            answer = questdlg('Are your files already in .mat form?','File Format','Yes','No','No');
+            switch answer
+                case 'No'
+            answer2 = questdlg('Which alignment method was used?','Alignment Method','Annotation Method','IR LED Washout Method','IR LED Washout Method');
+            switch answer2
+                case 'Annotation Method'
+            fileNumber = inputdlg('How many Pupil Labs Spreadsheets and corresponding Shimmer files are you segmenting?','File Number',[1,40],{'1'});
+            fileNumber = str2num(fileNumber{1});
+            for files = 1:fileNumber
+                [FileName,PathName,FilterIndex] = uigetfile('*.csv',['Please choose the exported Pupil Labs Gaze .csv data file for analysis of set', num2str(files)]);
+                 a = strfind(PathName,'\');
+                 b = strfind(PathName,'/');
+                 if length(a)>0
+                     savePath = PathName(1:a(length(a)-4));
+                 else
+                     savePath = PathName(1:a(length(b)-4));
+                 end
+                cd(savePath);
+                [FileNameAnnotations,PathNameAnnotations,FilterIndexAnnotatons] = uigetfile('*.csv',['Please choose the exported Pupil Labs Annotations .csv data file for analysis of set', num2str(files)]);
+                [FileNameShimmer,PathNameShimmer,FilterIndexShimmer] = uigetfile('*.csv',['Please choose the exported Shimmer .csv data file for analysis of set', num2str(files)]);
+                handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+                gazeset1 = importdata([PathName,FileName]);
+                annotations = importdata([PathNameAnnotations,FileNameAnnotations]);
+                shimmerset1 = importdata([PathNameShimmer,FileNameShimmer]);
+                                              handles.load_raw.BackgroundColor = [0    1    0];
+                pause(0.1);
+                                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+                %Loading in the 3D gaze data in mm from the coordinant system designated by Pupil Labs
+                %With X being horizontal movements, Y vertical, and Z being
+                %depth of gaze or how far away the subject is looking and
+                %therefore not relevant but can still be used during the
+                %conversion to position in degrees
+                handles.pl(files).gazeptX1 = gazeset1.data(:,1);
+                handles.pl(files).gazeptY1 = gazeset1.data(:,2);
+                handles.pl(files).gazeptZ1 = gazeset1.data(:,3);
+
+                    handles.pl(files).time = str2double(gazeset1.textdata(2:end,1))-str2double(gazeset1.textdata(2));
+                    handles.pl(files).trig.matchtimes = str2double(annotations.textdata(find(strcmp(annotations.textdata(:,3),'t')),2))-str2double(gazeset1.textdata(2));
+                    handles.shimmer(files).time1 = ((shimmerset1.data(:,1)-shimmerset1.data(1,1))/1000);
+
+                handles.pl(files).trig.plot = zeros(length(handles.pl(files).time),1);
+                
+                handles.shimmer(files).gyroX1 = shimmerset1.data(:,5);
+                handles.shimmer(files).gyroY1 = shimmerset1.data(:,6);
+                handles.shimmer(files).gyroZ1 = shimmerset1.data(:,7);
+                handles.shimmer(files).trig = shimmerset1.data(:,8)*300;
+
+            
+                    for i = 1:length(handles.pl(files).trig.matchtimes)
+                        [c ind] = min(abs(handles.pl(files).time-handles.pl(files).trig.matchtimes(i)));
+                        handles.pl(files).trig.inds(i) = ind;
+                    end
+                handles.pl(files).trig.plot(handles.pl(files).trig.inds) = 300;
+                
+
+            data.set(files).plTime = handles.pl(files).time;
+        data.set(files).shimmerTime = handles.shimmer(files).time1;
+
+        data.set(files).plangX = handles.pl(files).gazeptX1;
+        data.set(files).plangY = handles.pl(files).gazeptY1;
+        data.set(files).plangZ = handles.pl(files).gazeptZ1;
+
+        data.set(files).plInterpTime = 0:1/1100:data.set(files).plTime(end);
+        data.set(files).shimmerInterpTime = 0:1/1100:data.set(files).shimmerTime(end);
+
+        data.set(files).plInterpTrig = interp1(data.set(files).plTime,handles.pl(files).trig.plot,data.set(files).plInterpTime);
+        data.set(files).shimmerInterpTrig = interp1(data.set(files).shimmerTime,handles.shimmer(files).trig,data.set(files).shimmerInterpTime);
+        data.set(files).plInterpTrig(data.set(files).plInterpTrig>0) = 300;
+        data.set(files).shimmerInterpTrig(data.set(files).shimmerInterpTrig>0) = 300;
+        
+        inds_pl = [1:length(data.set(files).plInterpTrig)];
+inds_shimmer = [1:length(data.set(files).shimmerInterpTrig)];
+
+onset_inds_pl = inds_pl([false ; diff(data.set(files).plInterpTrig')>0]);
+onset_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTrig')>0]);
+
+end_inds_pl = inds_pl([false ; diff(data.set(files).plInterpTrig')<0]);
+end_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTrig')<0]);
+
+final_inds_pl = find((end_inds_pl-onset_inds_pl)>200);
+final_inds_shimmer = find((end_inds_shimmer-onset_inds_shimmer)>200);
+
+onset_inds_final_pl= onset_inds_pl(final_inds_pl);
+onset_inds_final_shimmer= onset_inds_shimmer(final_inds_shimmer);
+
+end_inds_final_pl = end_inds_pl(final_inds_pl);
+end_inds_final_shimmer = end_inds_shimmer(final_inds_shimmer);
+
+dif = data.set(files).shimmerInterpTime(onset_inds_final_shimmer(1))- data.set(files).plInterpTime(onset_inds_final_pl(1))
+data.set(files).plInterpTime = data.set(files).plInterpTime+dif;
+p = polyfit(shift(onset_inds_final_pl),data.set(files).shimmerInterpTime(onset_inds_final_shimmer),1)
+data.set(files).shimmerInterpTime = (data.set(files).shimmerInterpTime-p(2))./p(1);
+
+        
+        data.set(files).plangX = atan2d(sqrt(data.set(files).plangY.^2+data.set(files).plangZ.^2),data.set(files).plangX);
+        data.set(files).plangY = atan2d(sqrt(data.set(files).plangX.^2+data.set(files).plangZ.^2),data.set(files).plangY);
+        data.set(files).plangZ = atan2d(sqrt(data.set(files).plangY.^2+data.set(files).plangX.^2),data.set(files).plangZ);
+         handles.load_raw.BackgroundColor = [0.9400    0.9400    0.9400];
+         answer3 = questdlg('Which orientation was the shimmer placed?','Shimmer Orientation','Connector facing up toward the top of the head','Connector facing down toward the neck','Connector facing down toward the neck');
+        switch answer3
+            case 'Connector facing down toward the neck'
+         rotationx = [
+            1 0 0;
+            0 cosd(-90) -sind(-90);
+            0 sind(-90) cosd(-90);
+            ];
+        rotationz = [
+            cosd(90) -sind(90) 0;
+            sind(90) cosd(90) 0;
+            0 0 1;
+            ];
+            case 'Connector facing up toward the top of the head'
+                         rotationx = [
+            1 0 0;
+            0 cosd(90) -sind(90);
+            0 sind(90) cosd(90);
+            ];
+        rotationz = [
+            cosd(90) -sind(90) 0;
+            sind(90) cosd(90) 0;
+            0 0 1;
+            ];
+        end
+        
+            rgyroX1 = rotationx'*[handles.shimmer(files).gyroX1' ; handles.shimmer(files).gyroY1' ; handles.shimmer(files).gyroZ1'];
+            rgyroZ1 = rotationz'*rgyroX1;
+
+            data.set(files).shimmerX = rgyroZ1(1,:)';
+        data.set(files).shimmerY = rgyroZ1(2,:)';
+        data.set(files).shimmerZ = rgyroZ1(3,:)';
+        
+              %Reorganizing the Pupil Lab eye movement convention into
+             %rotation about the lab convention axis ***Need to figure out
+             %which direction Left or Right pupil labs sees as positive****  
+                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+                
+ data.final(files).plTime = data.set(files).plInterpTime;
+ data.final(files).compare = dif;
+                              handles.load_raw.BackgroundColor = [0    1    0];
+                pause(0.1);
+                                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+ data.final(files).plangZ = interp1(data.set(files).plTime,data.set(files).plangX,data.set(files).plInterpTime);
+                               handles.load_raw.BackgroundColor = [0    1    0];
+                pause(0.1);
+                                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+ data.final(files).plangY = interp1(data.set(files).plTime,data.set(files).plangY,data.set(files).plInterpTime);
+                               handles.load_raw.BackgroundColor = [0    1    0];
+                pause(0.1);
+                                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+ data.final(files).plangX = zeros(length(data.final(files).plTime),1);
+ data.final(files).shimmerTime = data.set(files).shimmerInterpTime;
+ data.final(files).shimmerX = interp1(data.set(files).shimmerTime,data.set(files).shimmerX,data.set(files).shimmerInterpTime);
+                               handles.load_raw.BackgroundColor = [0    1    0];
+                pause(0.1);
+                                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+ data.final(files).shimmerY = interp1(data.set(files).shimmerTime,data.set(files).shimmerY,data.set(files).shimmerInterpTime);
+                               handles.load_raw.BackgroundColor = [0    1    0];
+                pause(0.1);
+                                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+ 
+              data.final(files).shimmerZ = interp1(data.set(files).shimmerTime,data.set(files).shimmerZ,data.set(files).shimmerInterpTime);
+                               handles.load_raw.BackgroundColor = [0    1    0];
+                pause(0.1);
+                                             handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+
+ 
+            end
+            data.f.plTime = [];
+            data.f.compare = [];
+            data.f.plangX = [];
+            data.f.plangY = [];
+            data.f.plangZ = [];
+            data.f.shimmerTime = [];
+            data.f.shimmerX = [];
+            data.f.shimmerY = [];
+            data.f.shimmerZ = [];
+         for i = 1:length(data.final)
+             if i>1
+                 timeSpace = max([data.f.plTime(end) data.f.shimmerTime(end)])+10;
+             data.f.compare = [data.f.compare; data.final(i).compare];
+             data.f.plangX = [data.f.plangX; data.final(i).plangX];
+             data.f.plangY = [data.f.plangY; data.final(i).plangY'];
+             data.f.plangZ = [data.f.plangZ; data.final(i).plangZ'];
+             if length(find(data.f.shimmerTime-data.final(i).shimmerTime'==0))==length(data.f.shimmerTime)
+             data.f.plTime = [data.f.plTime; data.final(i).plTime'];
+                 data.f.shimmerTime = data.f.shimmerTime;
+             data.f.shimmerX = data.f.shimmerX; 
+             data.f.shimmerY = data.f.shimmerY; 
+             data.f.shimmerZ = data.f.shimmerZ; 
+             else
+                 data.f.plTime = [data.f.plTime; data.final(i).plTime'+timeSpace];
+             data.f.shimmerTime = [data.f.shimmerTime; data.final(i).shimmerTime'+timeSpace];
+             data.f.shimmerX = [data.f.shimmerX; data.final(i).shimmerX'];
+             data.f.shimmerY = [data.f.shimmerY; data.final(i).shimmerY'];
+             data.f.shimmerZ = [data.f.shimmerZ; data.final(i).shimmerZ'];
+             end
+
+             
+             else
+                 data.f.plTime = [data.f.plTime; data.final(i).plTime'];
+                 data.f.compare = [data.f.compare; data.final(i).compare];
+                 data.f.plangX = [data.f.plangX; data.final(i).plangX];
+                 data.f.plangY = [data.f.plangY; data.final(i).plangY'];
+                 data.f.plangZ = [data.f.plangZ; data.final(i).plangZ'];
+                 data.f.shimmerTime = [data.f.shimmerTime; data.final(i).shimmerTime'];
+                 data.f.shimmerX = [data.f.shimmerX; data.final(i).shimmerX'];
+                 data.f.shimmerY = [data.f.shimmerY; data.final(i).shimmerY'];
+                 data.f.shimmerZ = [data.f.shimmerZ; data.final(i).shimmerZ'];
+             end
+         end
+         handles.load_raw.BackgroundColor = [0.9400    0.9400    0.9400];
+ final = data.f;
+ 
+ a = strfind(PathName,'\');
+ b = strfind(PathName,'/');
+ if length(a)>0
+     hold1 = PathName;
+     hold1(a)= '_';
+     FileName = hold1(a(2)+1:a(length(a)-4)-1);
+     savePath = PathName(1:a(length(a)-4));
+ else
+          hold1 = PathName;
+          hold1(b) = '_';
+     FileName = hold1(b(2)+1:b(length(b)-4)-1);
+     savePath = PathName(1:a(length(b)-4));
+ end
+ save([savePath,FileName,'.mat'],'-struct','final')
+            handles.raw_PathName = savePath;
+            handles.raw_FileName = FileName;
+            set(handles.raw_name,'String',FileName);
+                case 'IR LED Washout Method'
+                    handles.pl = [];
+                    handles.shimmer = [];
+                    data = [];
+                    fileNumber = inputdlg('How many Pupil Labs Gaze Spreadsheets are you segmenting?','File Number',[1,40],{'1'});
+                    fileNumber = str2num(fileNumber{1});
+
+              for files = 1:fileNumber
+                [FileName,PathName,FilterIndex] = uigetfile('*.csv',['Please choose the exported Pupil Labs Gaze .csv data file for analysis of set', num2str(files)]);
+                 a = strfind(PathName,'\');
+                 b = strfind(PathName,'/');
+                 if length(a)>0
+                     savePath = PathName(1:a(length(a)-4));
+                 else
+                     savePath = PathName(1:a(length(b)-4));
+                 end
+                cd(savePath);
+                [FileNameShimmer,PathNameShimmer,FilterIndexShimmer] = uigetfile('*.csv',['Please choose the exported Shimmer .csv data file for analysis of set', num2str(files)]);
+                handles.load_raw.BackgroundColor = [1    1    0];
+                pause(0.1);
+                gazeset1 = importdata([PathName,FileName]);
+                shimmerset1 = importdata([PathNameShimmer,FileNameShimmer]);
+                
+                
+                handles.pl(files).gazeptX1 = gazeset1.data(:,1);
+                handles.pl(files).gazeptY1 = gazeset1.data(:,2);
+                handles.pl(files).gazeptZ1 = gazeset1.data(:,3);
+
+                    handles.pl(files).time = str2double(gazeset1.textdata(2:end,1))-str2double(gazeset1.textdata(2));
+                
+                    handles.shimmer(files).time1 = ((shimmerset1.data(:,1)-shimmerset1.data(1,1))/1000);
+
+                
+                handles.shimmer(files).gyroX1 = shimmerset1.data(:,3);
+                handles.shimmer(files).gyroY1 = shimmerset1.data(:,4);
+                handles.shimmer(files).gyroZ1 = shimmerset1.data(:,5);
+                handles.shimmer(files).trig = (shimmerset1.data(:,2)-3000)*-1;
+
+                
+
+            data.set(files).plTime = handles.pl(files).time;
+        data.set(files).shimmerTime = handles.shimmer(files).time1;
+        data.set(files).shimmerTrig = handles.shimmer(files).trig;
+        data.set(files).plangX = handles.pl(files).gazeptX1;
+        data.set(files).plangY = handles.pl(files).gazeptY1;
+        data.set(files).plangZ = handles.pl(files).gazeptZ1;
+        
+
+        
+        data.set(files).plangX = atan2d(sqrt(data.set(files).plangY.^2+data.set(files).plangZ.^2),data.set(files).plangX);
+        data.set(files).plangY = atan2d(sqrt(data.set(files).plangX.^2+data.set(files).plangZ.^2),data.set(files).plangY);
+        data.set(files).plangZ = atan2d(sqrt(data.set(files).plangY.^2+data.set(files).plangX.^2),data.set(files).plangZ);
+         handles.load_raw.BackgroundColor = [0.9400    0.9400    0.9400];
+         answer3 = questdlg('Which orientation was the shimmer placed?','Shimmer Orientation','Connector facing up toward the top of the head','Connector facing down toward the neck','Connector facing down toward the neck');
+        switch answer3
+            case 'Connector facing down toward the neck'
+         rotationx = [
+            1 0 0;
+            0 cosd(-90) -sind(-90);
+            0 sind(-90) cosd(-90);
+            ];
+        rotationz = [
+            cosd(90) -sind(90) 0;
+            sind(90) cosd(90) 0;
+            0 0 1;
+            ];
+            case 'Connector facing up toward the top of the head'
+                         rotationx = [
+            1 0 0;
+            0 cosd(90) -sind(90);
+            0 sind(90) cosd(90);
+            ];
+        rotationz = [
+            cosd(90) -sind(90) 0;
+            sind(90) cosd(90) 0;
+            0 0 1;
+            ];
+        end
+        
+            rgyroX1 = rotationx'*[handles.shimmer(files).gyroX1' ; handles.shimmer(files).gyroY1' ; handles.shimmer(files).gyroZ1'];
+            rgyroZ1 = rotationz'*rgyroX1;
+
+            data.set(files).shimmerX = rgyroZ1(1,:)';
+        data.set(files).shimmerY = rgyroZ1(2,:)';
+        data.set(files).shimmerZ = rgyroZ1(3,:)';
+        
+        data.set(files).plInterpTime = 0:1/1100:data.set(files).plTime(end);
+       data.set(files).shimmerInterpTime = 0:1/1100:data.set(files).shimmerTime(end);
+        
+                      %Reorganizing the Pupil Lab eye movement convention into
+             %rotation about the lab convention axis ***Need to figure out
+             %which direction Left or Right pupil labs sees as positive****
+ data.final(files).plangZ = interp1(data.set(files).plTime,data.set(files).plangX,data.set(files).plInterpTime);
+ data.final(files).plangY = interp1(data.set(files).plTime,data.set(files).plangY,data.set(files).plInterpTime);
+ data.final(files).plangX = zeros(length(data.set(files).plInterpTime),1);
+
+ data.final(files).shimmerX = interp1(data.set(files).shimmerTime,data.set(files).shimmerX,data.set(files).shimmerInterpTime);
+ data.final(files).shimmerY = interp1(data.set(files).shimmerTime,data.set(files).shimmerY,data.set(files).shimmerInterpTime);
+ data.final(files).shimmerZ = interp1(data.set(files).shimmerTime,data.set(files).shimmerZ,data.set(files).shimmerInterpTime);
+ 
+        
+        
+        
+        data.set(files).mag = sqrt((data.set(files).plangX.^2) + (data.set(files).plangY.^2) + (data.set(files).plangZ.^2)); % Calculating the magnitude of the X Y and Z velocities
+        trace = data.set(files).mag;
+%         traceTest = data.set(files).mag;
+%         traceTest(traceTest<190) = 0;
+%                         inds = [1:length(traceTest)];
+% onset_inds = inds([false ; diff(traceTest)>0]); 
+% 
+% end_inds = inds([false ; diff(traceTest)<0]);
+% if onset_inds(1)>end_inds(1)
+%     end_inds(1) = [];
+% end
+% final_inds = find((end_inds-onset_inds)>150);
+% onset_inds_final= onset_inds(final_inds);
+% end_inds_final = end_inds(final_inds);
+        
+    
+        mask = zeros(length(trace),1);
+        
+        window = 500;
+        b = (1/window)*ones(1,window);
+        a = 1;
+        x = filter(b,a,data.set(files).mag);
+        threshPTx = find(abs(gradient(x)<0.02));                                                                                 
+        xVal =  round(mean(x(threshPTx)));
+        
+        
+        saved_thresh = xVal+40;
+
+        mask(trace > saved_thresh) = ones(length(find(trace > saved_thresh)),1); % All of the indicies where the magnitudes is greater than 20 will be changed from zero to 1
+        mask = (mask)*3000;
+                inds = [1:length(mask)];
+onset_inds = inds([false ; diff(mask)>0]); 
+
+end_inds = inds([false ; diff(mask)<0]);
+
+if onset_inds(1)>end_inds(1)
+    end_inds(1) = [];
+end
+final_inds = find((end_inds-onset_inds)>100);%150
+onset_inds_final= onset_inds(final_inds);
+end_inds_final = end_inds(final_inds);
+for i = 1:length(onset_inds_final)
+    if i==1
+        mask(1:onset_inds_final(i)-1) = 0;
+    elseif i<length(onset_inds_final)
+        mask(end_inds_final(i-1)+1:onset_inds_final(i)-1) = 0;
+    else
+        mask(end_inds_final(i)+1:end) = 0;
+    end
+end
+
+
+        data.set(files).plInterpTrig = interp1(data.set(files).plTime,mask,data.set(files).plInterpTime);
+        data.set(files).shimmerInterpTrig = interp1(data.set(files).shimmerTime,handles.shimmer(files).trig,data.set(files).shimmerInterpTime);
+
+
+        data.set(files).plInterpTrig(data.set(files).plInterpTrig>0) = 300;
+        data.set(files).shimmerInterpTrig(data.set(files).shimmerInterpTrig>0) = 300;
+        
+                inds_pl = [1:length(data.set(files).plInterpTrig)];
+inds_shimmer = [1:length(data.set(files).shimmerInterpTrig)];
+
+onset_inds_pl = inds_pl([false ; diff(data.set(files).plInterpTrig')>0]);
+onset_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTrig')>0]);
+
+end_inds_pl = inds_pl([false ; diff(data.set(files).plInterpTrig')<0]);
+end_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTrig')<0]);
+
+final_inds_pl = find((end_inds_pl-onset_inds_pl)>1000);%150);
+final_inds_shimmer = find((end_inds_shimmer-onset_inds_shimmer)>1000);%150);
+
+onset_inds_final_pl= onset_inds_pl(final_inds_pl);
+onset_inds_final_shimmer= onset_inds_shimmer(final_inds_shimmer);
+
+end_inds_final_pl = end_inds_pl(final_inds_pl);
+end_inds_final_shimmer = end_inds_shimmer(final_inds_shimmer);
+
+
+
+dif = data.set(files).shimmerInterpTime(onset_inds_final_shimmer(1))- data.set(files).plInterpTime(onset_inds_final_pl(1))
+data.set(files).plInterpTime = data.set(files).plInterpTime+dif;
+
+a=find(([false ; diff(onset_inds_final_shimmer')])>100000);
+b=find(([diff(end_inds_final_shimmer') ; false])>100000);
+lower = end_inds_final_shimmer(b);
+upper = onset_inds_final_shimmer(a);
+
+[va,l] = min(abs(data.set(files).plInterpTime-data.set(files).shimmerInterpTime(lower)));
+[vb,u] = min(abs(data.set(files).shimmerInterpTime(upper)-data.set(files).plInterpTime));
+
+onset_inds_final_pl(onset_inds_final_pl<(u-2000) & onset_inds_final_pl>(l)) = [];
+end_inds_final_pl(end_inds_final_pl<(u-2000) & end_inds_final_pl>(l+2000)) = [];
+
+if length(onset_inds_final_pl) ~= length(onset_inds_final_shimmer)
+go = 1;
+ind = 1;
+while go
+    if length(onset_inds_final_pl) ~= length(onset_inds_final_shimmer)
+    if ind==min([length(onset_inds_final_pl) length(onset_inds_final_shimmer)])
+        if ind==length(onset_inds_final_pl)
+            onset_inds_final_shimmer(ind+1) = [];
+            end_inds_final_shimmer(ind+1) = [];
+            go = 0;
+        else
+            onset_inds_final_pl(ind+1) = [];
+            end_inds_final_pl(ind+1) = [];
+            go = 0;
+        end
+    elseif (abs(data.set(files).plInterpTime(onset_inds_final_pl(ind))-data.set(files).shimmerInterpTime(onset_inds_final_shimmer(ind)))>0.03)
+        if data.set(files).plInterpTime(onset_inds_final_pl(ind))-data.set(files).shimmerInterpTime(onset_inds_final_shimmer(ind))<0
+            onset_inds_final_pl(ind) = [];
+            end_inds_final_pl(ind) = [];
+            ind = ind -1;
+        else
+             onset_inds_final_shimmer(ind) = [];
+            end_inds_final_shimmer(ind) = [];
+            ind = ind-1;
+        end
+    end
+    ind = ind +1;
+    else
+        go = 0;
+    end
+end
+end
+p = polyfit(data.set(files).plInterpTime(onset_inds_final_pl),data.set(files).shimmerInterpTime(onset_inds_final_shimmer),1);
+data.set(files).shimmerInterpTime = (data.set(files).shimmerInterpTime-p(2))./p(1);
+figure
+plot(data.set(files).shimmerInterpTime,data.set(files).shimmerInterpTrig)
+hold on
+plot(data.set(files).plInterpTime,data.set(files).plInterpTrig)
+plot(data.set(files).plInterpTime(onset_inds_final_pl),linspace(290,290,length(onset_inds_final_pl)),'b*')
+plot(data.set(files).plInterpTime(end_inds_final_pl),linspace(290,290,length(end_inds_final_pl)),'g*')
+hold off
+        
+         data.final(files).plTime = data.set(files).plInterpTime;
+ data.final(files).compare = dif; 
+ data.final(files).shimmerTime = data.set(files).shimmerInterpTime;
+ 
+              end
+                    
+            data.f.plTime = [];
+            data.f.compare = [];
+            data.f.plangX = [];
+            data.f.plangY = [];
+            data.f.plangZ = [];
+            data.f.shimmerTime = [];
+            data.f.shimmerX = [];
+            data.f.shimmerY = [];
+            data.f.shimmerZ = [];
+         for i = 1:length(data.final)
+             if i>1
+                 timeSpace = max([data.f.plTime(end) data.f.shimmerTime(end)])+10;
+             data.f.plTime = [data.f.plTime; data.final(i).plTime'+timeSpace];
+             data.f.compare = [data.f.compare; data.final(files).compare];
+             data.f.plangX = [data.f.plangX; data.final(i).plangX];
+             data.f.plangY = [data.f.plangY; data.final(i).plangY'];
+             data.f.plangZ = [data.f.plangZ; data.final(i).plangZ'];
+             data.f.shimmerTime = [data.f.shimmerTime; data.final(i).shimmerTime'+timeSpace];
+             data.f.shimmerX = [data.f.shimmerX; data.final(i).shimmerX'];
+             data.f.shimmerY = [data.f.shimmerY; data.final(i).shimmerY'];
+             data.f.shimmerZ = [data.f.shimmerZ; data.final(i).shimmerZ'];
+             else
+                 data.f.plTime = [data.f.plTime; data.final(i).plTime'];
+                 data.f.compare = [data.f.compare; data.final(i).compare];
+                 data.f.plangX = [data.f.plangX; data.final(i).plangX];
+                 data.f.plangY = [data.f.plangY; data.final(i).plangY'];
+                 data.f.plangZ = [data.f.plangZ; data.final(i).plangZ'];
+                 data.f.shimmerTime = [data.f.shimmerTime; data.final(i).shimmerTime'];
+                 data.f.shimmerX = [data.f.shimmerX; data.final(i).shimmerX'];
+                 data.f.shimmerY = [data.f.shimmerY; data.final(i).shimmerY'];
+                 data.f.shimmerZ = [data.f.shimmerZ; data.final(i).shimmerZ'];
+             end
+         end
+ final = data.f;
+ 
+ a = strfind(PathName,'\');
+ b = strfind(PathName,'/');
+ if length(a)>0
+     hold1 = PathName;
+     hold1(a)= '_';
+     FileName = hold1(a(2)+1:a(length(a)-4)-1);
+     savePath = PathName(1:a(length(a)-4));
+ else
+          hold1 = PathName;
+          hold1(b) = '_';
+     FileName = hold1(b(2)+1:b(length(b)-4)-1);
+     savePath = PathName(1:a(length(b)-4));
+ end
+ save([savePath,FileName,'.mat'],'-struct','final')
+            handles.raw_PathName = savePath;
+            handles.raw_FileName = FileName;
+            set(handles.raw_name,'String',FileName);
+            end
+                case 'Yes'
             [FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the data file for analysis');
             
             handles.raw_PathName = PathName;
             handles.raw_FileName = FileName;
             
             set(handles.raw_name,'String',FileName);
+            end
         else
             % If we are reloading a file, don't prompt the user and reset
             % the 'reload' flag.
             FileName = handles.raw_FileName;
             PathName = handles.raw_PathName;
-            handles.params.reloadflag = 0;
+            handles.params.reloadflag = 0;        
+            data = load([handles.raw_PathName handles.raw_FileName]);
         end
         
-        
-        % Load Data
         data = load([handles.raw_PathName handles.raw_FileName]);
         Time_Eye = data.plTime;
         Time_Stim = data.shimmerTime;
 
-        Horizontal_LE_Position = data.plangX;
+        Horizontal_LE_Position = data.plangZ;
         Vertical_LE_Position = data.plangY;
-        Torsion_LE_Position = data.plangZ;
+        Torsion_LE_Position = data.plangX;
         Horizontal_RE_Position = zeros(length(Time_Eye),1);
         Vertical_RE_Position = zeros(length(Time_Eye),1);
         Torsion_RE_Position = zeros(length(Time_Eye),1);
@@ -927,11 +1467,11 @@ switch handles.params.system_code
          psi =  Horizontal_LE_Position;
             phi = Vertical_LE_Position;
             theta = Torsion_LE_Position;
-            Fs = 200;
+            Fs = 1100;
             % Computing angular velocity from Fick angular position angles
-            angvel_dps_b = [diff([eps; data.plangX(:)])./diff([eps; data.plTime(:)]) ...
-                diff([eps; data.plangY(:)])./diff([eps; data.plTime(:)]) ...
-                zeros(length(Time_Eye),1)];
+            angvel_dps_b = [zeros(length(data.plangY(:)),1) ...
+                gradient([data.plangY(:)]).*1100 ...
+                gradient([data.plangZ(:)]).*1100];
             
             
             
@@ -998,8 +1538,8 @@ switch handles.params.system_code
         Data.HeadMPUAccel_Y = zeros(length(data.shimmerX),1);
         Data.HeadMPUAccel_Z = zeros(length(data.shimmerX),1);
         
-        Data.Fs = 200;
-        
+        Data.Fs = 1100;
+         
         Data.Time_Eye = Time_Eye;
         Data.Time_Stim = Time_Stim;
         
@@ -2729,16 +3269,69 @@ end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep
         [c,d] = findpeaks(diff(end_inds),'Threshold',5);
         end_inds_final = end_inds([d length(end_inds)]);
         case 5 % Mechanical Sinusoids
-        onset_inds_final = onset_inds([true  diff(onset_inds)>3000]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
+                    onset_inds_final = onset_inds([true diff(onset_inds)>2000]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
         % Keeping the first index allows for the initial onset to be selected
-        end_inds_final = end_inds([diff(end_inds)>3000 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
+        end_inds_final = end_inds([diff(end_inds)>2000 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
         % Keeping the last index allows for the last end to be selected
+            go = 1;
+            checkEnd = 1;
+            checkOn = 1;
+            figure
+            plot(handles.Segment.Time_Stim(:,1),trace);
+            hold on
+            plot(handles.Segment.Time_Stim(:,1),mask*75)
+            s = plot(handles.Segment.Time_Stim(onset_inds_final,1),linspace(50,50,length(onset_inds_final)),'g*')
+            e = plot(handles.Segment.Time_Stim(end_inds_final,1),linspace(50,50,length(end_inds_final)),'r*')
+            axis([handles.Segment.Time_Stim(onset_inds_final(1),1) handles.Segment.Time_Stim(end_inds_final(end),1) 0 80])
+            while go
+                    if (max([checkEnd checkOn])< min([length(onset_inds_final) length(end_inds_final)]))
+                        if end_inds_final(checkEnd)>onset_inds_final(checkOn+1)
+                            onset_inds_final(checkOn+1) = [];
+                            s.XData = handles.Segment.Time_Stim(onset_inds_final,1);
+                            s.YData = linspace(50,50,length(onset_inds_final));
+
+                        elseif end_inds_final(checkEnd+1)<onset_inds_final(checkOn+1)
+                            end_inds_final(checkEnd) = [];
+                            e.XData = handles.Segment.Time_Stim(end_inds_final,1);
+                            e.YData = linspace(50,50,length(end_inds_final));
+                        elseif (end_inds_final(checkEnd)-onset_inds_final(checkOn))<3700
+                            onset_inds_final(checkOn) = [];
+                            end_inds_final(checkEnd) = [];
+                            e.XData = handles.Segment.Time_Stim(end_inds_final,1);
+                            e.YData = linspace(50,50,length(end_inds_final));
+                            s.XData = handles.Segment.Time_Stim(onset_inds_final,1);
+                            s.YData = linspace(50,50,length(onset_inds_final));
+                        elseif ((end_inds_final(checkEnd)-onset_inds_final(checkOn))<6000) && (mean(trace(onset_inds_final(checkOn):end_inds_final(checkEnd)))<50)
+                            onset_inds_final(checkOn) = [];
+                            end_inds_final(checkEnd) = [];
+                            e.XData = handles.Segment.Time_Stim(end_inds_final,1);
+                            e.YData = linspace(50,50,length(end_inds_final));
+                            s.XData = handles.Segment.Time_Stim(onset_inds_final,1);
+                            s.YData = linspace(50,50,length(onset_inds_final));
+                        else
+                            checkEnd = checkEnd+1;
+                        checkOn = checkOn+1; 
+                        end
+
+                    end
+                if (max([checkEnd checkOn])== min([length(onset_inds_final) length(end_inds_final)]))
+                    go = 0;
+                end
+                
+            end
     end
     
 lengthCheck = [];
 end_del = [];
 onset_del = [];
 go = 1;
+% check = 2;
+% while go
+%     if (check>1) && (check< min([length(onset_inds_final) length(end_inds_final)]))
+%         if end_inds_final(check)
+%         end
+%     end
+% end
 if length(onset_inds_final) ~= length(end_inds_final)
     uneven = max([length(onset_inds_final) length(end_inds_final)]);
     if uneven == length(onset_inds_final)
@@ -2796,7 +3389,7 @@ end
 check = 1;
 go = 1;
 if handles.choice.stim == 5
-    bound = 9000;
+    bound = 3700;
 else
 bound = 300;
 end

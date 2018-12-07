@@ -368,9 +368,36 @@ switch handles.params.detect_method
         handles.stim_ind = stim_ind_temp;
         
         plot_stim_inds(hObject, eventdata, handles)
-end
+    case 4
+                        temp_smth = sgolayfilt(handles.Stimulus,3,105);
+                temp_smth = sgolayfilt(temp_smth,3,105);
+                mask = zeros(1,length(temp_smth));
+        mask(temp_smth>20) = ones(length(mask(temp_smth>20)),1);
+        a = [false ; diff(abs(mask'))>0];
+        inds = find(a>0);
 
+        [pks,locs] = findpeaks(handles.Stimulus,'MinPeakHeight',100,'MinPeakDistance',2000);
+        if length(locs)>10
+            finalInds = [];
+            for i = 1:length(locs)
+                d = inds-locs(i);
+                d(d<0);
+                finalInds = [finalInds;inds(max(d(d<0))==(d))];
+            end
+            finalInds = finalInds-100;
+        else
+
+finalInds = inds([diff(inds);false]>500);
+
+        end
+            stim_ind_temp = finalInds;
+        set(handles.cycle_table,'Data',[handles.Time(stim_ind_temp)]);
+        
+        handles.stim_ind = stim_ind_temp;
+        
+        plot_stim_inds(hObject, eventdata, handles)
 guidata(hObject,handles)
+end
 
 function plot_stim_inds(hObject, eventdata, handles)
  stim_inds = get(handles.cycle_table,'Data');
