@@ -112,7 +112,9 @@ if FileName ~= 0
     set(handles.excel_sheet_text,'String',FileName);
     
     % Assume the user is loading the first sheet
+
     [num1,txt1,raw1] = xlsread([handles.params.xlspath handles.params.xlsname],1);
+
     
     handles.params.raw = raw1;
 end
@@ -201,6 +203,21 @@ switch index_selected
 
         set(handles.rawfile_opt1,'Value',1)
         handles.params.file_format = 1;
+    case 6
+                set(handles.lasker_stim_chan,'Visible','Off')
+        
+        set(handles.rawfile_opt1,'Visible','Off')
+        set(handles.rawfile_opt1,'String','VORDAQ-Only Files ')
+        set(handles.rawfile_opt2,'Visible','Off')
+        set(handles.rawfile_opt2,'String','VORDAQ + CED Files')
+        set(handles.rawfile_opt3,'Visible','Off')
+        set(handles.rawfile_opt3,'String','CED-Only Files')
+        set(handles.lasker_panel,'Visible','Off')
+        set(handles.labdev_panel,'Visible','Off')
+        set(handles.coil_sys_gen_panel,'Visible','Off')
+
+        set(handles.rawfile_opt1,'Value',1)
+        handles.params.file_format = 4;
 end
 
 handles.params.system_config = index_selected;
@@ -1564,6 +1581,11 @@ switch handles.params.file_format
                 case 4 %VNEL Digital Coil System
                     Parameters(n-1).DAQ = 'DigCoilSys';
                     Parameters(n-1).DAQ_code = 6;
+                case 6 %Ross 710 moog coil
+                    Parameters(n-1).DAQ = 'MoogCoil';
+                    Parameters(n-1).DAQ_code = 7;
+                    Stimulus{n-1} = {Data.HeadMPUVel_Z};
+                    stim_ind{n-1} = {[]};
             end
             
             

@@ -451,6 +451,7 @@ setappdata(handles.export_data,'data',handles.experimentdata);
 handles.segment_number.String = num2str(segments);
 set(handles.save_indicator,'String','SAVED!')
 set(handles.save_indicator,'BackgroundColor','g')
+pause(1);
 end
 
 
@@ -734,7 +735,7 @@ switch handles.params.system_code
         
         Data.HeadMPUVel_X = XAxisVelHead';
         Data.HeadMPUVel_Y = YAxisVelHead';
-        Data.HeadMPUVel_Z = ZAxisVelHead';
+        Data.HeadMPUVel_Z = ZAxisVelHead'; mn
         
         Data.HeadMPUAccel_X = XAxisAccelHead';
         Data.HeadMPUAccel_Y = YAxisAccelHead';
@@ -884,12 +885,30 @@ switch handles.params.system_code
         Data.HeadMPUAccel_X = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUAccel_Y = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUAccel_Z = zeros(length(Data.Time_Eye),1);
+    case 4 
+        if handles.params.reloadflag == 0
+            % If requesting a new file, prompt the user to choose the file.
+            [handles.FileNameGains,handles.PathNameGains,FilterIndex] = uigetfile('*.txt','Please choose the Gain file');
+            cd(handles.PathNameGains);
+            [handles.FileNameOffset1,handles.PathNameOffset1,FilterIndex] = uigetfile('*.coil','Please choose the First Orientation Offset file');
+            [handles.FileNameOffset2,handles.PathNameOffset2,FilterIndex] = uigetfile('*.coil','Please choose the Second Orientation Offset file');
+            handles.PathNameofFiles = uigetdir(cd,'Please choose the folder where the coil files are saved');
+                handles.segment_number.String = '0';
+                handles.experimentdata = {};
+            
+        else
+                handles.segment_number.String = '0';
+                handles.experimentdata = {};
+        end
         
     otherwise
         
         
-        
+     guidata(hObject,handles)   
 end
+
+if handles.params.system_code == 4
+else
 
 % Check all saved data variables and make sure they are COLUMN vectors
 if isrow(Data.LE_Position_X)
@@ -994,7 +1013,7 @@ handles.Segment.end_t = Data.Time_Eye(end);
 % Update the GUI plot
 keep_plot_limit = false; % Don't keep the plot limits, we are loading a new file
 plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
-
+end
 
 guidata(hObject,handles)
 end
@@ -1027,6 +1046,18 @@ switch handles.params.system_code
         set(handles.LaskerSystPanel,'Visible','On')
         set(handles.mpuoffsetpanel,'Visible','Off')
         set(handles.LabDevVOG,'Visible','Off')
+    case 4 % Ross 710 Moog Coil System
+        set(handles.LaskerSystPanel,'Visible','Off');
+        set(handles.mpuoffsetpanel,'Visible','Off');
+        set(handles.LabDevVOG,'Visible','On');
+            [handles.FileNameGains,handles.PathNameGains,FilterIndex] = uigetfile('*.txt','Please choose the Gain file');
+            cd(handles.PathNameGains);
+            [handles.FileNameOffset1,handles.PathNameOffset1,FilterIndex] = uigetfile('*.coil','Please choose the First Orientation Offset file');
+            [handles.FileNameOffset2,handles.PathNameOffset2,FilterIndex] = uigetfile('*.coil','Please choose the Second Orientation Offset file');
+            handles.PathNameofFiles = uigetdir(cd,'Please choose the folder where the coil files are saved');
+            handles.segment_number.String = '0';
+            handles.experimentdata = {};
+            handles.text53.BackgroundColor = 'r';
         
     otherwise
         set(handles.LabDevVOG,'Visible','Off')
@@ -2037,7 +2068,222 @@ switch choice.stim
         
     case 4 % Electrical Only
         [handles] = auto_seg_general_Callback(hObject, eventdata, handles);
+    case 5 % Ross 710 Moog coils
+            listing = dir(handles.PathNameofFiles);
+            [GAINSR, GAINSL]=getGains(handles.PathNameGains,handles.FileNameGains);
+            [ZEROS_R, ZEROS_L]=calcOffsets(handles.PathNameOffset1,handles.FileNameOffset1,handles.FileNameOffset2,1);
+            a = [listing.bytes];
+            [y,detect] = max(a);
+            [z,detect2] = max(a(a<y));
+            count = 0;
+            test=struct2table(listing);
+            all=test.name;
+            handles.totalSegment = length(find(contains(all,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'})));
+            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+            if y/z>20               
+                directory = listing(detect).folder;
+                filename = listing(detect).name;
+            coilsWithProsthSync = readcoils(directory, filename, 1);
+            else
+                
+            segments = str2num(handles.segment_number.String);
+            if segments>0
+                s = segments+count
+            else
+                s=1
+            end
+            for fs = s:length(listing)
+                    segments = str2num(handles.segment_number.String);
+                    if contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'}) && (listing(fs).bytes>0)
+                        %Need to insert computer flag%%
+                        directory = [listing(fs).folder,'/'];
+                        filename = listing(fs).name;
+                        dashes = find(filename=='_');
+                        dot = find(filename=='.');
+                        amp = find(filename=='a');
+                        
+                        if isempty(segments==0) || (segments==0)
+                            handles.subj_id.String = {filename(dashes(2)+1:dashes(3)-1)};
+                            handles.visit_number.String = {'NA'};
+                            handles.date.String = filename(1:dashes(1)-1);
+                            handles.exp_type.String = {'ElectricalStim'};
+                            handles.exp_condition.String = {'PulseTrains'};
+                            prompt = {'Enter the stimulation rate (pps):'};
+                            title = 'Input';
+                            dims = [1 35];
+                            definput = {'100'};
+                            answer = inputdlg(prompt,title,dims,definput);
+                            handles.stim_frequency.String = {answer{1}};
+                            setappdata(handles.stim_frequency,'fq',answer{1});
+                            handles.stim_axis.String = {filename(dot-2:dot-1)};
+                            if contains(handles.stim_axis.String,'L')
+                                handles.implant.String={'Left'};
+                            else
+                                handles.implant.String={'Right'};
+                            end
+                        end
+                        
+                            setappdata(handles.stim_axis,'ax',filename(dot-2:dot-1));
+                            handles.stim_axis.String = {filename(dot-2:dot-1)};
+                            setappdata(handles.stim_type,'type',filename(dashes(3)+1:amp-1));
+                            handles.stim_type.String = {filename(dashes(3)+1:amp-1)};
+                            setappdata(handles.stim_intensity,'intensity',filename(amp:dashes(4)-1));
+                            handles.stim_intensity.String = {filename(amp:dashes(4)-1)};
+                            [handles] = update_seg_filename(hObject, eventdata, handles);
+                        
+                            coilsWithProsthSync = readcoils(directory, filename, 1);
+
+                        prosthSync(:,1:2)=coilsWithProsthSync(:,4:5);
+                        coils(:,1:3)=coilsWithProsthSync(:,1:3);
+                        coils(:,4:15)=coilsWithProsthSync(:,6:17);
+
+                        TS_idx=1+find(gradient(prosthSync(:,1)));
+                        TS_time = prosthSync(TS_idx, 1)-1 + prosthSync(TS_idx,2)/25000;
+                        TS_interval = gradient(TS_time) / 1000;
+
+                        [rotRhead,rotLhead,rotRReye,rotLLeye,rotRref,rotLref] = analyzeCoilData(coils, 1, [],GAINSR,GAINSL,ZEROS_R,ZEROS_L);
+                        rotRlarpralp = rotRref;
+                        rotLlarpralp = rotLref;
+                        rotRxyz = rotRReye;
+                        rotLxyz = rotLLeye;
+
+                        
+                        [pks,locs] = findpeaks(diff(prosthSync(:,1)),'MinPeakHeight',50);
+                        if isempty(locs)
+                            handles.totalSegment = handles.totalSegment-1;
+                            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+                        else
+
+%%%%rot2fick of rotRref and rotLref gives position in yaw larp and ralp
+                        boundaries = [locs(1) locs(20)];%reshape(bound', 1, []);
+                        boundaries(2) = boundaries(2) + 1500;
+                        boundaries(1) = boundaries(1) - 1500;
+                        coilsSplit = zeros(boundaries(2)-boundaries(1)+1,17,length(boundaries)/2);
+
+                         
+                            coilsSplit(:,:,1) = coilsWithProsthSync(boundaries(1):boundaries(2),:);
+                            
+                            rotRsplit(:,:,1) = rotRlarpralp(boundaries(1):boundaries(2),:);
+                            rotLsplit(:,:,1) = rotLlarpralp(boundaries(1):boundaries(2),:);
+                            rotRsplitxyz(:,:,1) = rotRxyz(boundaries(1):boundaries(2),:);
+                            rotLsplitxyz(:,:,1) = rotLxyz(boundaries(1):boundaries(2),:);
+                            
+
+                            angularPosL = rot2fick(rotLsplit(:,:,1));
+                            angularPosR = rot2fick(rotRsplit(:,:,1));
+
+                            pSync(:,1:2)=coilsSplit(:,4:5,1);
+                            TS_idxS=1+find(diff(pSync(:,1)));
+                            TS_timeS = pSync(TS_idxS, 1)-1 + pSync(TS_idxS,2)/25000;
+                            TS_intervalS = diff(TS_timeS) / 1000;
+                            importantPts = [1+find(diff(pSync(:,1))>50) 1+find(diff(pSync(:,1))>50)+250];
+                            newFrameinFrame = fick2rot([45 0 0]);
+                            
+                            rotrotL = rot2rot(newFrameinFrame,rotLsplit(:,:,1));
+                            rotrotR = rot2rot(newFrameinFrame,rotRsplit(:,:,1));
+                            rotrotLxyz = rot2rot(newFrameinFrame,rotLsplitxyz(:,:,1));
+                            rotrotRxyz = rot2rot(newFrameinFrame,rotRsplitxyz(:,:,1));
+                            
+                            
+                            filtAngVelL=rot2angvelBJM20190107(rotrotL)/pi*180 * 1000;
+                            filtAngVelR=rot2angvelBJM20190107(rotrotR)/pi*180 * 1000;
+                            filtAngVelLxyz=rot2angvelBJM20190107(rotrotLxyz)/pi*180 * 1000;
+                            filtAngVelRxyz=rot2angvelBJM20190107(rotrotRxyz)/pi*180 * 1000;
+
+                            t=1/1000:1/1000:length(filtAngVelL)/1000;
+                            
+%                             figure;
+%                             plot(t,filtAngVelL(:,3),'r', t, filtAngVelL(:,2),'b', t, filtAngVelL(:,1),'g');
+%                             hold on;
+%                             plot(t,filtAngVelR(:,3),'r', t, filtAngVelR(:,2),'b', t, filtAngVelR(:,1),'g');
+% 
+%                             plot(TS_idxS(2:end)./1000,1./TS_intervalS./10,'.'); %to plot the prosthesis sync signal (pps/10)
+%                             xlabel('Time (s)');
+%                             ylabel('Eye Velocity (dps)') % left y-axis
+%                             title('Left Eye Angular Velocity');
+%                             legend('Yaw','RALP','LARP','Stim Pulses');
+%                             % Comp flag
+%                             saveas(gcf,strcat([directory,'Raw Figures/'],fileString{1},'.fig'));
+%                             close all
+
+%                                     legend('Yaw','RALP','LARP','Gyro')  %for vel
+%                                     legend('Horiz','Vert','Torsion','Gyro')
+                            
+                            Segment.segment_code_version = mfilename;
+                            Segment.raw_filename = filename;
+                            Segment.start_t = t(1);
+                            Segment.end_t = t(end);
+                            Segment.LE_Position_X = angularPosL(:,3);
+                            Segment.LE_Position_Y = angularPosL(:,2);
+                            Segment.LE_Position_Z = angularPosL(:,1);
+
+                            Segment.RE_Position_X = angularPosR(:,3);
+                            Segment.RE_Position_Y = angularPosR(:,2);
+                            Segment.RE_Position_Z = angularPosR(:,1);
+
+                            Segment.LE_Velocity_X = filtAngVelLxyz(:,1);
+                            Segment.LE_Velocity_Y = filtAngVelLxyz(:,2);
+                            Segment.LE_Velocity_LARP = filtAngVelL(:,1);
+                            Segment.LE_Velocity_RALP = filtAngVelL(:,2);
+                            Segment.LE_Velocity_Z = filtAngVelL(:,3);
+
+                            Segment.RE_Velocity_X = filtAngVelRxyz(:,1);
+                            Segment.RE_Velocity_Y = filtAngVelRxyz(:,2);
+                            Segment.RE_Velocity_LARP = filtAngVelR(:,1);
+                            Segment.RE_Velocity_RALP = filtAngVelR(:,2);
+                            Segment.RE_Velocity_Z = filtAngVelR(:,3);
+                            Segment.Fs = 1000;
+                            Segment.Time_Eye = t';
+                            
+                            Time_Stim = TS_idxS./1000';
+                            Stim = 1./TS_intervalS./10';
+                            Stim(Stim>10)=20;
+                            Stim(Stim<20)=0;
+                            if length(Time_Stim) ~= length(Segment.Time_Eye)
+                               Time_Stim_Interp = Segment.Time_Eye;
+                               Stim_Interp = interp1(Time_Stim(2:end),Stim,Time_Stim_Interp);
+                            end
+                            Stim_Interp(Stim_Interp<20) = 0;
+
+                            Segment.Time_Stim = Time_Stim_Interp;
+
+                            Segment.HeadMPUVel_X = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUVel_Y = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUVel_Z = Stim_Interp;
+
+                            Segment.HeadMPUAccel_X = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUAccel_Y = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUAccel_Z = zeros(1,length(Stim_Interp))';
+
+handles.Segment = Segment;
+
+segments = str2num(handles.segment_number.String);
+if segments == 0
+    mkdir([directory,'Segments/'])
+    setappdata(handles.save_segment,'foldername',[directory,'Segments/']);
 end
+
+[handles]=save_segment_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+                        end
+prosthSync = [];
+coils = [];
+pSync = [];
+rotRsplit = [];
+rotLsplit = [];
+rotRsplitxyz = [];
+rotLsplitxyz = [];
+                    elseif contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'}) && (listing(fs).bytes==0)
+                            handles.totalSegment = handles.totalSegment-1;
+                            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+                    end
+                count = count +1;
+            end
+            set(handles.save_indicator,'BackgroundColor','b')
+            pause(1);
+            set(handles.save_indicator,'BackgroundColor','g')
+        end
+    end
 end
 
 
@@ -2054,7 +2300,7 @@ txt = uicontrol('Parent',d,...
 popup = uicontrol('Parent',d,...
     'Style','popup',...
     'Position',[75 70 225 25],...
-    'String',{'Pulse Train';'Electric Only Sinusoid [CED]';'Mechanical Sinusoid';'LD VOG Electrical Only'},...
+    'String',{'Pulse Train';'Electric Only Sinusoid [CED]';'Mechanical Sinusoid';'LD VOG Electrical Only';'Ross 710 Moog Coils'},...
     'Callback',@choose_stimuli_callback);
 %             'Callback',{@popup_callback,hObject, eventdata, handles});
 
@@ -2093,6 +2339,8 @@ switch choice
         
     case 'LD VOG Electrical Only'
         options.stim = 4;
+    case 'Ross 710 Moog Coils'
+        options.stim = 5;
 end
 
 
@@ -2487,6 +2735,7 @@ function eye_rec_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_intensity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.text53.BackgroundColor = [0.94 0.94 0.94];
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -2982,7 +3231,7 @@ end
 
 
 [handles]=save_segment_Callback(hObject, eventdata, handles);
-pause(1)
+pause(.2)
 guidata(hObject,handles)
 uiresume(gcbf)
 % Hints: get(hObject,'String') returns contents of stim_intensity as text

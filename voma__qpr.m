@@ -2207,6 +2207,10 @@ switch handles.params.plot_toggle_flag
                 if ~strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
                     pos_scale = 100;
                 end
+            case 7
+%                 if length(handles.CurrData.VOMA_data.Eye_t) ~= length(handles.CurrData.VOMA_data.Data_LE_Pos_X)
+%                 handles.CurrData.VOMA_data.Eye_t = 0:1/1000:(length(handles.CurrData.VOMA_data.Data_LE_Pos_X)-1)/1000;
+%                 end
                 
         end
         
@@ -2366,6 +2370,7 @@ switch handles.params.plot_toggle_flag
             ylabel(handles.vor_plot,'Ang. Eye Velocity [\circ/s]')
             
         end
+                        guidata(hObject,handles)
 end
 
 
@@ -3989,7 +3994,6 @@ DAQ_code = handles.CurrData.VOMA_data.Parameters.DAQ_code;
 % Initialize the output format as and empty value. If needed, we will
 % update the value below.
 OutputFormat = [];
-
 if strcmp(handles.CurrData.VOMA_data.Parameters.DAQ,'Fick Angles')
     % If, regardless of the system used to record the eye movement data,
     % the data is presented in Fick angles, change the DAQ_code to '5'

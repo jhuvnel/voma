@@ -577,7 +577,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         %
         %         end
         
-    case {1,4,5,6}
+    case {1,4,5,6,7}
         
         % Check if the variable is empty. If it is, set the 'stimulus length' to
         % the starting and ending point of the stimulus trace.
@@ -905,7 +905,7 @@ eye_stim_ind = handles.Final_Data.eye_stim_ind;
 
 % Plot the chosen cycle of data
 if handles.params.lefteye_flag == 1
-    
+
     % Plot Smooth Cycle Data
     plot(handles.main_plot,handles.Final_Data.Eye_t(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(cycle,1):eye_stim_ind(cycle,1) + handles.len),'r','LineWidth',1)
     hold on
@@ -1019,7 +1019,7 @@ if handles.params.righteye_flag == 1
 end
 
 switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5,6}
+    case {1,4,5,6,7}
         
         plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
         
@@ -1645,7 +1645,7 @@ if handles.params.plot_cycleavg_flag == 1
     end
     
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-        case {1,4,5,6}
+        case {1,4,5,6,7}
             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
             
             
