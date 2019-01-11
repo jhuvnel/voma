@@ -17,7 +17,7 @@ function varargout = voma__convert_raw2qpr(varargin)
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
-%      
+%
 %       The VOMA version of 'convert_raw2qpr' was adapted from
 %       'convert_raw2qpr_v5'
 %
@@ -30,11 +30,11 @@ function varargout = voma__convert_raw2qpr(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @voma__convert_raw2qpr_OpeningFcn, ...
-                   'gui_OutputFcn',  @voma__convert_raw2qpr_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @voma__convert_raw2qpr_OpeningFcn, ...
+    'gui_OutputFcn',  @voma__convert_raw2qpr_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -82,7 +82,7 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = voma__convert_raw2qpr_OutputFcn(hObject, eventdata, handles) 
+function varargout = voma__convert_raw2qpr_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -144,7 +144,7 @@ switch index_selected
         set(handles.lasker_panel,'Visible','On')
         set(handles.labdev_panel,'Visible','Off')
         set(handles.coil_sys_gen_panel,'Visible','On')
-
+        
         set(handles.rawfile_opt1,'Value',1)
         handles.params.file_format = 1;
     case 2 % McGill System 1 [2D]
@@ -157,7 +157,7 @@ switch index_selected
         set(handles.lasker_panel,'Visible','Off')
         set(handles.labdev_panel,'Visible','Off')
         set(handles.coil_sys_gen_panel,'Visible','Off')
-
+        
         set(handles.rawfile_opt1,'Value',1)
         handles.params.file_format = 1;
     case 3 % Lab. Dev. VOG [3D]
@@ -183,7 +183,7 @@ switch index_selected
         set(handles.lasker_panel,'Visible','Off')
         set(handles.labdev_panel,'Visible','Off')
         set(handles.coil_sys_gen_panel,'Visible','On')
-
+        
         set(handles.rawfile_opt1,'Value',1)
         handles.params.file_format = 1;
         
@@ -200,7 +200,7 @@ switch index_selected
         set(handles.lasker_panel,'Visible','On')
         set(handles.labdev_panel,'Visible','Off')
         set(handles.coil_sys_gen_panel,'Visible','On')
-
+        
         set(handles.rawfile_opt1,'Value',1)
         handles.params.file_format = 1;
     case 6
@@ -290,6 +290,7 @@ function start_conversion_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+save_flag = true;				 
 switch handles.params.file_format
     
     case {1,2,3} % We are processing RAW files
@@ -360,7 +361,7 @@ switch handles.params.file_format
                                     % velocity computation to apply a
                                     % -135 deg YAW axis passive
                                     % rotation to align the '[+X,+Y,+Z}'
-                                    % axes of the coils system to the 
+                                    % axes of the coils system to the
                                     % '[+X,+Y,+Z}' of the subject's head.
                                     data_rot = 4;
                                 case 2 % Ross 710, Lasker Coil System, with the animal
@@ -388,7 +389,7 @@ switch handles.params.file_format
                                     % velocity computation to apply a
                                     % -45 deg YAW axis passive
                                     % rotation to align the '[+X,+Y,+Z}'
-                                    % axes of the coils system to the 
+                                    % axes of the coils system to the
                                     % '[+X,+Y,+Z}' of the subject's head.
                                     
                                     data_rot = 3;
@@ -420,7 +421,7 @@ switch handles.params.file_format
                                     % velocity computation to apply a
                                     % -45 deg YAW axis passive
                                     % rotation to align the '[+X,+Y,+Z}'
-                                    % axes of the coils system to the 
+                                    % axes of the coils system to the
                                     % '[+X,+Y,+Z}' of the subject's head.
                                     % details)
                                     data_rot = 3;
@@ -449,7 +450,7 @@ switch handles.params.file_format
                                     % velocity computation to apply a
                                     % -135 deg YAW axis passive
                                     % rotation to align the '[+X,+Y,+Z}'
-                                    % axes of the coils system to the 
+                                    % axes of the coils system to the
                                     % '[+X,+Y,+Z}' of the subject's head.
                                     data_rot = 4;
                             end
@@ -509,7 +510,7 @@ switch handles.params.file_format
                         case 1
                             Stimulus{n-1} = {Data.angvel};
                         case 2
-                            angvel_calc_temp = gradient(Data.angpos)*Data.Fs;                            
+                            angvel_calc_temp = gradient(Data.angpos)*Data.Fs;
                     end
                     
                     useradjust = 'n';
@@ -1161,10 +1162,10 @@ switch handles.params.file_format
                     
                     FileName = [raw{n,1}];
                     
-                    %% Check with peter on this? 
-                    DAQ_code = 6; % This is the code used in the 'processeyemovements' 
+                    %% Check with peter on this?
+                    DAQ_code = 6; % This is the code used in the 'processeyemovements'
                     % code to indicate we are dealing with a file that was only recorded using digital coil system
-
+                    
                     inds = [];
                     [direction, frequency, amplitude, theta, phi] = voma__readFileInfo(filepath,FileName);
                     [Data] = voma__processeyemovements(filepath,FileName,FieldGains,coilzeros,ref,data_rot,DAQ_code);
@@ -1230,7 +1231,7 @@ switch handles.params.file_format
                             addedvec = -mpuAligned(1:length(Data.LE_Vel_Z),4).*cosd(theta).*sind(phi) + mpuAligned(1:length(Data.LE_Vel_Z),3).*sind(theta).*sind(phi)+mpuAligned(1:length(Data.LE_Vel_Z),5).*cosd(phi);
                             Stimulus{n-1}={atand((filtfilt(ones(1,Nf)/Nf,1,addedvec)/65536*9.8*8)/9.8)};
                             
-                        
+                            
                             %%STATIC TILT
                         elseif (strcmp(direction,'LED')||strcmp(direction,'RED')||strcmp(direction,'NU')||strcmp(direction,'ND'))
                             if (strcmp(direction,'LED')||strcmp(direction,'RED'))
@@ -1239,7 +1240,7 @@ switch handles.params.file_format
                                 sensorColumn=3;
                             end
                             Stimulus{n-1}={asind((filtfilt(ones(1,Nf)/Nf,1,mpuAligned(1:length(Data.LE_Vel_Z),sensorColumn))/65536*9.8*8)/9.8)};
-   
+                            
                         elseif (strcmp(direction,'Lateral'))||strcmp(direction,'Surge')||strcmp(direction,'Heave')
                             if (strcmp(direction,'Lateral'))
                                 sensorColumn=4;
@@ -1467,117 +1468,142 @@ switch handles.params.file_format
                     if ~isempty(strfind(raw{n,9},'ElectricalOnly')) || ~isempty(strfind(raw{n,9},'ElectricOnly')) || ~isempty(strfind(raw{n,9},'Electrical Only')) || ~isempty(strfind(raw{n,9},'Electric Only'))
                         
                         % Create sinusoidal stimulus file
-                                Transitions = abs(diff(Data.Stim_Trig));
-                                inds = [1:length(Data.Stim_Trig)];
-                                transition_inds = inds(Transitions==1);
-                                transition_inds = transition_inds(1:end-1);
-                                
-                                A = raw{n,13};
-                                mean_period = mean(diff(transition_inds))/(Data.Fs);
-                                f = 1/(mean_period);
-                                phi = 0;
-                                t_sine = [0:1/(Data.Fs):((transition_inds(end)-transition_inds(1))/(Data.Fs))+mean_period];
-                                
-                                sine = A*sin(2*pi*f*t_sine + phi);
-                                VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
-                                
-                                Stimulus{n-1} = {VirtSine};
-                                stim_ind{n-1} = {transition_inds'};
-                                % For Elec. Only stimuli w/ the MVI LD goggles,
-                                % the GPIO line is collected w/ the VOG data.
-                                % Thus, we will overwrite the 'Stim_t' time
-                                % vector w/ the VOG time vector.
-                                Stim_t{n-1} = {Data.Time_Eye};
+                        Transitions = abs(diff(Data.Stim_Trig));
+                        inds = [1:length(Data.Stim_Trig)];
+                        transition_inds = inds(Transitions==1);
+                        transition_inds = transition_inds(1:end-1);
+                        
+                        A = raw{n,13};
+                        mean_period = mean(diff(transition_inds))/(Data.Fs);
+                        f = 1/(mean_period);
+                        phi = 0;
+                        t_sine = [0:1/(Data.Fs):((transition_inds(end)-transition_inds(1))/(Data.Fs))+mean_period];
+                        
+                        sine = A*sin(2*pi*f*t_sine + phi);
+                        VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
+                        
+                        Stimulus{n-1} = {VirtSine};
+                        stim_ind{n-1} = {transition_inds'};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n-1} = {Data.Time_Eye};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'65Vector'))
+                        
+                        inds = [1:length(Data.Stim_Trig)];
+                        
+                        temp_inds = [0 ; diff(Data.Stim_Trig)];
+                        
+                        start_ramp = inds(temp_inds > 0);
+                        start_onramp = start_ramp(1:2:end);
+                        start_offramp = start_ramp(2:2:end);
+                        
+                        stop_ramp = inds(temp_inds < 0);
+                        stop_onramp = stop_ramp(1:2:end);
+                        stop_offramp = stop_ramp(2:2:end);
+                        
+                        A = raw{n,13};
+                        
+                        stimwaveform = zeros(length(Data.Stim_Trig),1);
+                        for jjj = 1:length(start_onramp)
+                            stimwaveform(start_onramp(jjj):stop_onramp(jjj)) = linspace(0,A,length(stimwaveform(start_onramp(jjj):stop_onramp(jjj))));
+                            stimwaveform(stop_onramp(jjj):start_offramp(jjj)) = A*ones(length(stimwaveform(stop_onramp(jjj):start_offramp(jjj))),1);
+                            stimwaveform(start_offramp(jjj):stop_offramp(jjj)) = linspace(A,0,length(stimwaveform(start_offramp(jjj):stop_offramp(jjj))));
+                        end
+                        
+                        Stimulus{n-1} = {stimwaveform};
+                        Stim_t{n-1} = {Data.Time_Eye};
+                        stim_ind{n-1} ={start_onramp'};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'Activation')) || ~isempty(strfind(raw{n,9},'Adaptation'))
+                        
+                        Stimulus{n-1} = {Data.Stim_Trig};
+                        Stim_t{n-1} = {Data.Time_Eye};
+                        stim_ind{n-1} ={[]};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'Current Fitting')) || ~isempty(strfind(raw{n,9},'CurrentFitting'))
+                        Stimulus{n-1} = {Data.Stim_Trig};
+                        
+                        inds = [1:length(Data.Stim_Trig)]';
+                        on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                        off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                        %    stim_ind{n-1} = {[on_inds off_inds]};
+                        stim_ind{n-1} ={[]};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n-1} = {Data.Time_Eye};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'Pulse Train')) || ~isempty(strfind(raw{n,9},'PulseTrain'))
+                        
+                        
+                        
+                        Stimulus{n-1} = {Data.Stim_Trig};
+                        
+                        inds = [1:length(Data.Stim_Trig)]';
+                        on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                        off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                        %    stim_ind{n-1} = {[on_inds off_inds]};
+                        stim_ind{n-1} ={[]};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n-1} = {Data.Time_Eye};
+                        
+                        
                         
                     else
                         
-                        switch raw{n,9}
-                                                            
-                                
-                                
-                            case 'Pulse Train'
-                                
-                                Stimulus{n-1} = {Data.Stim_Trig};
-                                
-                                inds = [1:length(Data.Stim_Trig)]';
-                                on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
-                                off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
-                                %    stim_ind{n-1} = {[on_inds off_inds]};
-                                stim_ind{n-1} ={[]};
-                                % For Elec. Only stimuli w/ the MVI LD goggles,
-                                % the GPIO line is collected w/ the VOG data.
-                                % Thus, we will overwrite the 'Stim_t' time
-                                % vector w/ the VOG time vector.
-                                Stim_t{n-1} = {Data.Time_Eye};
-                            case 'Current Fitting'
-                                
-                                Stimulus{n-1} = {Data.Stim_Trig};
-                                
-                                inds = [1:length(Data.Stim_Trig)]';
-                                on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
-                                off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
-                                %    stim_ind{n-1} = {[on_inds off_inds]};
-                                stim_ind{n-1} ={[]};
-                                % For Elec. Only stimuli w/ the MVI LD goggles,
-                                % the GPIO line is collected w/ the VOG data.
-                                % Thus, we will overwrite the 'Stim_t' time
-                                % vector w/ the VOG time vector.
-                                Stim_t{n-1} = {Data.Time_Eye};
-                                
-                            case {'Activation','Adaptation'}
-                                
-                                Stimulus{n-1} = {Data.Stim_Trig};
-                                Stim_t{n-1} = {Data.Time_Eye};
-                                stim_ind{n-1} ={[]};
-                                
-                            otherwise
-                                
-                                
-                                headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
-                                
-                                headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
-                                
-                                % NOTE: The data acquired on the
-                                % MPU9250 is not time stamped
-                                % identically with the VOG data. Thus,
-                                % the 'Time_Eye' and 'Time_Stim' traces
-                                % are NOT identicle for these files. The user
-                                % has the option to interpolate the MPU data to
-                                % the VOG time stamps.
-                                
-                                if handles.params.interp_ldvog_mpu
+                        
+                        headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                        
+                        headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                        
+                        % NOTE: The data acquired on the
+                        % MPU9250 is not time stamped
+                        % identically with the VOG data. Thus,
+                        % the 'Time_Eye' and 'Time_Stim' traces
+                        % are NOT identicle for these files. The user
+                        % has the option to interpolate the MPU data to
+                        % the VOG time stamps.
+                        
+                        if handles.params.interp_ldvog_mpu
+                            
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye)};
                                     
-                                    switch raw{n,10}
-                                        case {'LARP-Axis','LA','LARP','RP'}
-                                            Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye)};
-                                            
-                                        case {'RALP-Axis','LP','RALP','RA'}
-                                            Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye)};
-                                            
-                                        case {'LHRH-Axis','LH','LHRH','RH'}
-                                            Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye)};
-                                            
-                                    end
-                                    Stim_t{n-1} = {Data.Time_Eye};
-                                else
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye)};
                                     
-                                    switch raw{n,10}
-                                        case {'LARP-Axis','LA','LARP','RP'}
-                                            Stimulus{n-1} = {headmpu_lrz(:,1)};
-                                        case {'RALP-Axis','LP','RALP','RA'}
-                                            Stimulus{n-1} = {headmpu_lrz(:,2)};
-                                            
-                                        case {'LHRH-Axis','LH','LHRH','RH'}
-                                            Stimulus{n-1} = {headmpu_lrz(:,3)};
-                                            
-                                    end
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n-1} = {interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye)};
                                     
-                                end
-                                stim_ind{n-1} = {[]};
-                                
+                            end
+                            Stim_t{n-1} = {Data.Time_Eye};
+                        else
+                            
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,1)};
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,2)};
+                                    
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,3)};
+                                    
+                            end
+                            
                         end
+                        stim_ind{n-1} = {[]};
                         
                     end
+                    
+                    
                 case 4 %VNEL Digital Coil System
                     Parameters(n-1).DAQ = 'DigCoilSys';
                     Parameters(n-1).DAQ_code = 6;
@@ -1592,6 +1618,21 @@ switch handles.params.file_format
             
             Raw_Filenames{n-1} = Data.raw_filename;
             
+			if ~exist('Stimulus','var')
+                h = questdlg(['ERROR: No stimulus file was extracted for file number: ' num2str(n-1) '. Please check the ''Function''  listed in your experimental record sheet. Please choose how to proceed.'],'Stimulus Error',...
+                    'Exit','Try Next File','Try Next File');
+                
+                switch h
+                    
+                    case 'Exit'
+                        save_flag = false;
+                        break
+                    case 'Try Next File'
+                        continue
+                end
+                
+                
+            end   
         end
         
         
@@ -1600,15 +1641,21 @@ switch handles.params.file_format
         [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
         
         
+		if save_flag
+            
+            [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
+            
+        end 
 end
 
 
 
-
+if save_flag
 cd(handles.params.output_data_path)
 str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
 
 save([str{1} '.voma'],'Data_QPR')
+   end
 
 % --- Executes on selection change in excel_sheet_list.
 function excel_sheet_list_Callback(hObject, eventdata, handles)
@@ -1641,7 +1688,7 @@ end
 
 % --- Executes when selected object is changed in lasker_stim_chan.
 function lasker_stim_chan_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in lasker_stim_chan 
+% hObject    handle to the selected object in lasker_stim_chan
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
@@ -1807,7 +1854,7 @@ for n = 2:size(raw,1)
     
     switch raw{n,10}
         
-        case {'E11 - LARP'}    
+        case {'E11 - LARP'}
             
             [m_l,ind_l] = max(m_ll);
             plot(t(ind_l),m_ll(ind_1),'ko');
@@ -1852,7 +1899,7 @@ end
 
 % --- Executes when selected object is changed in file_type.
 function file_type_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in file_type 
+% hObject    handle to the selected object in file_type
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
@@ -1981,9 +2028,9 @@ function interp_ldvog_mpu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if (get(hObject,'Value') == get(hObject,'Max'))
-	handles.params.interp_ldvog_mpu = true;
+    handles.params.interp_ldvog_mpu = true;
 else
-	handles.params.interp_ldvog_mpu = false;
+    handles.params.interp_ldvog_mpu = false;
 end
 % Hint: get(hObject,'Value') returns toggle state of interp_ldvog_mpu
 guidata(hObject,handles)
@@ -2018,17 +2065,17 @@ sr = sin(r);
 cr = cos(r);
 
 Ryaw = [cy -sy 0;
-      sy  cy 0;
-      0    0 1];
+    sy  cy 0;
+    0    0 1];
 
 Rpitch = [cp 0 sp;
-           0 1  0;
-          -sp 0 cp];
-      
+    0 1  0;
+    -sp 0 cp];
+
 Rroll = [1 0 0;
-         0 cr -sr;
-         0 sr  cr];
-     
+    0 cr -sr;
+    0 sr  cr];
+
 R = Ryaw*Rpitch*Rroll;
 
 

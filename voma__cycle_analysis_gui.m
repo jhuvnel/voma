@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 18-Jan-2018 13:19:13
+% Last Modified by GUIDE v2.5 22-May-2018 20:14:06
 
 
 % Begin initialization code - DO NOT EDIT
@@ -211,14 +211,23 @@ else
     handles.Final_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP;
     handles.Final_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP;
     handles.Final_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
-    handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
-    handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+    try
+        handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
+        handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+    catch
+        handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+        handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
+    end
     handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP;
     handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP;
     handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
-    handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
-    handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
-    
+    try
+        handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
+        handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
+    catch
+        handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+        handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
+    end
     handles.Raw_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
     handles.Raw_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
     handles.Raw_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
@@ -1354,9 +1363,9 @@ Results.cyclist = get(handles.stim_table,'Data');
 
 
 if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) handles.params.user.savefile_suffix '_CycleAvg'],'Results')
+    save([handles.CurrData.name(1:end-4) handles.params.user.savefile_suffix '_CycleAvg.mat'],'Results')
 else
-    save([handles.CurrData.name handles.params.user.savefile_suffix '_CycleAvg'],'Results')
+    save([handles.CurrData.name handles.params.user.savefile_suffix '_CycleAvg.mat'],'Results')
 end
 handles.individualSave = 2;
 guidata(hObject, handles);
@@ -1534,6 +1543,51 @@ if handles.params.plot_saved_cycles_flag == 1
         
     end
     
+    switch handles.CurrData.VOMA_data.Parameters.DAQ_code	
+        case {1,4,5,6}	
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)	
+            	
+            	
+        case {2,3}	
+            	
+            if isfield(handles,'Lasker_stim') || isempty(handles.Lasker_stim)	
+                	
+            else	
+                % Construct a questdlg with three options	
+                choice = questdlg('It is detected that you are analyzing data from collected on the Lasker system. What type of stimulus was used in this file?', ...	
+                    'Stimulus Info', ...	
+                    'Motion','Electrical Only','Pulse Train/Current Fitting','Pulse Train/Current Fitting');	
+                % Handle response	
+                switch choice	
+                    case 'Motion'	
+                        handles.Lasker_stim = 1;	
+                    case 'Electrical Only'	
+                        handles.Lasker_stim = 2;	
+                    case 'Pulse Train/Current Fitting'	
+                        handles.Lasker_stim = 3;	
+                end	
+            end	
+            	
+            switch handles.Lasker_stim	
+                case 1	
+                    plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)	
+                    	
+                case 2	
+                    plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(1,1):handles.Final_Data.stim_ind(1,1)+handles.len_stim,1)-handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(1,1)),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(1,1):handles.Final_Data.stim_ind(1,1)+handles.len_stim,1),'Marker','*','color','k','LineWidth',0.5)	
+                case 3	
+                    	
+            end	
+            	
+            %             switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}	
+            %                 case 'Current Fitting'	
+            %                     %             plot(handles.main_plot,handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim),200*ones(1,length(handles.Final_Data.Stim_Trace(1,stim_ind(cycle,1):stim_ind(cycle,1)+handles.len_stim))),'Marker','*','color','k','LineWidth',0.5)	
+            %	
+            %                 otherwise	
+            %	
+            %                     plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)	
+            %             end	
+    end
+    
     xlabel(handles.main_plot,'Time [s]')
     ylabel(handles.main_plot,'Eye Velocity [dps]')
     
@@ -1557,39 +1611,88 @@ if handles.params.plot_cycleavg_flag == 1
     
     SDplot = 1;
     
-    
+    lstyle = '-';
     % Plot the cycle average
     if handles.params.lefteye_flag == 1
         switch handles.lr_xy_flag
             case 1
                 
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg,'Color',[0,128,0]/255,'LineWidth',2)
+                p.ll = shadedErrorBar([1:length(handles.Results.ll_cycavg)]/handles.Final_Data.Fs,handles.Results.ll_cycavg,...
+                    handles.Results.ll_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.l_l})
+                set(p.ll.edge,'LineWidth',1,'color',handles.colors.l_l)
+                set(p.ll.patch,'facecolor',handles.colors.l_l)
+                set(p.ll.mainLine,'LineWidth',2,'color',handles.colors.l_l)
+                set(p.ll.edge,'LineStyle',lstyle)
+                set(p.ll.mainLine,'LineStyle',lstyle)
+                
                 hold on
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg + SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg - SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
+                p.lr = shadedErrorBar([1:length(handles.Results.lr_cycavg)]/handles.Final_Data.Fs,handles.Results.lr_cycavg,...
+                    handles.Results.lr_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.l_r})
+                set(p.lr.edge,'LineWidth',1,'color',handles.colors.l_r)
+                set(p.lr.patch,'facecolor',handles.colors.l_r)
+                set(p.lr.mainLine,'LineWidth',2,'color',handles.colors.l_r)
+                set(p.lr.edge,'LineStyle',lstyle)
+                set(p.lr.mainLine,'LineStyle',lstyle)
                 
                 
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg,'b','LineWidth',2)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg + SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg - SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
+																												   
+																																						  
+																																						  
+                
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg,'Color',[0,128,0]/255,'LineWidth',2)
+%                 hold on
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg + SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ll_cycavg - SDplot*handles.Results.ll_cycstd,'LineStyle','--','Color',[0,128,0]/255,'LineWidth',0.5)
+%                 
+%                 
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg,'b','LineWidth',2)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg + SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lr_cycavg - SDplot*handles.Results.lr_cycstd,'b--','LineWidth',0.5)
                 
             case 2
                 
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg,'Color',handles.colors.l_x,'LineWidth',2)
+                p.lx = shadedErrorBar([1:length(handles.Results.lx_cycavg)]/handles.Final_Data.Fs,handles.Results.lx_cycavg,...
+                    handles.Results.lx_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.l_x})
+                set(p.lx.edge,'LineWidth',1,'color',handles.colors.l_x)
+                set(p.lx.patch,'facecolor',handles.colors.l_x)
+                set(p.lx.mainLine,'LineWidth',2,'color',handles.colors.l_x)
+                set(p.lx.edge,'LineStyle',lstyle)
+                set(p.lx.mainLine,'LineStyle',lstyle)
+                
                 hold on
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg + SDplot*handles.Results.lx_cycstd,'LineStyle','--','Color',handles.colors.l_x,'LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg - SDplot*handles.Results.lx_cycstd,'LineStyle','--','Color',handles.colors.l_x,'LineWidth',0.5)
+                p.ly = shadedErrorBar([1:length(handles.Results.ly_cycavg)]/handles.Final_Data.Fs,handles.Results.ly_cycavg,...
+                    handles.Results.ly_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.l_y})
+                set(p.ly.edge,'LineWidth',1,'color',handles.colors.l_y)
+                set(p.ly.patch,'facecolor',handles.colors.l_y)
+                set(p.ly.mainLine,'LineWidth',2,'color',handles.colors.l_y)
+                set(p.ly.edge,'LineStyle',lstyle)
+                set(p.ly.mainLine,'LineStyle',lstyle)
                 
-                
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg,'Color',handles.colors.l_y,'LineWidth',2)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg + SDplot*handles.Results.ly_cycstd,'LineStyle','--','Color',handles.colors.l_y,'LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg - SDplot*handles.Results.ly_cycstd,'LineStyle','--','Color',handles.colors.l_y,'LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg,'Color',handles.colors.l_x,'LineWidth',2)
+%                 hold on
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg + SDplot*handles.Results.lx_cycstd,'LineStyle','--','Color',handles.colors.l_x,'LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lx_cycavg - SDplot*handles.Results.lx_cycstd,'LineStyle','--','Color',handles.colors.l_x,'LineWidth',0.5)
+%                 
+%                 
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg,'Color',handles.colors.l_y,'LineWidth',2)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg + SDplot*handles.Results.ly_cycstd,'LineStyle','--','Color',handles.colors.l_y,'LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ly_cycavg - SDplot*handles.Results.ly_cycstd,'LineStyle','--','Color',handles.colors.l_y,'LineWidth',0.5)
                 
         end
         
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg,'r','LineWidth',2)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg + SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg - SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+        hold on
+                p.lz = shadedErrorBar([1:length(handles.Results.lz_cycavg)]/handles.Final_Data.Fs,handles.Results.lz_cycavg,...
+                    handles.Results.lz_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.l_z})
+                set(p.lz.edge,'LineWidth',1,'color',handles.colors.l_z)
+                set(p.lz.patch,'facecolor',handles.colors.l_z)
+                set(p.lz.mainLine,'LineWidth',2,'color',handles.colors.l_z)
+                
+                set(p.lz.edge,'LineStyle',lstyle)
+                set(p.lz.mainLine,'LineStyle',lstyle)
+        
+%         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg,'r','LineWidth',2)
+%         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg + SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
+%         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.lz_cycavg - SDplot*handles.Results.lz_cycstd,'r--','LineWidth',0.5)
         
         
         % Plot the mean + 2*standard deviations
@@ -1609,30 +1712,78 @@ if handles.params.plot_cycleavg_flag == 1
             
             case 1
                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg,'g','LineWidth',2)
+%                 hold on
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg + SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg - SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
+%                 
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg,'Color',[64,224,208]/255,'LineWidth',2)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg + SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg - SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+%                 
+
+                 p.rl = shadedErrorBar([1:length(handles.Results.rl_cycavg)]/handles.Final_Data.Fs,handles.Results.rl_cycavg,...
+                    handles.Results.rl_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.r_l})
+                set(p.rl.edge,'LineWidth',1,'color',handles.colors.r_l)
+                set(p.rl.patch,'facecolor',handles.colors.r_l)
+                set(p.rl.mainLine,'LineWidth',2,'color',handles.colors.r_l)
+                set(p.rl.edge,'LineStyle',lstyle)
+                set(p.rl.mainLine,'LineStyle',lstyle)
                 hold on
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg + SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rl_cycavg - SDplot*handles.Results.rl_cycstd,'g--','LineWidth',0.5)
+                p.rr = shadedErrorBar([1:length(handles.Results.rr_cycavg)]/handles.Final_Data.Fs,handles.Results.rr_cycavg,...
+                    handles.Results.rr_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.r_r})
+                set(p.rr.edge,'LineWidth',1,'color',handles.colors.r_r)
+                set(p.rr.patch,'facecolor',handles.colors.r_r)
+                set(p.rr.mainLine,'LineWidth',2,'color',handles.colors.r_r)
+                set(p.rr.edge,'LineStyle',lstyle)
+                set(p.rr.mainLine,'LineStyle',lstyle)
                 
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg,'Color',[64,224,208]/255,'LineWidth',2)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg + SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rr_cycavg - SDplot*handles.Results.rr_cycstd,'LineStyle','--','Color',[64,224,208]/255,'LineWidth',0.5)
+																																		
+																																															  
+																																															  
                 
             case 2
                 
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg,'Color',handles.colors.r_x,'LineWidth',2)
+                p.rx = shadedErrorBar([1:length(handles.Results.rx_cycavg)]/handles.Final_Data.Fs,handles.Results.rx_cycavg,...
+                    handles.Results.rx_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.r_x})
+                set(p.rx.edge,'LineWidth',1,'color',handles.colors.r_x)
+                set(p.rx.patch,'facecolor',handles.colors.r_x)
+                set(p.rx.mainLine,'LineWidth',2,'color',handles.colors.r_x)
+                set(p.rx.edge,'LineStyle',lstyle)
+                set(p.rx.mainLine,'LineStyle',lstyle)
                 hold on
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg + SDplot*handles.Results.rx_cycstd,'LineStyle','--','Color',handles.colors.r_x,'LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg - SDplot*handles.Results.rx_cycstd,'LineStyle','--','Color',handles.colors.r_x,'LineWidth',0.5)
+                p.ry = shadedErrorBar([1:length(handles.Results.ry_cycavg)]/handles.Final_Data.Fs,handles.Results.ry_cycavg,...
+                    handles.Results.ry_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.r_y})
+                set(p.ry.edge,'LineWidth',1,'color',handles.colors.r_y)
+                set(p.ry.patch,'facecolor',handles.colors.r_y)
+                set(p.ry.mainLine,'LineWidth',2,'color',handles.colors.r_y)
+                set(p.ry.edge,'LineStyle',lstyle)
+                set(p.ry.mainLine,'LineStyle',lstyle)
                 
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg,'Color',handles.colors.r_y,'LineWidth',2)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg + SDplot*handles.Results.ry_cycstd,'LineStyle','--','Color',handles.colors.r_y,'LineWidth',0.5)
-                plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg - SDplot*handles.Results.ry_cycstd,'LineStyle','--','Color',handles.colors.r_y,'LineWidth',0.5)
-                
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg,'Color',handles.colors.r_x,'LineWidth',2)
+%                 hold on
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg + SDplot*handles.Results.rx_cycstd,'LineStyle','--','Color',handles.colors.r_x,'LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rx_cycavg - SDplot*handles.Results.rx_cycstd,'LineStyle','--','Color',handles.colors.r_x,'LineWidth',0.5)
+%                 
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg,'Color',handles.colors.r_y,'LineWidth',2)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg + SDplot*handles.Results.ry_cycstd,'LineStyle','--','Color',handles.colors.r_y,'LineWidth',0.5)
+%                 plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.ry_cycavg - SDplot*handles.Results.ry_cycstd,'LineStyle','--','Color',handles.colors.r_y,'LineWidth',0.5)
+%                 
         end
         
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg,'Color',[255,0,255]/255,'LineWidth',2)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg + SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
-        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg - SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
+        hold on
+        p.rz = shadedErrorBar([1:length(handles.Results.rz_cycavg)]/handles.Final_Data.Fs,handles.Results.rz_cycavg,...
+            handles.Results.rz_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.colors.r_z})
+        set(p.rz.edge,'LineWidth',1,'color',handles.colors.r_z)
+        set(p.rz.patch,'facecolor',handles.colors.r_z)
+        set(p.rz.mainLine,'LineWidth',2,'color',handles.colors.r_z)
+        
+        set(p.rz.edge,'LineStyle',lstyle)
+        set(p.rz.mainLine,'LineStyle',lstyle)
+        
+%         
+%         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg,'Color',[255,0,255]/255,'LineWidth',2)
+%         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg + SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
+%         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.Results.rz_cycavg - SDplot*handles.Results.rz_cycstd,'LineStyle','--','Color',[255,0,255]/255,'LineWidth',0.5)
         % Plot the mean + 2*standard deviations
         
         
@@ -2138,14 +2289,14 @@ RootData = handles.RootData;
 RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
 RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;
 RootData(handles.curr_file).QPparams = handles.CurrData.QPparams;
-if (handles.singleEyeSwitch.Value == 0) 
-RootData(handles.curr_file).cyc2plot = get(handles.stim_table,'Data');
-        RootData(handles.curr_file).L_cyc2plot = [];
-        RootData(handles.curr_file).R_cyc2plot = [];
+if (handles.singleEyeSwitch.Value == 0)
+    RootData(handles.curr_file).cyc2plot = get(handles.stim_table,'Data');
+    RootData(handles.curr_file).L_cyc2plot = [];
+    RootData(handles.curr_file).R_cyc2plot = [];
 elseif (handles.singleEyeSwitch.Value == 1)
-        RootData(handles.curr_file).L_cyc2plot = handles.l_cyclist;
-        RootData(handles.curr_file).R_cyc2plot = handles.r_cyclist;
-        RootData(handles.curr_file).cyc2plot = [];
+    RootData(handles.curr_file).L_cyc2plot = handles.l_cyclist;
+    RootData(handles.curr_file).R_cyc2plot = handles.r_cyclist;
+    RootData(handles.curr_file).cyc2plot = [];
 end
 RootData(handles.curr_file).VOMA_data.stim_ind = handles.CurrData.VOMA_data.stim_ind;
 
@@ -2191,9 +2342,9 @@ Results.QPparams = handles.CurrData.QPparams;
 
 
 if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) '_CycleAvg'],'Results')
+    save([handles.CurrData.name(1:end-4) '_CycleAvg.mat'],'Results')
 else
-    save([handles.CurrData.name '_CycleAvg'],'Results')
+    save([handles.CurrData.name '_CycleAvg.mat'],'Results')
 end
 
 guidata(hObject, handles);
@@ -2636,3 +2787,15 @@ plot_cycle_Callback(hObject, eventdata, handles)
 
 
 guidata(hObject,handles)
+
+
+% --- Executes on button press in popout_fig.
+function popout_fig_Callback(hObject, eventdata, handles)
+% hObject    handle to popout_fig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+h_new = figure;
+copyobj(handles.main_plot,h_new)
+AxesH = gca
+InSet = get(AxesH, 'TightInset');
+set(AxesH, 'Position', [InSet(1:2), 1-InSet(1)-InSet(3), 1-InSet(2)-InSet(4)])
