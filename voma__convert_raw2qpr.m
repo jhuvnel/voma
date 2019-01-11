@@ -105,7 +105,13 @@ if FileName ~= 0
     handles.params.xlsname = FileName;
     handles.params.xlspath = PathName;
     
-    [status,sheets] = xlsfinfo([PathName FileName]);
+   if handles.ispc.flag
+[status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+else
+    A = importdata(handles.ss_FileName)
+    names = fieldnames(A.textdata);
+    sheets = strrep(names,'0x2D','-')';
+end
     
     set(handles.excel_sheet_list,'String',sheets);
     
