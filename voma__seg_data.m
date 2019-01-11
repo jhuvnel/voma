@@ -2750,7 +2750,13 @@ function export_data_Callback(hObject, eventdata, handles)
 handles.export_data.BackgroundColor = [1    1    0];
 pause(0.1);
 cd(handles.ss_PathName);
+if handles.ispc.flag
 [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+else
+    A = importdata(handles.ss_FileName)
+    names = fieldnames(A.textdata);
+    sheets = strrep(names,'0x2D','-')';
+end
 
 handles.experimentdata = getappdata(hObject,'data');
 
