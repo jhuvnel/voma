@@ -67,8 +67,6 @@ if strcmp(get(handles.e_vel_param2,'Enable'),'off')
     handles.params.e_vel_param2 = 5000;
 end
 
-
-
 % Update handles structure
 guidata(hObject, handles);
 
@@ -90,6 +88,14 @@ function initialize_gui(hObject, handles, isrecall)
 % we are we are just re-initializing a GUI by calling it from the cmd line
 % while it is up. So, bail out as we dont want to reset the data.
 
+% Initialize Operating system flag
+if ispc
+    handles.ispc.flag = true;
+    handles.ispc.slash = '\';
+else
+    handles.ispc.flag = false;
+    handles.ispc.slash = '/';
+end
 
 if isrecall
     % i.e. we are reloading this GUI. The user may have just updated the

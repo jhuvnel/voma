@@ -74,6 +74,14 @@ handles.params.interp_ldvog_mpu = true;
 
 handles.Yaxis_MPU_Rot_theta = str2double(get(handles.Yaxis_Rot_Theta,'String'));
 
+if ispc
+    handles.ispc.flag = true;
+    handles.ispc.slash = '\';
+else
+    handles.ispc.flag = false;
+    handles.ispc.slash = '/';
+end
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -105,16 +113,15 @@ if FileName ~= 0
     handles.params.xlsname = FileName;
     handles.params.xlspath = PathName;
     
-   if handles.ispc.flag
-[status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
-else
-    A = importdata(handles.ss_FileName)
-    names = fieldnames(A.textdata);
-    sheets = strrep(names,'0x2D','-')';
-end
+    if handles.ispc.flag
+        [status,sheets,xlFormat] = xlsfinfo([PathName,FileName]);
+    else
+        A = importdata([PathName,FileName]);
+        names = fieldnames(A.textdata);
+        sheets = strrep(names,'0x2D','-')';
+    end
     
     set(handles.excel_sheet_list,'String',sheets);
-    
     set(handles.excel_sheet_text,'String',FileName);
     
     % Assume the user is loading the first sheet
