@@ -25,7 +25,7 @@ function varargout = voma__seg_data(varargin)
 
 % Edit the above text to modify the response to help voma__seg_data
 
-% Last Modified by GUIDE v2.5 16-Jan-2018 13:39:47
+% Last Modified by GUIDE v2.5 09-Oct-2018 23:30:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -118,6 +118,22 @@ handles.Yaxis_MPU_Rot_theta = str2double(get(handles.Yaxis_Rot_Theta,'String'));
 
 handles.params.gpio_trig_opt = 1;
 
+% ARound 2018-04, PJB noticed that the LD VOG system appeared to record the
+% PCU trigger LATE relative to the collected eye movement data. PJB, MR,
+% and NV performed some experiments outlined here:
+% https://docs.google.com/document/d/16EppbHOlsSabjR61xbDi798p7ldrqqTV6tOXjH1KZbI/edit#heading=h.xh2azhw75tvn
+% These experiments resulted in the following trigger recording delay in
+% samples (where positive values indicate the trigger was recorded AFTER
+% the eye movement).
+handles.TriggerDelay.G1 = 3;
+handles.TriggerDelay.G2 = 5;
+handles.TriggerDelay.G3 = 2;
+
+handles.AdjustTrig_flag = false;
+handles.AdjustTrig = handles.TriggerDelay.G1;
+set(handles.AdjustTrig_Control,'String',num2str(handles.TriggerDelay.G1));
+
+
 set(handles.LaskerSystPanel,'Visible','Off')
 
 set(handles.mpuoffsetpanel,'Visible','On')
@@ -173,6 +189,7 @@ function varargout = voma__seg_data_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 end
+
 
 % --- Executes on button press in new_segment.
 function [handles] = new_segment_Callback(hObject, eventdata, handles,user_seg_flag)
@@ -422,16 +439,17 @@ if strcmp(handles.params.segment_filename(1),'-')
 else
 end
 
-save(handles.params.segment_filename,'Data')
+save([handles.params.segment_filename handles.string_addon '.mat'],'Data')
 
 
 
 if ~isfield(handles,'skip_excel_fill_flag')
+
 segments = segments + 1;
 handles.experimentdata = getappdata(handles.export_data,'data');
 set(handles.worksheet_name,'String',[handles.visit_number.String{handles.visit_number.Value},'-',handles.date.String,'-',handles.exp_type.String{handles.exp_type.Value}]);
-handles.experimentdata{segments,1} = handles.seg_filename.String;
-handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
+    handles.experimentdata{segments,1} = [handles.seg_filename.String handles.string_addon];
+    handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
 handles.experimentdata{segments,3} = handles.subj_id.String{handles.subj_id.Value};
 handles.experimentdata{segments,4} = handles.implant.String{handles.implant.Value};
 handles.experimentdata{segments,5} = handles.eye_rec.String{handles.eye_rec.Value};
@@ -451,6 +469,7 @@ setappdata(handles.export_data,'data',handles.experimentdata);
 handles.segment_number.String = num2str(segments);
 set(handles.save_indicator,'String','SAVED!')
 set(handles.save_indicator,'BackgroundColor','g')
+pause(1);
 end
 
 
@@ -477,7 +496,7 @@ else
 end
 
 if strcmp(eventdata.Source.String,'Load New Raw Data File')
-     handles.params.reloadflag = 0;
+    handles.params.reloadflag = 0;
 end
 
 switch handles.params.system_code
@@ -492,8 +511,7 @@ switch handles.params.system_code
             
             handles.raw_PathName = PathName;
             handles.raw_FileName = FileName;
-            
-            set(handles.raw_name,'String',FileName);
+                 
         else
             % If we are reloading a file, don't prompt the user and reset
             % the 'reload' flag.
@@ -501,6 +519,8 @@ switch handles.params.system_code
             PathName = handles.raw_PathName;
             handles.params.reloadflag = 0;
         end
+        
+        set(handles.raw_name,'String',FileName);
         
         switch handles.params.vog_data_acq_version
             
@@ -553,6 +573,7 @@ switch handles.params.system_code
         
         % Load Data
         data = dlmread([handles.raw_PathName handles.raw_FileName],' ',1,0);
+        handles.raw_data = data;
         
         % Generate Time_Eye vector
         Time = data(:,2);
@@ -609,6 +630,8 @@ switch handles.params.system_code
                         
                         StimIndex = 35;
                         
+                        
+                        
                     case 2 % The user has chosen to use the software trigger from the MVI fitting software (toggled by the operator
                         
                         
@@ -617,6 +640,47 @@ switch handles.params.system_code
                 end
                 
                 Stim = data(1:length(Time_Eye),StimIndex);
+                
+                
+                % Check if the user wants to adjust the trigger
+                if handles.AdjustTrig_flag
+                    
+                    
+                    
+                    if handles.AdjustTrig>0
+                        
+                        Stim = [Stim(handles.AdjustTrig + 1:end) ; Stim(end)*ones(handles.AdjustTrig,1)];
+                        direction = 'Earlier';
+                    else
+                        
+                        Stim = [Stim(1)*ones(abs(handles.AdjustTrig),1) ; Stim(1:end-handles.AdjustTrig) ];
+                        
+                        direction = 'Later';
+                    end
+                    
+                    
+                    handles.string_addon = ['_UpdatedLDVOGTrigger_Shifted' num2str(handles.AdjustTrig) 'Samples' direction '__UpdatedOn' datestr(now,'yyyy-mm-dd')];
+                    
+                    answer = questdlg('Would you like to save the raw data as a new .txt file?', ...
+                        'Save Updated File', ...
+                        'Yes','No thank you','No thank you');
+                    % Handle response
+                    switch answer
+                        case 'Yes'
+                            data(1:length(Time_Eye),StimIndex) = Stim;
+                            
+                            dlmwrite([PathName FileName(1:end-4) '_UpdatedLDVOGTrigger_Shifted' num2str(handles.AdjustTrig) 'Samples' direction '__UpdatedOn' datestr(now,'yyyy-mm-dd') '.txt'], data, 'delimiter',' ','precision','%.4f');
+                            
+                            
+                        case 'No thank you'
+                            
+                    end
+                    
+                else
+                    
+                    handles.string_addon = [];
+                    
+                end
                 
             case {3}
                 
@@ -734,13 +798,45 @@ switch handles.params.system_code
         
         Data.HeadMPUVel_X = XAxisVelHead';
         Data.HeadMPUVel_Y = YAxisVelHead';
-        Data.HeadMPUVel_Z = ZAxisVelHead';
+        Data.HeadMPUVel_Z = ZAxisVelHead'; mn
         
         Data.HeadMPUAccel_X = XAxisAccelHead';
         Data.HeadMPUAccel_Y = YAxisAccelHead';
         Data.HeadMPUAccel_Z = ZAxisAccelHead';
         
-        Data.Fs = 100;
+        %Compute the mean 
+        temp_SampPer = median(abs(diff(Time)));
+        temp_Fs = 1/temp_SampPer;
+        
+        expected_Fs = 100;
+        
+        if abs(expected_Fs - temp_Fs) > expected_Fs*0.1
+            
+            answer = questdlg(['The computed sample rate produced an unexpected value.' char(10) 'Expected Sample Rate: ' num2str(expected_Fs) 'Hz' char(10) ...
+                'Mean Computed Sample Rate: ' num2str(1/abs(mean(diff(Time)))) 'Hz' char(10) 'Median Computed Sample Rate: ' num2str(temp_Fs) 'Hz' char(10) ...
+                'How would you like to proceed?'], ...
+                'Sample Rate Error', ...
+                'Let me define the sample rate',['Force the expected rate:' num2str(expected_Fs) 'Hz'],['Force the expected rate:' num2str(expected_Fs) 'Hz']);
+            % Handle response
+            switch answer
+                case 'Let me define the sample rate'
+                    prompt = {'Enter Sample Rate:'};
+                    title = 'Input';
+                    dims = [1 35];
+                    definput = {'150','hsv'};
+                    answer = str2double(inputdlg(prompt,title,dims,definput))
+                    
+                    Data.Fs = answer;
+                case ['Force the expected rate:' num2str(expected_Fs) 'Hz']
+                    Data.Fs = expected_Fs;
+                    
+            end
+            
+        else
+            Data.Fs = expected_Fs;
+        end
+        
+        
         
         Data.Time_Eye = Time_Eye;
         Data.Time_Stim = Time_Stim;
@@ -884,6 +980,21 @@ switch handles.params.system_code
         Data.HeadMPUAccel_X = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUAccel_Y = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUAccel_Z = zeros(length(Data.Time_Eye),1);
+    case 4 
+        if handles.params.reloadflag == 0
+            % If requesting a new file, prompt the user to choose the file.
+            [handles.FileNameGains,handles.PathNameGains,FilterIndex] = uigetfile('*.txt','Please choose the Gain file');
+            cd(handles.PathNameGains);
+            [handles.FileNameOffset1,handles.PathNameOffset1,FilterIndex] = uigetfile('*.coil','Please choose the First Orientation Offset file');
+            [handles.FileNameOffset2,handles.PathNameOffset2,FilterIndex] = uigetfile('*.coil','Please choose the Second Orientation Offset file');
+            handles.PathNameofFiles = uigetdir(cd,'Please choose the folder where the coil files are saved');
+                handles.segment_number.String = '0';
+                handles.experimentdata = {};
+            
+        else
+                handles.segment_number.String = '0';
+                handles.experimentdata = {};
+        end
         
         
         
@@ -1518,8 +1629,11 @@ hold off
     otherwise
         
         
-        
+     guidata(hObject,handles)   
 end
+
+if handles.params.system_code == 4
+else
 
 % Check all saved data variables and make sure they are COLUMN vectors
 if isrow(Data.LE_Position_X)
@@ -1624,7 +1738,7 @@ handles.Segment.end_t = Data.Time_Eye(end);
 % Update the GUI plot
 keep_plot_limit = false; % Don't keep the plot limits, we are loading a new file
 plot_segment_data(hObject, eventdata, handles,keep_plot_limit)
-
+end
 
 guidata(hObject,handles)
 end
@@ -1664,6 +1778,18 @@ switch handles.params.system_code
         set(handles.LaskerSystPanel,'Visible','Off')
         
         set(handles.mpuoffsetpanel,'Visible','On')
+    case 4 % Ross 710 Moog Coil System
+        set(handles.LaskerSystPanel,'Visible','Off');
+        set(handles.mpuoffsetpanel,'Visible','Off');
+        set(handles.LabDevVOG,'Visible','On');
+            [handles.FileNameGains,handles.PathNameGains,FilterIndex] = uigetfile('*.txt','Please choose the Gain file');
+            cd(handles.PathNameGains);
+            [handles.FileNameOffset1,handles.PathNameOffset1,FilterIndex] = uigetfile('*.coil','Please choose the First Orientation Offset file');
+            [handles.FileNameOffset2,handles.PathNameOffset2,FilterIndex] = uigetfile('*.coil','Please choose the Second Orientation Offset file');
+            handles.PathNameofFiles = uigetdir(cd,'Please choose the folder where the coil files are saved');
+            handles.segment_number.String = '0';
+            handles.experimentdata = {};
+            handles.text53.BackgroundColor = 'r';
         
     otherwise
         set(handles.LabDevVOG,'Visible','Off')
@@ -1877,9 +2003,9 @@ function stim_type_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.params.stim_type = handles.stim_type.String{handles.stim_type.Value};
 setappdata(hObject,'type',handles.stim_type.String{handles.stim_type.Value});
-    if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
-        handles.stim_frequency.Value = 2;
-    end
+if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
+    handles.stim_frequency.Value = 2;
+end
 handles.params.stim_frequency = handles.stim_frequency.String{handles.stim_frequency.Value};
 setappdata(handles.stim_frequency,'fq',handles.stim_frequency.String{handles.stim_frequency.Value})
 [handles] = update_seg_filename(hObject, eventdata, handles);
@@ -1966,7 +2092,7 @@ handles.params.suffix = getappdata(handles.stim_intensity,'suf');
 handles.params.segment_filename = [handles.params.subj_id '-' handles.params.visit_number ...
     '-' handles.params.date '-' handles.params.exp_type '-' handles.params.exp_condition ...
     '-' handles.params.stim_axis '-' handles.params.stim_type '-' handles.params.stim_frequency ...
-    '-' handles.params.stim_intensity handles.params.suffix '.mat'];
+    '-' handles.params.stim_intensity handles.params.suffix];
 
 set(handles.seg_filename,'String',handles.params.segment_filename);
 end
@@ -2093,6 +2219,19 @@ function labdev_goggleID_Callback(hObject, eventdata, handles)
 index_selected = get(hObject,'Value');
 
 handles.params.goggleID = index_selected;
+
+switch index_selected
+    
+    case 1
+        temp = handles.TriggerDelay.G1;
+    case 2
+        temp = handles.TriggerDelay.G2;
+    case 3
+        temp = handles.TriggerDelay.G3;
+end
+
+handles.AdjustTrig = temp;
+set(handles.AdjustTrig_Control,'String',num2str(temp));
 
 guidata(hObject,handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns labdev_goggleID contents as cell array
@@ -2502,9 +2641,9 @@ switch choice.stim
             
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
             
-            handles.params.segment_filename = [raw{k,1} '.mat'];
+            handles.params.segment_filename = [raw{k,1}];
             
-            handles.seg_filename.String = [raw{k,1} '.mat'];
+            handles.seg_filename.String = [raw{k,1}];
             
             handles.skip_excel_fill_flag = 1;
             
@@ -2649,7 +2788,7 @@ switch choice.stim
             
             [handles] = new_segment_Callback(hObject, eventdata, handles,false);
             
-            handles.params.segment_filename = [raw{k,1} '.mat'];
+            handles.params.segment_filename = [raw{k,1}];
             
             save_segment_Callback(hObject, eventdata, handles);
             
@@ -2674,9 +2813,225 @@ switch choice.stim
         
     case 4 % Electrical Only
         [handles] = auto_seg_general_Callback(hObject, eventdata, handles);
-    case 5 % Pupil Labs
-        [handles] = auto_seg_general_Callback(hObject, eventdata, handles);
+    case 5 % Ross 710 Moog coils
+            listing = dir(handles.PathNameofFiles);
+            [GAINSR, GAINSL]=getGains(handles.PathNameGains,handles.FileNameGains);
+            [ZEROS_R, ZEROS_L]=calcOffsets(handles.PathNameOffset1,handles.FileNameOffset1,handles.FileNameOffset2,1);
+            a = [listing.bytes];
+            [y,detect] = max(a);
+            [z,detect2] = max(a(a<y));
+            count = 0;
+            test=struct2table(listing);
+            all=test.name;
+            handles.totalSegment = length(find(contains(all,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'})));
+            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+            if y/z>20               
+                directory = listing(detect).folder;
+                filename = listing(detect).name;
+            coilsWithProsthSync = readcoils(directory, filename, 1);
+            else
+                
+            segments = str2num(handles.segment_number.String);
+            if segments>0
+                s = segments+count
+            else
+                s=1
+            end
+            for fs = s:length(listing)
+                    segments = str2num(handles.segment_number.String);
+                    if contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'}) && (listing(fs).bytes>0)
+                        %Need to insert computer flag%%
+                        directory = [listing(fs).folder,'/'];
+                        filename = listing(fs).name;
+                        dashes = find(filename=='_');
+                        dot = find(filename=='.');
+                        amp = find(filename=='a');
+                        
+                        if isempty(segments==0) || (segments==0)
+                            handles.subj_id.String = {filename(dashes(2)+1:dashes(3)-1)};
+                            handles.visit_number.String = {'NA'};
+                            handles.date.String = filename(1:dashes(1)-1);
+                            handles.exp_type.String = {'ElectricalStim'};
+                            handles.exp_condition.String = {'PulseTrains'};
+                            prompt = {'Enter the stimulation rate (pps):'};
+                            title = 'Input';
+                            dims = [1 35];
+                            definput = {'100'};
+                            answer = inputdlg(prompt,title,dims,definput);
+                            handles.stim_frequency.String = {answer{1}};
+                            setappdata(handles.stim_frequency,'fq',answer{1});
+                            handles.stim_axis.String = {filename(dot-2:dot-1)};
+                            if contains(handles.stim_axis.String,'L')
+                                handles.implant.String={'Left'};
+                            else
+                                handles.implant.String={'Right'};
+                            end
+                        end
+                        
+                            setappdata(handles.stim_axis,'ax',filename(dot-2:dot-1));
+                            handles.stim_axis.String = {filename(dot-2:dot-1)};
+                            setappdata(handles.stim_type,'type',filename(dashes(3)+1:amp-1));
+                            handles.stim_type.String = {filename(dashes(3)+1:amp-1)};
+                            setappdata(handles.stim_intensity,'intensity',filename(amp:dashes(4)-1));
+                            handles.stim_intensity.String = {filename(amp:dashes(4)-1)};
+                            [handles] = update_seg_filename(hObject, eventdata, handles);
+                        
+                            coilsWithProsthSync = readcoils(directory, filename, 1);
+
+                        prosthSync(:,1:2)=coilsWithProsthSync(:,4:5);
+                        coils(:,1:3)=coilsWithProsthSync(:,1:3);
+                        coils(:,4:15)=coilsWithProsthSync(:,6:17);
+
+                        TS_idx=1+find(gradient(prosthSync(:,1)));
+                        TS_time = prosthSync(TS_idx, 1)-1 + prosthSync(TS_idx,2)/25000;
+                        TS_interval = gradient(TS_time) / 1000;
+
+                        [rotRhead,rotLhead,rotRReye,rotLLeye,rotRref,rotLref] = analyzeCoilData(coils, 1, [],GAINSR,GAINSL,ZEROS_R,ZEROS_L);
+                        rotRlarpralp = rotRref;
+                        rotLlarpralp = rotLref;
+                        rotRxyz = rotRReye;
+                        rotLxyz = rotLLeye;
+
+                        
+                        [pks,locs] = findpeaks(diff(prosthSync(:,1)),'MinPeakHeight',50);
+                        if isempty(locs)
+                            handles.totalSegment = handles.totalSegment-1;
+                            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+                        else
+
+%%%%rot2fick of rotRref and rotLref gives position in yaw larp and ralp
+                        boundaries = [locs(1) locs(20)];%reshape(bound', 1, []);
+                        boundaries(2) = boundaries(2) + 1500;
+                        boundaries(1) = boundaries(1) - 1500;
+                        coilsSplit = zeros(boundaries(2)-boundaries(1)+1,17,length(boundaries)/2);
+
+                         
+                            coilsSplit(:,:,1) = coilsWithProsthSync(boundaries(1):boundaries(2),:);
+                            
+                            rotRsplit(:,:,1) = rotRlarpralp(boundaries(1):boundaries(2),:);
+                            rotLsplit(:,:,1) = rotLlarpralp(boundaries(1):boundaries(2),:);
+                            rotRsplitxyz(:,:,1) = rotRxyz(boundaries(1):boundaries(2),:);
+                            rotLsplitxyz(:,:,1) = rotLxyz(boundaries(1):boundaries(2),:);
+                            
+
+                            angularPosL = rot2fick(rotLsplit(:,:,1));
+                            angularPosR = rot2fick(rotRsplit(:,:,1));
+
+                            pSync(:,1:2)=coilsSplit(:,4:5,1);
+                            TS_idxS=1+find(diff(pSync(:,1)));
+                            TS_timeS = pSync(TS_idxS, 1)-1 + pSync(TS_idxS,2)/25000;
+                            TS_intervalS = diff(TS_timeS) / 1000;
+                            importantPts = [1+find(diff(pSync(:,1))>50) 1+find(diff(pSync(:,1))>50)+250];
+                            newFrameinFrame = fick2rot([45 0 0]);
+                            
+                            rotrotL = rot2rot(newFrameinFrame,rotLsplit(:,:,1));
+                            rotrotR = rot2rot(newFrameinFrame,rotRsplit(:,:,1));
+                            rotrotLxyz = rot2rot(newFrameinFrame,rotLsplitxyz(:,:,1));
+                            rotrotRxyz = rot2rot(newFrameinFrame,rotRsplitxyz(:,:,1));
+                            
+                            
+                            filtAngVelL=rot2angvelBJM20190107(rotrotL)/pi*180 * 1000;
+                            filtAngVelR=rot2angvelBJM20190107(rotrotR)/pi*180 * 1000;
+                            filtAngVelLxyz=rot2angvelBJM20190107(rotrotLxyz)/pi*180 * 1000;
+                            filtAngVelRxyz=rot2angvelBJM20190107(rotrotRxyz)/pi*180 * 1000;
+
+                            t=1/1000:1/1000:length(filtAngVelL)/1000;
+                            
+%                             figure;
+%                             plot(t,filtAngVelL(:,3),'r', t, filtAngVelL(:,2),'b', t, filtAngVelL(:,1),'g');
+%                             hold on;
+%                             plot(t,filtAngVelR(:,3),'r', t, filtAngVelR(:,2),'b', t, filtAngVelR(:,1),'g');
+% 
+%                             plot(TS_idxS(2:end)./1000,1./TS_intervalS./10,'.'); %to plot the prosthesis sync signal (pps/10)
+%                             xlabel('Time (s)');
+%                             ylabel('Eye Velocity (dps)') % left y-axis
+%                             title('Left Eye Angular Velocity');
+%                             legend('Yaw','RALP','LARP','Stim Pulses');
+%                             % Comp flag
+%                             saveas(gcf,strcat([directory,'Raw Figures/'],fileString{1},'.fig'));
+%                             close all
+
+%                                     legend('Yaw','RALP','LARP','Gyro')  %for vel
+%                                     legend('Horiz','Vert','Torsion','Gyro')
+                            
+                            Segment.segment_code_version = mfilename;
+                            Segment.raw_filename = filename;
+                            Segment.start_t = t(1);
+                            Segment.end_t = t(end);
+                            Segment.LE_Position_X = angularPosL(:,3);
+                            Segment.LE_Position_Y = angularPosL(:,2);
+                            Segment.LE_Position_Z = angularPosL(:,1);
+
+                            Segment.RE_Position_X = angularPosR(:,3);
+                            Segment.RE_Position_Y = angularPosR(:,2);
+                            Segment.RE_Position_Z = angularPosR(:,1);
+
+                            Segment.LE_Velocity_X = filtAngVelLxyz(:,1);
+                            Segment.LE_Velocity_Y = filtAngVelLxyz(:,2);
+                            Segment.LE_Velocity_LARP = filtAngVelL(:,1);
+                            Segment.LE_Velocity_RALP = filtAngVelL(:,2);
+                            Segment.LE_Velocity_Z = filtAngVelL(:,3);
+
+                            Segment.RE_Velocity_X = filtAngVelRxyz(:,1);
+                            Segment.RE_Velocity_Y = filtAngVelRxyz(:,2);
+                            Segment.RE_Velocity_LARP = filtAngVelR(:,1);
+                            Segment.RE_Velocity_RALP = filtAngVelR(:,2);
+                            Segment.RE_Velocity_Z = filtAngVelR(:,3);
+                            Segment.Fs = 1000;
+                            Segment.Time_Eye = t';
+                            
+                            Time_Stim = TS_idxS./1000';
+                            Stim = 1./TS_intervalS./10';
+                            Stim(Stim>10)=20;
+                            Stim(Stim<20)=0;
+                            if length(Time_Stim) ~= length(Segment.Time_Eye)
+                               Time_Stim_Interp = Segment.Time_Eye;
+                               Stim_Interp = interp1(Time_Stim(2:end),Stim,Time_Stim_Interp);
+                            end
+                            Stim_Interp(Stim_Interp<20) = 0;
+
+                            Segment.Time_Stim = Time_Stim_Interp;
+
+                            Segment.HeadMPUVel_X = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUVel_Y = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUVel_Z = Stim_Interp;
+
+                            Segment.HeadMPUAccel_X = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUAccel_Y = zeros(1,length(Stim_Interp))';
+                            Segment.HeadMPUAccel_Z = zeros(1,length(Stim_Interp))';
+
+handles.Segment = Segment;
+
+segments = str2num(handles.segment_number.String);
+if segments == 0
+    mkdir([directory,'Segments/'])
+    setappdata(handles.save_segment,'foldername',[directory,'Segments/']);
 end
+
+[handles]=save_segment_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+                        end
+prosthSync = [];
+coils = [];
+pSync = [];
+rotRsplit = [];
+rotLsplit = [];
+rotRsplitxyz = [];
+rotLsplitxyz = [];
+                    elseif contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'}) && (listing(fs).bytes==0)
+                            handles.totalSegment = handles.totalSegment-1;
+                            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+                    end
+                count = count +1;
+            end
+            set(handles.save_indicator,'BackgroundColor','b')
+            pause(1);
+            set(handles.save_indicator,'BackgroundColor','g')
+            end
+    case 6 % Pupil Labs
+        [handles] = auto_seg_general_Callback(hObject, eventdata, handles);
+
+    end
 end
 
 
@@ -2693,7 +3048,7 @@ txt = uicontrol('Parent',d,...
 popup = uicontrol('Parent',d,...
     'Style','popup',...
     'Position',[75 70 225 25],...
-    'String',{'Pulse Train';'Electric Only Sinusoid [CED]';'Mechanical Sinusoid';'LD VOG Electrical Only';'Pupil Labs'},...
+    'String',{'Pulse Train';'Electric Only Sinusoid [CED]';'Mechanical Sinusoid';'LD VOG Electrical Only';'Ross 710 Moog Coils';'Pupil Labs'},...
     'Callback',@choose_stimuli_callback);
 %             'Callback',{@popup_callback,hObject, eventdata, handles});
 
@@ -2732,8 +3087,10 @@ switch choice
         
     case 'LD VOG Electrical Only'
         options.stim = 4;
-    case 'Pupil Labs'
+    case 'Ross 710 Mogg Coils'
         options.stim = 5;
+    case 'Pupil Labs'
+        options.stim = 6;
 end
 
 
@@ -3035,7 +3392,13 @@ function export_data_Callback(hObject, eventdata, handles)
 handles.export_data.BackgroundColor = [1    1    0];
 pause(0.1);
 cd(handles.ss_PathName);
+if handles.ispc.flag
 [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+else
+    A = importdata(handles.ss_FileName)
+    names = fieldnames(A.textdata);
+    sheets = strrep(names,'0x2D','-')';
+end
 
 handles.experimentdata = getappdata(hObject,'data');
 
@@ -3061,7 +3424,7 @@ if ismember(handles.worksheet_name.String, sheets)
             if ismember([handles.experimentdata(rs,1)],txt1)
                 replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
                 xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
-
+                
             else
                 xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
                 newEntry = newEntry+1;
@@ -3072,13 +3435,13 @@ if ismember(handles.worksheet_name.String, sheets)
             if ismember([handles.experimentdata(rs,1)],txt1)
                 replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
                 Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false) 
+                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false)
             else
                 Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false) 
+                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false)
                 newEntry = newEntry+1;
             end
-        end  
+        end
     end
 else
     labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
@@ -3087,15 +3450,15 @@ else
         handles.worksheet_name.String = handles.worksheet_name.String(1:31);
     end
     if handles.ispc.flag
-    xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
-    segs = size(handles.experimentdata);
-    xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
+        xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
+        segs = size(handles.experimentdata);
+        xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
     else
-    Tlabels = cell2table(labels);
-    Tdata = cell2table([handles.experimentdata]);
-    segs = size(handles.experimentdata);
-    writetable(Tlabels,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range','A1:Q1','WriteVariableNames',false)   
-    writetable(Tdata,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range',['A2:Q',num2str(segs(1)+1)],'WriteVariableNames',false)   
+        Tlabels = cell2table(labels);
+        Tdata = cell2table([handles.experimentdata]);
+        segs = size(handles.experimentdata);
+        writetable(Tlabels,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range','A1:Q1','WriteVariableNames',false)
+        writetable(Tdata,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range',['A2:Q',num2str(segs(1)+1)],'WriteVariableNames',false)
     end
 end
 handles.export_data.BackgroundColor = [0    1    0];
@@ -3128,6 +3491,7 @@ function eye_rec_Callback(hObject, eventdata, handles)
 % hObject    handle to stim_intensity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.text53.BackgroundColor = [0.94 0.94 0.94];
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -3146,8 +3510,8 @@ end
 
 function [handles] = auto_seg_general_Callback(hObject, eventdata, handles)
 
-    switch handles.choice.stim
-        case 3 % Mechanical Sinusoids
+switch handles.choice.stim
+    case 3 % Mechanical Sinusoids
         window = 500;
         b = (1/window)*ones(1,window);
         a = 1;
@@ -3166,8 +3530,8 @@ function [handles] = auto_seg_general_Callback(hObject, eventdata, handles)
         handles.Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z - zVal;
         handles.stim_mag = sqrt((handles.Segment.HeadMPUVel_X.^2) + (handles.Segment.HeadMPUVel_Y.^2) + (handles.Segment.HeadMPUVel_Z.^2)); % Calculating the magnitude of the X Y and Z velocities
         trace = handles.stim_mag;
-
-        case 4 % Electrical Only
+        
+    case 4 % Electrical Only
         handles.stim_mag = handles.Segment.Stim_Trig;
         trace = handles.Segment.Stim_Trig;
         case 5 % Pupil Labs
@@ -3205,14 +3569,14 @@ ax1.Position = [0.06 0.2 0.9 0.75];
         handles.zVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':','DisplayName','MPU-GYRO-Z');
         plot(ax1,handles.Segment.Time_Stim(:,1),trace,'color','k','DisplayName','MPU-Vel Magnitude');
         handles.h = plot(ax1,handles.Segment.Time_Stim(:,1),zeros(1,length(trace)),'g','DisplayName','Threshold Value');
-        case 4 % Electrical Only
+    case 4 % Electrical Only
         plot(ax1,handles.Segment.Time_Stim(:,1),trace,'color','k','DisplayName','MPU-Vel Magnitude');
         hold on
         handles.h = plot(ax1,handles.Segment.Time_Stim(:,1),zeros(1,length(trace)),'g','DisplayName','Threshold Value');
-    end
-    
+end
+
 hold off
-legend('show')    
+legend('show')
 handles.thresh_value = uicontrol(handles.thresh_plot,'Style','edit','Position',[210 13 70 30],'fontsize',12,'CallBack',{@thresh_value_Callback, handles});
 thresh_prompt = uicontrol(handles.thresh_plot,'Style','text','String','Enter a Threshold Value:','Position',[15 18 190 20],'FontSize',12);
 thresh_instruct = uicontrol(handles.thresh_plot,'Style','text','String','(Click enter after entering a value to adjust the threshold line and click "ok" when complete)','Position',[290 13 250 30],'FontSize',8);
@@ -3226,18 +3590,18 @@ inds = [1:length(mask)];
 onset_inds = inds([false ; diff(mask)>0]); % take the backward difference but keep the values greater than zero, disregard the first index, find the index value which corresponds to those positive differences
 
 end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep the values less than zero, disregard the first index, find the index value which corresponds to those negative differences
-    
-    switch handles.choice.stim
-        case 3 % Mechanical Sinusoids
+
+switch handles.choice.stim
+    case 3 % Mechanical Sinusoids
         onset_inds_final = onset_inds([true  diff(onset_inds)>300]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
         % Keeping the first index allows for the initial onset to be selected
         end_inds_final = end_inds([diff(end_inds)>300 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
         % Keeping the last index allows for the last end to be selected
-        case 4 % Electrical Only
-        [a,b] = findpeaks(diff(onset_inds),'Threshold',5);
+    case 4 % Electrical Only
+        [a,b] = findpeaks(diff(onset_inds),'Threshold',15);
         onset_inds_final = onset_inds([1 b+1]);
-
-        [c,d] = findpeaks(diff(end_inds),'Threshold',5);
+        
+        [c,d] = findpeaks(diff(end_inds),'Threshold',15);
         end_inds_final = end_inds([d length(end_inds)]);
         case 5 % Pupil Labs
                     onset_inds_final = onset_inds([true diff(onset_inds)>2000]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
@@ -3395,7 +3759,7 @@ for plots = 1:length(end_inds_final)
         handles.HeadMPUVel_Y_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':');
         handles.HeadMPUVel_X_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':');
         case 4 % Electrical Only
-        handles.stim_mag = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.Stim_Trig,'color','k','LineWidth',2);
+            handles.stim_mag = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.Stim_Trig,'color','k','LineWidth',2);
     end
 
 handles.left_extra = 3*handles.Data.Fs;
@@ -3403,7 +3767,7 @@ handles.right_extra = 3*handles.Data.Fs;
 
     x1 = [-100 -100 600 600];
     y1 = [-400 300 300 -400];
-        if (handles.onset_inds_final(plots) - handles.left_extra) < 1
+    if (handles.onset_inds_final(plots) - handles.left_extra) < 1
         a = handles.Segment.Time_Stim(1);
     else
         a = handles.Segment.Time_Stim((handles.onset_inds_final(plots) - handles.left_extra));
@@ -3471,14 +3835,14 @@ handles.right_extra = 3*handles.Data.Fs;
     handles.stim_intensity.Value = 1;
     handles.params.stim_intensity = '';
     handles.params.suffix = '';
-    setappdata(handles.stim_intensity,'suf',''); 
+    setappdata(handles.stim_intensity,'suf','');
     setappdata(handles.stim_frequency,'fq','');
     setappdata(handles.stim_intensity,'intensity','');
     [handles] = update_seg_filename(hObject, eventdata, handles);
     set(handles.save_indicator,'String','UNSAVED');
     set(handles.save_indicator,'BackgroundColor','r');
     guidata(hObject,handles)
-end 
+end
 end
 
 function inc_right_Callback(hObject, eventdata, handles)
@@ -3520,11 +3884,11 @@ end
 
 function [handles] = suffix_confirm_Callback(hObject, eventdata, handles)
 if isempty(hObject.String)
-setappdata(handles.stim_intensity,'suf','');    
+    setappdata(handles.stim_intensity,'suf','');
     guidata(hObject,handles)
     [handles] = update_seg_filename(hObject, eventdata, handles);
 else
-    setappdata(handles.stim_intensity,'suf',['-',hObject.String]);    
+    setappdata(handles.stim_intensity,'suf',['-',hObject.String]);
     guidata(hObject,handles)
     [handles] = update_seg_filename(hObject, eventdata, handles);
 end
@@ -3549,9 +3913,9 @@ function [handles] = stim_type_confirm_Callback(hObject, eventdata, handles)
 
 handles.stim_type.Value = get(hObject,'Value');
 setappdata(handles.stim_type,'type',hObject.String{hObject.Value});
-    if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
-        handles.stim_freq_confirm.Value = 2;
-    end
+if (get(hObject,'Value') == 2) || (get(hObject,'Value') == 4)
+    handles.stim_freq_confirm.Value = 2;
+end
 handles.stim_frequency.Value = handles.stim_freq_confirm.Value;
 setappdata(handles.stim_frequency,'fq',handles.stim_freq_confirm.String{handles.stim_freq_confirm.Value});
 guidata(hObject,handles)
@@ -3704,7 +4068,7 @@ end
 
 
 [handles]=save_segment_Callback(hObject, eventdata, handles);
-pause(1)
+pause(.2)
 guidata(hObject,handles)
 uiresume(gcbf)
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
@@ -3756,37 +4120,37 @@ function paramList_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.paramvals = getappdata(handles.paramList,'handles');
 handles.paramvals.editParams = figure('Name','Edit Parameter List', 'NumberTitle','off');
-    handles.paramvals.editParams.OuterPosition = [50   300   1300   300];
+handles.paramvals.editParams.OuterPosition = [50   300   1300   300];
 id = table(handles.paramvals.initialize.ID,'VariableNames',{'Subject_ID'});
-    visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
-    expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
-    expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
-    stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
-    stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
-    stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
-    stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
-    implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
-    eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
-    
-    handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
+expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
+expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
+stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
+eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
+
+handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.ID)));
-    handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.visit)));
-    handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expType)));
-    handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expCond)));
-    handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimAxis)));
-    handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimType)));
-    handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimFreq)));
-    handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimInt)));
-    handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.implant)));
-    handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.eye)));
 handles.table.addEntry = uicontrol(handles.paramvals.editParams,'Style','pushbutton','String','Add Parameter','fontsize',20,'Position',[550 10 200 30],'CallBack',{@addEntry_Callback, handles});
 handles.table.saveEntry = uicontrol(handles.paramvals.editParams,'Style','pushbutton','String','Save','fontsize',20,'Position',[1200 10 70 30],'CallBack',{@saveEntry_Callback, handles});
@@ -3807,35 +4171,35 @@ handles.paramvals.initialize.stimInt{end+1} = '';
 handles.paramvals.initialize.implant{end+1} = '';
 handles.paramvals.initialize.eye{end+1} = '';
 id = table(handles.paramvals.initialize.ID,'VariableNames',{'Subject_ID'});
-    visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
-    expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
-    expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
-    stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
-    stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
-    stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
-    stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
-    implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
-    eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
-    
-    handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
+visit = table(handles.paramvals.initialize.visit,'VariableNames',{'Visit_Number'});
+expType = table(handles.paramvals.initialize.expType,'VariableNames',{'Expirement_Type'});
+expCond = table(handles.paramvals.initialize.expCond,'VariableNames',{'Expirement_Condition'});
+stimAxis = table(handles.paramvals.initialize.stimAxis,'VariableNames',{'Stim_Axis'});
+stimType = table(handles.paramvals.initialize.stimType,'VariableNames',{'Stim_Type'});
+stimFreq = table(handles.paramvals.initialize.stimFreq,'VariableNames',{'Stim_Frequency'});
+stimInt = table(handles.paramvals.initialize.stimInt,'VariableNames',{'Stim_Intensity'});
+implant = table(handles.paramvals.initialize.implant,'VariableNames',{'Implant'});
+eye = table(handles.paramvals.initialize.eye,'VariableNames',{'Eye'});
+
+handles.paramvals.table.id = uitable(handles.paramvals.editParams,'Data',id{:,:},'ColumnName',id.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[30, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.ID)));
-    handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
+handles.paramvals.table.visit = uitable(handles.paramvals.editParams,'Data',visit{:,:},'ColumnName',visit.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[140, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.visit)));
-    handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
+handles.paramvals.table.expType = uitable(handles.paramvals.editParams,'Data',expType{:,:},'ColumnName',expType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[250, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expType)));
-    handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
+handles.paramvals.table.expCond = uitable(handles.paramvals.editParams,'Data',expCond{:,:},'ColumnName',expCond.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[380, 50, 160, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.expCond)));
-    handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
+handles.paramvals.table.stimAxis = uitable(handles.paramvals.editParams,'Data',stimAxis{:,:},'ColumnName',stimAxis.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[540, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimAxis)));
-    handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
+handles.paramvals.table.stimType = uitable(handles.paramvals.editParams,'Data',stimType{:,:},'ColumnName',stimType.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[650, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimType)));
-    handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
+handles.paramvals.table.stimFreq = uitable(handles.paramvals.editParams,'Data',stimFreq{:,:},'ColumnName',stimFreq.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[760, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimFreq)));
-    handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
+handles.paramvals.table.stimInt = uitable(handles.paramvals.editParams,'Data',stimInt{:,:},'ColumnName',stimInt.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[890, 50, 130, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.stimInt)));
-    handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
+handles.paramvals.table.implant = uitable(handles.paramvals.editParams,'Data',implant{:,:},'ColumnName',implant.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1020, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.implant)));
-    handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
+handles.paramvals.table.eye = uitable(handles.paramvals.editParams,'Data',eye{:,:},'ColumnName',eye.Properties.VariableNames,...
     'Units', 'Pixels', 'Position',[1130, 50, 110, 160],'ColumnEditable',true(1,length(handles.paramvals.initialize.eye)));
 setappdata(handles.paramList,'handles',handles.paramvals);
 guidata(hObject,handles)
@@ -3843,87 +4207,87 @@ end
 
 function saveEntry_Callback(hObject, eventdata, handles)
 handles.paramvals = getappdata(handles.paramList,'handles');
-    if (isempty(handles.paramvals.table.id.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.id.Data));
-        handles.paramvals.table.id.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
-    else
-        handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.visit.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.visit.Data));
-        handles.paramvals.table.visit.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
-    else
-        handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.expType.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.expType.Data));
-        handles.paramvals.table.expType.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
-    else
-        handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.expCond.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.expCond.Data));
-        handles.paramvals.table.expCond.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
-    else
-        handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.stimAxis.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimAxis.Data));
-        handles.paramvals.table.stimAxis.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
-    else
-        handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
-    end
-    
-        
-    if (isempty(handles.paramvals.table.stimType.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimType.Data));
-        handles.paramvals.table.stimType.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
-    else
-        handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.stimFreq.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimFreq.Data));
-        handles.paramvals.table.stimFreq.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
-    else
-        handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.stimInt.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.stimInt.Data));
-        handles.paramvals.table.stimInt.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
-    else
-        handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.implant.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.implant.Data));
-        handles.paramvals.table.implant.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
-    else
-        handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
-    end
-    
-    if (isempty(handles.paramvals.table.eye.Data{end}))
-        empty = find(cellfun('isempty',handles.paramvals.table.eye.Data));
-        handles.paramvals.table.eye.Data(empty(find(empty>1))) = [];
-        handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
-    else
-        handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
-    end
-    cd(handles.initializePathName)
+if (isempty(handles.paramvals.table.id.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.id.Data));
+    handles.paramvals.table.id.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
+else
+    handles.paramvals.initialize.ID = handles.paramvals.table.id.Data;
+end
+
+if (isempty(handles.paramvals.table.visit.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.visit.Data));
+    handles.paramvals.table.visit.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
+else
+    handles.paramvals.initialize.visit = handles.paramvals.table.visit.Data;
+end
+
+if (isempty(handles.paramvals.table.expType.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.expType.Data));
+    handles.paramvals.table.expType.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
+else
+    handles.paramvals.initialize.expType = handles.paramvals.table.expType.Data;
+end
+
+if (isempty(handles.paramvals.table.expCond.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.expCond.Data));
+    handles.paramvals.table.expCond.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
+else
+    handles.paramvals.initialize.expCond = handles.paramvals.table.expCond.Data;
+end
+
+if (isempty(handles.paramvals.table.stimAxis.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimAxis.Data));
+    handles.paramvals.table.stimAxis.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
+else
+    handles.paramvals.initialize.stimAxis = handles.paramvals.table.stimAxis.Data;
+end
+
+
+if (isempty(handles.paramvals.table.stimType.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimType.Data));
+    handles.paramvals.table.stimType.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
+else
+    handles.paramvals.initialize.stimType = handles.paramvals.table.stimType.Data;
+end
+
+if (isempty(handles.paramvals.table.stimFreq.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimFreq.Data));
+    handles.paramvals.table.stimFreq.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
+else
+    handles.paramvals.initialize.stimFreq = handles.paramvals.table.stimFreq.Data;
+end
+
+if (isempty(handles.paramvals.table.stimInt.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.stimInt.Data));
+    handles.paramvals.table.stimInt.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
+else
+    handles.paramvals.initialize.stimInt = handles.paramvals.table.stimInt.Data;
+end
+
+if (isempty(handles.paramvals.table.implant.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.implant.Data));
+    handles.paramvals.table.implant.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
+else
+    handles.paramvals.initialize.implant = handles.paramvals.table.implant.Data;
+end
+
+if (isempty(handles.paramvals.table.eye.Data{end}))
+    empty = find(cellfun('isempty',handles.paramvals.table.eye.Data));
+    handles.paramvals.table.eye.Data(empty(find(empty>1))) = [];
+    handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
+else
+    handles.paramvals.initialize.eye = handles.paramvals.table.eye.Data;
+end
+cd(handles.initializePathName)
 initialize = handles.paramvals.initialize;
 save('initialize.mat','initialize')
 
@@ -3938,6 +4302,279 @@ handles.stim_intensity.String = handles.paramvals.initialize.stimInt;
 handles.implant.String = handles.paramvals.initialize.implant;
 handles.eye_rec.String = handles.paramvals.initialize.eye;
 setappdata(handles.paramList,'handles',handles.paramvals);
-    guidata(hObject,handles)
-    close(handles.paramvals.editParams);
+guidata(hObject,handles)
+close(handles.paramvals.editParams);
+end
+
+
+% --- Executes on button press in AdjustTrigCheckBox.
+function AdjustTrigCheckBox_Callback(hObject, eventdata, handles)
+% hObject    handle to AdjustTrigCheckBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if (get(hObject,'Value') == get(hObject,'Max'))
+    handles.AdjustTrig_flag = true;
+else
+    handles.AdjustTrig_flag = false;
+end
+% Hint: get(hObject,'Value') returns toggle state of AdjustTrigCheckBox
+
+guidata(hObject,handles)
+
+end
+
+
+function AdjustTrig_Control_Callback(hObject, eventdata, handles)
+% hObject    handle to AdjustTrig_Control (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+input = get(hObject,'String');
+
+handles.AdjustTrig = str2double(input);
+% Hints: get(hObject,'String') returns contents of AdjustTrig_Control as text
+%        str2double(get(hObject,'String')) returns contents of AdjustTrig_Control as a double
+
+guidata(hObject,handles)
+
+
+end
+
+% --- Executes during object creation, after setting all properties.
+function AdjustTrig_Control_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to AdjustTrig_Control (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+% --- Executes on button press in recalibrateVOG.
+function recalibrateVOG_Callback(hObject, eventdata, handles)
+% hObject    handle to recalibrateVOG (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+ 
+ % Check if a file is loaded
+ if (~isfield(handles,'raw_FileName')) || isempty(handles.raw_FileName)
+     
+     [handles] = load_raw_Callback(hObject, eventdata, handles)
+     
+ end
+ 
+
+
+% Load LE and RE calibration files
+
+answer = questdlg(['You will be prompted to choose the LEFT and RIGHT eye calibration files for file: ' handles.raw_FileName], ...
+	'Recalibration Menu', ...
+	'OK','EXIT','EXIT');
+% Handle response
+switch answer
+    case 'OK'
+        
+        [LEcalibFileName,LEcalibPathName] = uigetfile('.txt','Select LEFT EYE calibration file.')
+        [REcalibFileName,REcalibPathName] = uigetfile('.txt','Select RIGHT EYE calibration file.')
+        
+        prompt = {'Enter the distance from the subject to the calibration grid [in]'};
+        title = 'Distance To Wall (in.)';
+        definput = {'55'};
+        opts.Interpreter = 'tex';
+        answer = inputdlg(prompt,title,[1 40],definput,opts);
+        
+        DistanceToWall = str2double(answer);
+        
+        flag = true;
+    case {'EXIT',''}
+        flag = false;
+    
+end
+
+if flag
+    
+end
+
+fname_data = strcat(handles.raw_PathName, handles.raw_FileName);
+
+calib_file_fullpath_left = strcat(LEcalibPathName, LEcalibFileName);
+calib_file_fullpath_right = strcat(REcalibPathName, REcalibFileName);
+% 
+% matlab_calib_left = strcat(Base_Dir, 'Calib_Polynomial_Left.txt');
+% matlab_calib_right = strcat(Base_Dir, 'Calib_Polynomial_Right.txt');
+
+%     Python_Calib_Dir = strcat(Base_Dir, 'Python\Calib');
+%     python_calib_left = strcat(Base_Dir, 'Python\Calib_Polynomial_Left.txt');
+%     python_calib_right = strcat(Base_Dir, 'Python\Calib_Polynomial_Right.txt');
+%
+
+
+
+% Load Data from File
+vogdata = handles.raw_data;
+% These are the column indices of the relevant parameters saved to file
+TIndex = 2;
+HLeftIndex_Pix = 3;
+VLeftIndex_Pix = 4;
+TLeftIndex_Pix = 9;
+HRightIndex_Pix = 15;
+VRightIndex_Pix = 16;
+TRightIndex_Pix = 21;
+HLeftIndex_Deg = 40;
+VLeftIndex_Deg = 41;
+TLeftIndex_Deg = 42;
+HRightIndex_Deg = 43;
+VRightIndex_Deg = 44;
+TRightIndex_Deg = 45;
+
+% load eye positions in degrees
+H_LE_pix = vogdata(:,HLeftIndex_Pix);
+V_LE_pix = vogdata(:,VLeftIndex_Pix);
+T_LE_pix = vogdata(:,TLeftIndex_Pix);
+H_RE_pix = vogdata(:,HRightIndex_Pix);
+V_RE_pix = vogdata(:,VRightIndex_Pix);
+T_RE_pix = vogdata(:,TRightIndex_Pix);
+H_LE_deg = vogdata(:,HLeftIndex_Deg);
+V_LE_deg = vogdata(:,VLeftIndex_Deg);
+T_LE_deg = vogdata(:,TLeftIndex_Deg);
+H_RE_deg = vogdata(:,HRightIndex_Deg);
+V_RE_deg = vogdata(:,VRightIndex_Deg);
+T_RE_deg = vogdata(:,TRightIndex_Deg);
+count = 0;
+
+N = length(vogdata(:,TIndex));
+%
+%     time = zeros(N,1);
+%     for i = 1:length(data(:,TIndex))-1
+%         time(i+1) = (data(i,TIndex)+128*count-data(1,TIndex));
+%         if (data(i+1,TIndex)-data(i,TIndex)) < 0
+%             count = count + 1;
+%         end
+%     end
+
+% Generate Time_Eye vector
+Time = vogdata(:,2);
+% The time vector recorded by the VOG goggles resets after it
+% reaches a value of 128. We will find those transitions, and
+% correct the time value.
+inds =[1:length(Time)];
+overrun_inds = inds([false ; (diff(Time) < -20)]);
+Time_Eye = Time;
+% Loop over each Time vector reset and add '128' to all data points
+% following each transition.
+for n =1:length(overrun_inds)
+    Time_Eye(overrun_inds(n):end) = Time_Eye(overrun_inds(n):end)+128;
+end
+% Subtract the first time point
+Time_Eye = Time_Eye - Time_Eye(1);
+
+
+
+%     if (Calibration_Script_Type == MATLAB)
+
+Eye = 'Left';
+Polynomials_Left = VOG_Calibration_9_Points(Eye, DistanceToWall, calib_file_fullpath_left,handles.raw_FileName(1:end-4));
+
+H_Left_Coeffs = Polynomials_Left(:,1);
+V_Left_Coeffs = Polynomials_Left(:,2);
+
+Eye = 'Right';
+Polynomials_Right = VOG_Calibration_9_Points(Eye, DistanceToWall, calib_file_fullpath_right,handles.raw_FileName(1:end-4));
+
+H_Right_Coeffs = Polynomials_Right(:,1);
+V_Right_Coeffs = Polynomials_Right(:,2);
+
+%     elseif (Calibration_Script_Type == PYTHON)
+%         Eye = 'Left';
+%         systemCommand = ['python GridCalibration.py ', calib_file_fullpath_left, ' ', num2str(DistanceToWall), ' ', Python_Calib_Dir, ' ', Eye];
+%         [status, result] = system(systemCommand)
+%
+%         Eye = 'Right';
+%         systemCommand = ['python GridCalibration.py ', calib_file_fullpath_right, ' ', num2str(DistanceToWall), ' ', Python_Calib_Dir, ' ', Eye];
+%         [status, result] = system(systemCommand)
+%
+%         % Load left eye calib params from file
+%         fileID = fopen(python_calib_left);
+%         C = textscan(fileID,'%q %q', 'delimiter','\t');
+%         H_Left_Coeffs = cellfun(@str2num,C{1});
+%         V_Left_Coeffs = cellfun(@str2num,C{2});
+%         fclose(fileID);
+%
+%         % Load right eye calib params from file
+%         fileID = fopen(python_calib_right);
+%         C = textscan(fileID,'%q %q', 'delimiter','\t');
+%         H_Right_Coeffs = cellfun(@str2num,C{1});
+%         V_Right_Coeffs = cellfun(@str2num,C{2});
+%         fclose(fileID);
+%     end
+
+
+
+H_LE_deg_new = zeros(size(H_LE_deg));
+V_LE_deg_new = zeros(size(H_LE_deg));
+T_LE_deg_new = T_LE_deg;
+H_RE_deg_new = zeros(size(H_LE_deg));
+V_RE_deg_new = zeros(size(H_LE_deg));
+T_RE_deg_new = T_RE_deg;
+
+
+
+for i = 1:N
+    H_LE_deg_new(i) = Polynomial_Surface_Mult(H_Left_Coeffs, H_LE_pix(i), V_LE_pix(i));
+    V_LE_deg_new(i) = Polynomial_Surface_Mult(V_Left_Coeffs, H_LE_pix(i), V_LE_pix(i));
+    H_RE_deg_new(i) = Polynomial_Surface_Mult(H_Right_Coeffs, H_RE_pix(i), V_RE_pix(i));
+    V_RE_deg_new(i) = Polynomial_Surface_Mult(V_Right_Coeffs, H_RE_pix(i), V_RE_pix(i));
+end
+% The raw data in pixels will saturate when the subject blinks/tracking
+% is lost. The VOG software will replace these data points w/ NaNs
+% since there is no real tracking measurements. We will replace these
+% saturated values in our newly calibrated data with NaNs.
+H_LE_deg_new(isnan(H_LE_deg)) = nan(length(H_LE_deg_new(isnan(H_LE_deg))),1);
+V_LE_deg_new(isnan(V_LE_deg)) = nan(length(V_LE_deg_new(isnan(V_LE_deg))),1);
+H_RE_deg_new(isnan(H_RE_deg)) = nan(length(H_RE_deg_new(isnan(H_RE_deg))),1);
+V_RE_deg_new(isnan(V_RE_deg)) = nan(length(V_RE_deg_new(isnan(V_RE_deg))),1);
+
+vogdata(:,HLeftIndex_Deg) = H_LE_deg_new;
+vogdata(:,VLeftIndex_Deg) = V_LE_deg_new;
+vogdata(:,HRightIndex_Deg) = H_RE_deg_new;
+vogdata(:,VRightIndex_Deg) = V_RE_deg_new;
+
+%     HLeftIndex_Deg = 40;
+%     VLeftIndex_Deg = 41;
+%     TLeftIndex_Deg = 42;
+%     HRightIndex_Deg = 43;
+%     VRightIndex_Deg = 44;
+%     TRightIndex_Deg = 45;
+
+%     if sum(cell2mat(strfind(Raw_file_names,RawName)))<1
+%         Raw_file_names{end+1} = RawName;
+
+% answer = questdlg('Would you like to save the recalibrated LDVOG  file?', ...
+%     'Recalibration Menu', ...
+%     'YES','NO','NO');
+% % Handle response
+% switch answer
+%     case 'YES'
+
+str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 100],{[handles.raw_FileName(1:end-4) '_UpdatedVOGCalib_' num2str(DistanceToWall) 'in' '__' datestr(now,'yyyy-mm-dd') '.txt']});
+
+
+handles.recalibrateVOG.BackgroundColor = [1    1    0];
+drawnow
+dlmwrite([handles.raw_PathName str{1}], vogdata, 'delimiter',' ','precision','%.4f');
+handles.recalibrateVOG.BackgroundColor = [0    1    0];
+pause(1)
+handles.recalibrateVOG.BackgroundColor = [0.9400    0.9400    0.9400];
+%     case 'NO'
+
+handles.raw_FileName = str{1};
+
+[handles] = reload_raw_Callback(hObject, eventdata, handles)
+% end
+guidata(hObject,handles)
 end

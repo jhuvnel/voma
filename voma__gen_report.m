@@ -676,7 +676,7 @@ SCC = handles.params.stimaxis;
 
 Scale = [handles.params.neg_y_scale handles.params.pos_y_scale];
 
-[hx] = MVI_Gen_Cyc_Avg_Plot__inputdata(Data,plotname,save_loc,stim_cond,Stim_trace,legend_flag,SCC,Scale,handles.params.plot_type_flag,handles.params.invert_stim,handles.lr_xy_flag);
+[hx] = voma__MVI_Gen_Cyc_Avg_Plot__inputdata(Data,plotname,save_loc,stim_cond,Stim_trace,legend_flag,SCC,Scale,handles.params.plot_type_flag,handles.params.invert_stim,handles.lr_xy_flag);
 
 reportname = [folder_name handles.ispc.slash plotname '_CRF'];
     temp_path = mfilename('fullpath');
@@ -769,7 +769,7 @@ fill(rpt);
 
 
 if ispc
-rptview([reportname '.html'],'pdf');
+rptview([reportname '.docx'],'pdf');
 
 save([reportname '.mat'],'file_params');
 else

@@ -162,7 +162,7 @@ cla
 
 CurrData = handles.CurrData;
 switch CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5}
+    case {1,4,5,7}
         plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
         hold on
         plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')

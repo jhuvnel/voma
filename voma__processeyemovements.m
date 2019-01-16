@@ -217,7 +217,7 @@ if exist('Data_In','var') && ~isempty(Data_In)
             rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
             rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
             
-        case 6 % Digital Coil System - Moog
+        case 7 % Digital Coil System - Moog
             Fs = Data_In.Fs;
             
             if (isrow(Data_In.Data_LE_Pos_X))
@@ -262,7 +262,7 @@ if exist('Data_In','var') && ~isempty(Data_In)
             %
             %             rotrotL = rot2rot(newFrameinFrame,rotL);
             %             LRZL = rot2angvel(rotrotL)/pi*180*1000;
-            
+        
     end
     
 else % i.e., the user did NOT provide any angular position data into the routine, and we must load the data from the raw files.
@@ -592,13 +592,13 @@ for j=1:2
             % The code below calculates the angular velocity using Haslwanter, 1995 eq.
             % 29 using the 2nd order central difference approximation of dr/dt
             % X,Y,Z
-            [dcolb,drb] = gradient(rot_corr);
-            rb = rot_corr(1:(end),:) + drb./2;
+            drb = diff(rot_corr);
+            rb = rot_corr(1:(end-1),:) + drb./2;
             denomb = (1 + dot(rb,rb,2) - dot(drb,drb,2));
             angvel_dps_b = (2*(drb + cross(rb,drb,2)) ./ denomb(:,[1 1 1]))*(180/pi)*Fs;
             % LARP,RALP,Z
-            [dcolc,drc] = gradient(rot_lr);
-            rc = rot_lr(1:(end),:) + drc./2;
+            drc = diff(rot_lr);
+            rc = rot_lr(1:(end-1),:) + drc./2;
             denomc = (1 + dot(rc,rc,2) - dot(drc,drc,2));
             angvel_dps_c = (2*(drc + cross(rc,drc,2)) ./ denomc(:,[1 1 1]))*(180/pi)*Fs;
             
@@ -633,6 +633,63 @@ for j=1:2
             % matrix. Note that rotation matrices are orthonormal, and
             % their inverses are equivalent to their transpose. -PJB
             angvel_dps_c = [rotZ3deg(-45)'*angvel_dps_b']';
+        case 7 % Ross 710 Moog Coils
+                        Fs = Data_In.Fs;
+            
+            if (isrow(Data_In.Data_LE_Pos_X))
+                Data_In.Data_LE_Pos_X=Data_In.Data_LE_Pos_X';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Y))
+                Data_In.Data_LE_Pos_Y=Data_In.Data_LE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Z))
+                Data_In.Data_LE_Pos_Z=Data_In.Data_LE_Pos_Z';
+            end
+            if (isrow(Data_In.Data_RE_Pos_X))
+                Data_In.Data_RE_Pos_X=Data_In.Data_RE_Pos_X';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Y))
+                Data_In.Data_RE_Pos_Y=Data_In.Data_RE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Z))
+                Data_In.Data_RE_Pos_Z=Data_In.Data_RE_Pos_Z';
+            end
+            
+            % NOTE: These are FICK ANGLES NOT ROTATION VECTORS, SO SAVE AS
+            % HVT (Horiz, Vert, Torsion)
+            %%% fick2rot looks for Z,Y,X and spits out X,Y,Z
+            rawData_L = [ Data_In.Data_LE_Pos_Z  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_X ];
+            rawData_R = [ Data_In.Data_RE_Pos_Z  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_X ];
+            
+            switch j
+                case 1 % Left Eye
+                    rawData = rawData_L;
+                case 2 % Right Eye
+                    rawData = rawData_R;
+            end
+                        rot=fick2rot(rawData); % Spits out X,Y,Z
+                        newFrameinFrame = fick2rot([45 0 0]);
+                        rotrot = rot2rot(newFrameinFrame,rot);
+                        rot_corr = rot;
+                        rot_lr = rotrot;      
+            
+            % The code below calculates the angular velocity using Haslwanter, 1995 eq.
+            % 29 using the 2nd order central difference approximation of dr/dt
+            % X,Y,Z
+            angvel_dps_b = rot2angvelBJM20190107(rot_corr)/pi*180 * 1000;
+ % LARP,RALP,Z
+
+            angvel_dps_c = rot2angvelBJM20190107(rot_lr)/pi*180 * 1000;
+
+% 
+%             
+%             % NOTE: These are FICK ANGLES NOT ROTATION VECTORS, SO SAVE AS
+%             % HVT (Horiz, Vert, Torsion)
+%             rawData_L = [ Data_In.Data_LE_Pos_Z  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_X ];
+%             rawData_R = [ Data_In.Data_RE_Pos_Z  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_X ];
+%             
+            % Here need to calculate velocity now.
+                        
             
             
             
@@ -726,11 +783,26 @@ switch DAQ_code
         Data.RE_Pos_X = rawData_R(:,1);
         Data.RE_Pos_Y = rawData_R(:,2);
         Data.RE_Pos_Z = rawData_R(:,3);
+    case 7
+        Data.LE_Pos_X = rawData_L(:,3);
+        Data.LE_Pos_Y = rawData_L(:,2);
+        Data.LE_Pos_Z = rawData_L(:,1);
+        
+        Data.RE_Pos_X = rawData_R(:,3);
+        Data.RE_Pos_Y = rawData_R(:,2);
+        Data.RE_Pos_Z = rawData_R(:,1);
 end
 
 function ang=rot2angvel(rot)
 dr = diff(rot,1,1);
 r = rot(1:(end-1),:) + dr./2;
+denom = (1 + dot(r,r,2) - dot(dr,dr,2));
+ang = 2*(dr + cross(r,dr,2)) ./ denom(:,[1 1 1]);
+
+function ang=rot2angvelBJM20190107(rot)
+
+dr = [diff(rot,1,1); [false false false]];
+r = rot(1:end,:) + dr./2;
 denom = (1 + dot(r,r,2) - dot(dr,dr,2));
 ang = 2*(dr + cross(r,dr,2)) ./ denom(:,[1 1 1]);
 
