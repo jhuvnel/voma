@@ -201,6 +201,7 @@ switch index_selected
 
         set(handles.rawfile_opt1,'Value',1)
         handles.params.file_format = 1;
+    case 7
 end
 
 handles.params.system_config = index_selected;

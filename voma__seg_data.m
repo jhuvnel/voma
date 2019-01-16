@@ -907,13 +907,8 @@ switch handles.params.system_code
             fileNumber = str2num(fileNumber{1});
             for files = 1:fileNumber
                 [FileName,PathName,FilterIndex] = uigetfile('*.csv',['Please choose the exported Pupil Labs Gaze .csv data file for analysis of set', num2str(files)]);
-                 a = strfind(PathName,'\');
-                 b = strfind(PathName,'/');
-                 if length(a)>0
+                 a = strfind(PathName,handles.ispc.slash);
                      savePath = PathName(1:a(length(a)-4));
-                 else
-                     savePath = PathName(1:a(length(b)-4));
-                 end
                 cd(savePath);
                 [FileNameAnnotations,PathNameAnnotations,FilterIndexAnnotatons] = uigetfile('*.csv',['Please choose the exported Pupil Labs Annotations .csv data file for analysis of set', num2str(files)]);
                 [FileNameShimmer,PathNameShimmer,FilterIndexShimmer] = uigetfile('*.csv',['Please choose the exported Shimmer .csv data file for analysis of set', num2str(files)]);
@@ -978,8 +973,11 @@ onset_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTri
 end_inds_pl = inds_pl([false ; diff(data.set(files).plInterpTrig')<0]);
 end_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTrig')<0]);
 
-final_inds_pl = find((end_inds_pl-onset_inds_pl)>200);
-final_inds_shimmer = find((end_inds_shimmer-onset_inds_shimmer)>200);
+thresh = end_inds_shimmer(1)-onset_inds_shimmer(1)-100;
+
+
+final_inds_pl = find((end_inds_pl-onset_inds_pl)>thresh);
+final_inds_shimmer = find((end_inds_shimmer-onset_inds_shimmer)>thresh);
 
 onset_inds_final_pl= onset_inds_pl(final_inds_pl);
 onset_inds_final_shimmer= onset_inds_shimmer(final_inds_shimmer);
@@ -1119,19 +1117,11 @@ data.set(files).shimmerInterpTime = (data.set(files).shimmerInterpTime-p(2))./p(
          handles.load_raw.BackgroundColor = [0.9400    0.9400    0.9400];
  final = data.f;
  
- a = strfind(PathName,'\');
- b = strfind(PathName,'/');
- if length(a)>0
+ a = strfind(PathName,handles.ispc.slash);
      hold1 = PathName;
      hold1(a)= '_';
      FileName = hold1(a(2)+1:a(length(a)-4)-1);
      savePath = PathName(1:a(length(a)-4));
- else
-          hold1 = PathName;
-          hold1(b) = '_';
-     FileName = hold1(b(2)+1:b(length(b)-4)-1);
-     savePath = PathName(1:a(length(b)-4));
- end
  save([savePath,FileName,'.mat'],'-struct','final')
             handles.raw_PathName = savePath;
             handles.raw_FileName = FileName;
@@ -1145,13 +1135,9 @@ data.set(files).shimmerInterpTime = (data.set(files).shimmerInterpTime-p(2))./p(
 
               for files = 1:fileNumber
                 [FileName,PathName,FilterIndex] = uigetfile('*.csv',['Please choose the exported Pupil Labs Gaze .csv data file for analysis of set', num2str(files)]);
-                 a = strfind(PathName,'\');
-                 b = strfind(PathName,'/');
-                 if length(a)>0
+                 a = strfind(PathName,handles.ispc.slash);
                      savePath = PathName(1:a(length(a)-4));
-                 else
-                     savePath = PathName(1:a(length(b)-4));
-                 end
+
                 cd(savePath);
                 [FileNameShimmer,PathNameShimmer,FilterIndexShimmer] = uigetfile('*.csv',['Please choose the exported Shimmer .csv data file for analysis of set', num2str(files)]);
                 handles.load_raw.BackgroundColor = [1    1    0];
@@ -1269,26 +1255,6 @@ data.set(files).shimmerInterpTime = (data.set(files).shimmerInterpTime-p(2))./p(
 
         mask(trace > saved_thresh) = ones(length(find(trace > saved_thresh)),1); % All of the indicies where the magnitudes is greater than 20 will be changed from zero to 1
         mask = (mask)*3000;
-                inds = [1:length(mask)];
-onset_inds = inds([false ; diff(mask)>0]); 
-
-end_inds = inds([false ; diff(mask)<0]);
-
-if onset_inds(1)>end_inds(1)
-    end_inds(1) = [];
-end
-final_inds = find((end_inds-onset_inds)>100);%150
-onset_inds_final= onset_inds(final_inds);
-end_inds_final = end_inds(final_inds);
-for i = 1:length(onset_inds_final)
-    if i==1
-        mask(1:onset_inds_final(i)-1) = 0;
-    elseif i<length(onset_inds_final)
-        mask(end_inds_final(i-1)+1:onset_inds_final(i)-1) = 0;
-    else
-        mask(end_inds_final(i)+1:end) = 0;
-    end
-end
 
 
         data.set(files).plInterpTrig = interp1(data.set(files).plTime,mask,data.set(files).plInterpTime);
@@ -1307,14 +1273,32 @@ onset_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTri
 end_inds_pl = inds_pl([false ; diff(data.set(files).plInterpTrig')<0]);
 end_inds_shimmer = inds_shimmer([false ; diff(data.set(files).shimmerInterpTrig')<0]);
 
-final_inds_pl = find((end_inds_pl-onset_inds_pl)>1000);%150);
-final_inds_shimmer = find((end_inds_shimmer-onset_inds_shimmer)>1000);%150);
+if length(onset_inds_pl) ~= length(end_inds_pl)
+    if length(onset_inds_pl)>length(end_inds_pl)
+            onset_inds_pl(end) = [];
+    else
+        end_inds_pl(1) = [];
+    end
+end
+
+thresh = end_inds_shimmer(1)-onset_inds_shimmer(1)-100;
+
+final_inds_pl = find((end_inds_pl-onset_inds_pl)>(thresh));
+final_inds_shimmer = find((end_inds_shimmer-onset_inds_shimmer)>(thresh));
 
 onset_inds_final_pl= onset_inds_pl(final_inds_pl);
 onset_inds_final_shimmer= onset_inds_shimmer(final_inds_shimmer);
 
 end_inds_final_pl = end_inds_pl(final_inds_pl);
 end_inds_final_shimmer = end_inds_shimmer(final_inds_shimmer);
+
+if length(onset_inds_final_shimmer)>20
+    d = ([false diff(onset_inds_final_shimmer)]);
+    if d(11)<100000
+        onset_inds_final_shimmer(11)=[];
+        end_inds_final_shimmer(11)=[];
+    end
+end
 
 
 
@@ -1331,6 +1315,8 @@ upper = onset_inds_final_shimmer(a);
 
 onset_inds_final_pl(onset_inds_final_pl<(u-2000) & onset_inds_final_pl>(l)) = [];
 end_inds_final_pl(end_inds_final_pl<(u-2000) & end_inds_final_pl>(l+2000)) = [];
+
+data.set(files).plInterpTrig(l:u-2000) = 0;
 
 if length(onset_inds_final_pl) ~= length(onset_inds_final_shimmer)
 go = 1;
@@ -1364,8 +1350,14 @@ while go
     end
 end
 end
+
 p = polyfit(data.set(files).plInterpTime(onset_inds_final_pl),data.set(files).shimmerInterpTime(onset_inds_final_shimmer),1);
 data.set(files).shimmerInterpTime = (data.set(files).shimmerInterpTime-p(2))./p(1);
+p = polyfit(data.set(files).plInterpTime(end_inds_final_pl),data.set(files).shimmerInterpTime(end_inds_final_shimmer),1)
+data.set(files).shimmerInterpTime = (data.set(files).shimmerInterpTime-p(2))./p(1);
+dif = data.set(files).shimmerInterpTime(onset_inds_final_shimmer(1))- data.set(files).plInterpTime(onset_inds_final_pl(1))
+data.set(files).plInterpTime = data.set(files).plInterpTime+dif;
+
 figure
 plot(data.set(files).shimmerInterpTime,data.set(files).shimmerInterpTrig)
 hold on
@@ -1415,19 +1407,11 @@ hold off
          end
  final = data.f;
  
- a = strfind(PathName,'\');
- b = strfind(PathName,'/');
- if length(a)>0
+ a = strfind(PathName,handles.ispc.slash);
      hold1 = PathName;
      hold1(a)= '_';
      FileName = hold1(a(2)+1:a(length(a)-4)-1);
      savePath = PathName(1:a(length(a)-4));
- else
-          hold1 = PathName;
-          hold1(b) = '_';
-     FileName = hold1(b(2)+1:b(length(b)-4)-1);
-     savePath = PathName(1:a(length(b)-4));
- end
  save([savePath,FileName,'.mat'],'-struct','final')
             handles.raw_PathName = savePath;
             handles.raw_FileName = FileName;
@@ -1446,7 +1430,9 @@ hold off
             % the 'reload' flag.
             FileName = handles.raw_FileName;
             PathName = handles.raw_PathName;
-            handles.params.reloadflag = 0;        
+            handles.params.reloadflag = 0;
+                handles.segment_number.String = '0';
+                handles.experimentdata = {};
             data = load([handles.raw_PathName handles.raw_FileName]);
         end
         
@@ -1472,11 +1458,6 @@ hold off
             angvel_dps_b = [zeros(length(data.plangY(:)),1) ...
                 gradient([data.plangY(:)]).*1100 ...
                 gradient([data.plangZ(:)]).*1100];
-            
-            
-            
-            
-
 
             LE_Vel_X = angvel_dps_b(:,1);
             LE_Vel_Y = angvel_dps_b(:,2);
@@ -1490,22 +1471,12 @@ hold off
             RE_Vel_LARP = zeros(length(angvel_dps_b(:,1)),1);
             RE_Vel_RALP = zeros(length(angvel_dps_b(:,1)),1);
         
-        
-
-                
                 Stim = zeros(1,length(Time_Eye));
                 
-       
-        
-        
         set(handles.Xoffset_txt,'String',0)
         set(handles.Yoffset_txt,'String',0)
         set(handles.Zoffset_txt,'String',0)
-        
-        
-        
-        
-        
+
         Data.segment_code_version = mfilename;
         Data.raw_filename = handles.raw_FileName;
         Data.LE_Position_X = Torsion_LE_Position;
@@ -3268,7 +3239,7 @@ end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep
 
         [c,d] = findpeaks(diff(end_inds),'Threshold',5);
         end_inds_final = end_inds([d length(end_inds)]);
-        case 5 % Mechanical Sinusoids
+        case 5 % Pupil Labs
                     onset_inds_final = onset_inds([true diff(onset_inds)>2000]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
         % Keeping the first index allows for the initial onset to be selected
         end_inds_final = end_inds([diff(end_inds)>2000 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
@@ -3276,13 +3247,14 @@ end_inds = inds([false ; diff(mask)<0]); % take the backward difference but keep
             go = 1;
             checkEnd = 1;
             checkOn = 1;
-            figure
-            plot(handles.Segment.Time_Stim(:,1),trace);
-            hold on
-            plot(handles.Segment.Time_Stim(:,1),mask*75)
-            s = plot(handles.Segment.Time_Stim(onset_inds_final,1),linspace(50,50,length(onset_inds_final)),'g*')
-            e = plot(handles.Segment.Time_Stim(end_inds_final,1),linspace(50,50,length(end_inds_final)),'r*')
-            axis([handles.Segment.Time_Stim(onset_inds_final(1),1) handles.Segment.Time_Stim(end_inds_final(end),1) 0 80])
+%             Check detection of segments figure
+%             figure
+%             plot(handles.Segment.Time_Stim(:,1),trace);
+%             hold on
+%             plot(handles.Segment.Time_Stim(:,1),mask*75)
+%             s = plot(handles.Segment.Time_Stim(onset_inds_final,1),linspace(50,50,length(onset_inds_final)),'g*')
+%             e = plot(handles.Segment.Time_Stim(end_inds_final,1),linspace(50,50,length(end_inds_final)),'r*')
+%             axis([handles.Segment.Time_Stim(onset_inds_final(1),1) handles.Segment.Time_Stim(end_inds_final(end),1) 0 80])
             while go
                     if (max([checkEnd checkOn])< min([length(onset_inds_final) length(end_inds_final)]))
                         if end_inds_final(checkEnd)>onset_inds_final(checkOn+1)
@@ -3425,12 +3397,10 @@ for plots = 1:length(end_inds_final)
         case 4 % Electrical Only
         handles.stim_mag = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.Stim_Trig,'color','k','LineWidth',2);
     end
-    if handles.choice.stim == 5
-handles.left_extra = 3000;
-handles.right_extra = 3000;
-handles.mult = 1000;
-    else handles.mult = 100;
-end
+
+handles.left_extra = 3*handles.Data.Fs;
+handles.right_extra = 3*handles.Data.Fs;
+
     x1 = [-100 -100 600 600];
     y1 = [-400 300 300 -400];
         if (handles.onset_inds_final(plots) - handles.left_extra) < 1
@@ -3461,8 +3431,8 @@ end
     
     handles.reject_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','Reject This Segment','fontsize',12,'Position',[15 10 160 30],'CallBack',{@reject_seg_Callback, handles});
     
-    handles.right_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.right_extra/handles.mult,'fontsize',12,'Position',[900 295 60 30]);
-    handles.left_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.left_extra/handles.mult,'fontsize',12,'Position',[15 295 60 30]);
+    handles.right_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.right_extra/handles.Data.Fs,'fontsize',12,'Position',[900 295 60 30]);
+    handles.left_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.left_extra/handles.Data.Fs,'fontsize',12,'Position',[15 295 60 30]);
     
     setappdata(handles.ok_seg,'r',handles.end_inds_final(plots) +  handles.right_extra);
     setappdata(handles.ok_seg,'l',handles.onset_inds_final(plots) - handles.left_extra);
@@ -3493,14 +3463,9 @@ end
     end
     close(handles.seg_plots);
     
-    handles.right_extra = 300;
-    handles.left_extra = 300;
-        if handles.choice.stim == 5
-handles.left_extra = 3000;
-handles.right_extra = 3000;
-handles.mult = 1000;
-    else handles.mult = 100;
-end
+    handles.right_extra = 3*handles.Data.Fs;
+    handles.left_extra = 3*handles.Data.Fs;
+
     handles.stim_frequency.Value = 1;
     handles.params.stim_frequency = '';
     handles.stim_intensity.Value = 1;
@@ -3517,42 +3482,37 @@ end
 end
 
 function inc_right_Callback(hObject, eventdata, handles)
-handles.r = str2num(handles.right_extra_val.String)*100;
-dif = round(1/(handles.Segment.Time_Stim(2)-handles.Segment.Time_Stim(1)))/100;
-handles.r = handles.r + 200*dif;
-handles.right_extra_val.String = handles.r/100;
+handles.r = str2num(handles.right_extra_val.String)*handles.Data.Fs;
+handles.r = handles.r + 2*handles.Data.Fs;
+handles.right_extra_val.String = handles.r/handles.Data.Fs;
 handles.seg_patch2.XData([1 4]) = handles.seg_patch2.XData([1 4]) + [2;2];
 setappdata(handles.ok_seg,'r',handles.end_inds_final(handles.plot_num) + handles.r);
 guidata(hObject,handles)
 end
 
 function dec_right_Callback(hObject, eventdata, handles)
-handles.r = str2num(handles.right_extra_val.String)*100;
-dif = round(1/(handles.Segment.Time_Stim(2)-handles.Segment.Time_Stim(1)))/100;
-handles.r = handles.r - 200*dif;
-handles.right_extra_val.String = handles.r/100;
+handles.r = str2num(handles.right_extra_val.String)*handles.Data.Fs;
+handles.r = handles.r - 2*handles.Data.Fs;
+handles.right_extra_val.String = handles.r/handles.Data.Fs;
 handles.seg_patch2.XData([1 4]) = handles.seg_patch2.XData([1 4]) - [2;2];
-r = getappdata(handles.ok_seg,'r');
 setappdata(handles.ok_seg,'r',handles.end_inds_final(handles.plot_num) + handles.r);
 guidata(hObject,handles)
 end
 
 
 function inc_left_Callback(hObject, eventdata, handles)
-handles.l = str2num(handles.left_extra_val.String)*100;
-dif = round(1/(handles.Segment.Time_Stim(2)-handles.Segment.Time_Stim(1)))/100;
-handles.l = handles.l + 200*dif;
-handles.left_extra_val.String = handles.l/100;
+handles.l = str2num(handles.left_extra_val.String)*handles.Data.Fs;
+handles.l = handles.l + 2*handles.Data.Fs;
+handles.left_extra_val.String = handles.l/handles.Data.Fs;
 handles.seg_patch1.XData([2 3]) = handles.seg_patch1.XData([2 3]) - [2;2];
 setappdata(handles.ok_seg,'l',handles.onset_inds_final(handles.plot_num) - handles.l);
 guidata(hObject,handles)
 end
 
 function dec_left_Callback(hObject, eventdata, handles)
-handles.l = str2num(handles.left_extra_val.String)*100;
-dif = round(1/(handles.Segment.Time_Stim(2)-handles.Segment.Time_Stim(1)))/100;
-handles.l = handles.l - 200*dif;
-handles.left_extra_val.String = handles.l/100;
+handles.l = str2num(handles.left_extra_val.String)*handles.Data.Fs;
+handles.l = handles.l - 2*handles.Data.Fs;
+handles.left_extra_val.String = handles.l/handles.Data.Fs;
 handles.seg_patch1.XData([2 3]) = handles.seg_patch1.XData([2 3]) + [2;2];
 setappdata(handles.ok_seg,'l',handles.onset_inds_final(handles.plot_num) - handles.l);
 guidata(hObject,handles)
