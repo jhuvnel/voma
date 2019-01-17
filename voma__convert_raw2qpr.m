@@ -108,23 +108,23 @@ function load_excel_sheet_Callback(hObject, eventdata, handles)
 
 % Prompt user for experimental file
 [FileName,PathName,~] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet for analysis. Matching .mat file should be in the same directory.');
-
 if FileName ~= 0
     handles.params.xlsname = FileName;
     handles.params.xlspath = PathName;
-    
-    load([PathName,FileName(1:end-4),'mat'],'ExperimentRecords');
+    if(exist([PathName,FileName(1:end-4),'mat'],'file')==2)
+        load([PathName,FileName(1:end-4),'mat'],'ExperimentRecords');
+    else
+        ExperimentRecords = ExperimentRecordsExcel2MAT([PathName,FileName]);
+        msgbox('This experimental records sheet did not have a corresponding .mat file so one was created.');
+    end
     sheets = fieldnames(ExperimentRecords);
-    
     set(handles.excel_sheet_list,'String',sheets);
     set(handles.excel_sheet_text,'String',FileName);
-    
-    % Assume the user is loading the first sheet
+    % Assume the user is loading the first sheet as a defualt
     handles.params.raw = [ExperimentRecords.(sheets{1}).Properties.VariableNames;table2cell(ExperimentRecords.(sheets{1}))];
     handles.ExperimentRecords = ExperimentRecords;
     handles.params.sheets = sheets;
 end
-
 guidata(hObject,handles)
 
 % --- Executes on selection change in system_config.
