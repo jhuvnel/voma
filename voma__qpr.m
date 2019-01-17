@@ -4202,24 +4202,6 @@ Data_In.Data_RE_Pos_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Pos_Z;
 
 Data_In.Fs = handles.CurrData.VOMA_data.Fs;
 
-if strfind(handles.filename_string.String,'PupilLabs')>0
-                New_Ang_Vel = [zeros(length(Data_In.Data_LE_Pos_X),1) ...
-                gradient([Data_In.Data_LE_Pos_Y]).*1100 ...
-                gradient([Data_In.Data_LE_Pos_Z]).*1100];
-            
-            handles.CurrData.VOMA_data.Data_LE_Vel_X = New_Ang_Vel(:,1);
-            handles.CurrData.VOMA_data.Data_LE_Vel_Y = New_Ang_Vel(:,2);
-            handles.CurrData.VOMA_data.Data_LE_Vel_LARP = New_Ang_Vel(:,1);
-            handles.CurrData.VOMA_data.Data_LE_Vel_RALP = New_Ang_Vel(:,1);
-            handles.CurrData.VOMA_data.Data_LE_Vel_Z = New_Ang_Vel(:,3);
-
-            handles.CurrData.VOMA_data.Data_RE_Vel_X = New_Ang_Vel(:,1);
-            handles.CurrData.VOMA_data.Data_RE_Vel_Y = New_Ang_Vel(:,1);
-            handles.CurrData.VOMA_data.Data_RE_Vel_LARP = New_Ang_Vel(:,1);
-            handles.CurrData.VOMA_data.Data_RE_Vel_RALP = New_Ang_Vel(:,1);
-            handles.CurrData.VOMA_data.Data_RE_Vel_Z = New_Ang_Vel(:,1);
-else
-
 [New_Ang_Vel] = voma__processeyemovements([],[],[],[],0,data_rot,DAQ_code,OutputFormat,Data_In);
 
 handles.CurrData.VOMA_data.Data_LE_Vel_X = New_Ang_Vel.LE_Vel_X;
@@ -4233,7 +4215,7 @@ handles.CurrData.VOMA_data.Data_RE_Vel_Y = New_Ang_Vel.RE_Vel_Y;
 handles.CurrData.VOMA_data.Data_RE_Vel_LARP = New_Ang_Vel.RE_Vel_LARP;
 handles.CurrData.VOMA_data.Data_RE_Vel_RALP = New_Ang_Vel.RE_Vel_RALP;
 handles.CurrData.VOMA_data.Data_RE_Vel_Z = New_Ang_Vel.RE_Vel_Z;
-end
+
 [handles] = update_eye_pos(hObject, eventdata, handles, 2);
 
 handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;

@@ -55,6 +55,14 @@ function voma__convert_raw2qpr_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to voma__convert_raw2qpr (see VARARGIN)
 
+if ispc
+    handles.ispc.flag = true;
+    handles.ispc.slash = '\';
+else
+    handles.ispc.flag = false;
+    handles.ispc.slash = '/';
+end
+
 % Choose default command line output for voma__convert_raw2qpr
 handles.output = hObject;
 
@@ -100,17 +108,19 @@ function load_excel_sheet_Callback(hObject, eventdata, handles)
 
 % Prompt user for experimental file
 [FileName,PathName,FilterIndex] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet for analysis');
-
 if FileName ~= 0
     handles.params.xlsname = FileName;
     handles.params.xlspath = PathName;
-    
 if handles.ispc.flag
-[status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+[status,sheets,xlFormat] = xlsfinfo([PathName FileName]);
 else
-    A = importdata(handles.ss_FileName)
+    A = load([PathName FileName],'-mat')
+    if size(A.textdata) ~= [1 1]
+    sheets = A.textdata{2}(7:24);
+    else
     names = fieldnames(A.textdata);
     sheets = strrep(names,'0x2D','-')';
+    end
 end
     
     set(handles.excel_sheet_list,'String',sheets);
@@ -224,7 +234,21 @@ switch index_selected
 
         set(handles.rawfile_opt1,'Value',1)
         handles.params.file_format = 4;
-    case 7
+    case 7 % Pupil Labs
+                        set(handles.lasker_stim_chan,'Visible','Off')
+        
+        set(handles.rawfile_opt1,'Visible','Off')
+        set(handles.rawfile_opt1,'String','VORDAQ-Only Files ')
+        set(handles.rawfile_opt2,'Visible','Off')
+        set(handles.rawfile_opt2,'String','VORDAQ + CED Files')
+        set(handles.rawfile_opt3,'Visible','Off')
+        set(handles.rawfile_opt3,'String','CED-Only Files')
+        set(handles.lasker_panel,'Visible','Off')
+        set(handles.labdev_panel,'Visible','Off')
+        set(handles.coil_sys_gen_panel,'Visible','Off')
+
+        set(handles.rawfile_opt1,'Value',1)
+        handles.params.file_format = 4;
 end
 
 handles.params.system_config = index_selected;
@@ -1619,6 +1643,34 @@ switch handles.params.file_format
                     Parameters(n-1).DAQ_code = 7;
                     Stimulus{n-1} = {Data.HeadMPUVel_Z};
                     stim_ind{n-1} = {[]};
+                case 7 %Pupil Labs
+                    Parameters(n-1).DAQ = 'PupilLabs';
+                    Parameters(n-1).DAQ_code = 8;
+                    if isrow(Data.HeadMPUVel_X)
+                        Data.HeadMPUVel_X = Data.HeadMPUVel_X';
+                    end
+                    if isrow(Data.HeadMPUVel_Y)
+                        Data.HeadMPUVel_Y = Data.HeadMPUVel_Y';
+                    end
+                    if isrow(Data.HeadMPUVel_Z)
+                        Data.HeadMPUVel_Z = Data.HeadMPUVel_Z';
+                    end
+                    
+                    
+                    headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                    
+                    headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,1)};
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,2)};
+                                    
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n-1} = {headmpu_lrz(:,3)};
+                                    
+                            end
+                            stim_ind{n-1} = {[]};
             end
             
             

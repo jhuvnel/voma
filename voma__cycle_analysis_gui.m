@@ -586,7 +586,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         %
         %         end
         
-    case {1,4,5,6,7}
+    case {1,4,5,6,7,8}
         
         % Check if the variable is empty. If it is, set the 'stimulus length' to
         % the starting and ending point of the stimulus trace.
@@ -1028,7 +1028,7 @@ if handles.params.righteye_flag == 1
 end
 
 switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5,6,7}
+    case {1,4,5,6,7,8}
         
         plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
         

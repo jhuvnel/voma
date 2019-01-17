@@ -262,6 +262,30 @@ if exist('Data_In','var') && ~isempty(Data_In)
             %
             %             rotrotL = rot2rot(newFrameinFrame,rotL);
             %             LRZL = rot2angvel(rotrotL)/pi*180*1000;
+        case 8 %PupilLabs
+                        Fs = Data_In.Fs;
+            
+            if (isrow(Data_In.Data_LE_Pos_X))
+                Data_In.Data_LE_Pos_X=Data_In.Data_LE_Pos_X';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Y))
+                Data_In.Data_LE_Pos_Y=Data_In.Data_LE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Z))
+                Data_In.Data_LE_Pos_Z=Data_In.Data_LE_Pos_Z';
+            end
+            if (isrow(Data_In.Data_RE_Pos_X))
+                Data_In.Data_RE_Pos_X=Data_In.Data_RE_Pos_X';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Y))
+                Data_In.Data_RE_Pos_Y=Data_In.Data_RE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Z))
+                Data_In.Data_RE_Pos_Z=Data_In.Data_RE_Pos_Z';
+            end
+            
+            rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
+            rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
         
     end
     
@@ -688,9 +712,45 @@ for j=1:2
 %             rawData_L = [ Data_In.Data_LE_Pos_Z  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_X ];
 %             rawData_R = [ Data_In.Data_RE_Pos_Z  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_X ];
 %             
-            % Here need to calculate velocity now.
-                        
+        case 8 
+                Fs = Data_In.Fs;
             
+            if (isrow(Data_In.Data_LE_Pos_X))
+                Data_In.Data_LE_Pos_X=Data_In.Data_LE_Pos_X';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Y))
+                Data_In.Data_LE_Pos_Y=Data_In.Data_LE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_LE_Pos_Z))
+                Data_In.Data_LE_Pos_Z=Data_In.Data_LE_Pos_Z';
+            end
+            if (isrow(Data_In.Data_RE_Pos_X))
+                Data_In.Data_RE_Pos_X=Data_In.Data_RE_Pos_X';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Y))
+                Data_In.Data_RE_Pos_Y=Data_In.Data_RE_Pos_Y';
+            end
+            if (isrow(Data_In.Data_RE_Pos_Z))
+                Data_In.Data_RE_Pos_Z=Data_In.Data_RE_Pos_Z';
+            end
+            
+            % NOTE: These are FICK ANGLES NOT ROTATION VECTORS, SO SAVE AS
+            % HVT (Horiz, Vert, Torsion)
+            %%% fick2rot looks for Z,Y,X and spits out X,Y,Z
+            rawData_L = [ Data_In.Data_LE_Pos_X  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_Z ];
+            rawData_R = [ Data_In.Data_RE_Pos_X  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_Z ];
+            
+            switch j 
+                case 1 % Left Eye
+                    rawData = rawData_L;
+                case 2 % Right Eye
+                    rawData = rawData_R;
+            end
+                            angvel_dps_b = [[rawData(:,1)]...
+                                            [diff(rawData(:,2)).*1100;false] ...
+                                            [diff(rawData(:,3)).*1100;false]];
+            
+            angvel_dps_c = [rawData(:,1) rawData(:,1)];
             
             
     end
@@ -791,6 +851,14 @@ switch DAQ_code
         Data.RE_Pos_X = rawData_R(:,3);
         Data.RE_Pos_Y = rawData_R(:,2);
         Data.RE_Pos_Z = rawData_R(:,1);
+    case 8 
+        Data.LE_Pos_X = rawData_L(:,1);
+        Data.LE_Pos_Y = rawData_L(:,2);
+        Data.LE_Pos_Z = rawData_L(:,3);
+        
+        Data.RE_Pos_X = rawData_R(:,1);
+        Data.RE_Pos_Y = rawData_R(:,2);
+        Data.RE_Pos_Z = rawData_R(:,3);
 end
 
 function ang=rot2angvel(rot)

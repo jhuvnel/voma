@@ -162,7 +162,7 @@ cla
 
 CurrData = handles.CurrData;
 switch CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5,7}
+    case {1,4,5,7,8}
         plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
         hold on
         plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')
@@ -335,7 +335,7 @@ switch handles.params.detect_method
         hold on
         plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.Stimulus(stim_pos_thresh_ind),'rx')
         %         plot(handles.stim_plot,handles.Time(stim_neg_thresh_ind),handles.Stimulus(stim_neg_thresh_ind),'bx')
-        
+        guidata(hObject,handles)
     case 2
         inds = [1:length(handles.Stimulus)];
         
@@ -359,6 +359,7 @@ switch handles.params.detect_method
             
         end
         plot_stim_trace(hObject, eventdata, handles)
+        guidata(hObject,handles)
         
     case 3
         [stim_ind_temp] = voma__find_stim_ind(handles.Stimulus,handles.CurrData.VOMA_data.Fs,handles.Time,'n');
@@ -368,6 +369,7 @@ switch handles.params.detect_method
         handles.stim_ind = stim_ind_temp;
         
         plot_stim_inds(hObject, eventdata, handles)
+        guidata(hObject,handles)
     case 4
                         temp_smth = sgolayfilt(handles.Stimulus,3,105);
                 temp_smth = sgolayfilt(temp_smth,3,105);

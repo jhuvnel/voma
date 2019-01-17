@@ -465,6 +465,10 @@ stim_int = handles.stim_intensity.String{handles.stim_intensity.Value};
 dps = find(handles.stim_intensity.String{handles.stim_intensity.Value} == 'd');
 stim_int(dps:end) = [];
 handles.experimentdata{segments,13} = str2num(stim_int);
+handles.experimentdata{segments,14} = [];
+handles.experimentdata{segments,15} = [];
+handles.experimentdata{segments,16} = [];
+handles.experimentdata{segments,17} = [];
 setappdata(handles.export_data,'data',handles.experimentdata);
 handles.segment_number.String = num2str(segments);
 set(handles.save_indicator,'String','SAVED!')
@@ -489,6 +493,8 @@ set(handles.save_indicator,'BackgroundColor','r')
 
 if handles.params.reloadflag == 0
     handles.segment_number.String = '0';
+    handles.exp_spread_sheet_name.String = '';
+    handles.worksheet_name.String = '';
     handles.experimentdata = {};
     
 else
@@ -980,26 +986,7 @@ switch handles.params.system_code
         Data.HeadMPUAccel_X = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUAccel_Y = zeros(length(Data.Time_Eye),1);
         Data.HeadMPUAccel_Z = zeros(length(Data.Time_Eye),1);
-    case 4 
-        if handles.params.reloadflag == 0
-            % If requesting a new file, prompt the user to choose the file.
-            [handles.FileNameGains,handles.PathNameGains,FilterIndex] = uigetfile('*.txt','Please choose the Gain file');
-            cd(handles.PathNameGains);
-            [handles.FileNameOffset1,handles.PathNameOffset1,FilterIndex] = uigetfile('*.coil','Please choose the First Orientation Offset file');
-            [handles.FileNameOffset2,handles.PathNameOffset2,FilterIndex] = uigetfile('*.coil','Please choose the Second Orientation Offset file');
-            handles.PathNameofFiles = uigetdir(cd,'Please choose the folder where the coil files are saved');
-                handles.segment_number.String = '0';
-                handles.experimentdata = {};
-            
-        else
-                handles.segment_number.String = '0';
-                handles.experimentdata = {};
-        end
-        
-        
-        
-        
-        
+  
     case 3 % Pupil Labs
         % Check if the user requested to start segmenting a new file, or a
         % 'reload' of the same file.            
@@ -1626,6 +1613,24 @@ hold off
         Data.Time_Stim = Time_Stim;
         
         Data.Stim_Trig = Stim;
+        handles.string_addon = [];
+             guidata(hObject,handles)
+            case 4 
+        if handles.params.reloadflag == 0
+            % If requesting a new file, prompt the user to choose the file.
+            [handles.FileNameGains,handles.PathNameGains,FilterIndex] = uigetfile('*.txt','Please choose the Gain file');
+            cd(handles.PathNameGains);
+            [handles.FileNameOffset1,handles.PathNameOffset1,FilterIndex] = uigetfile('*.coil','Please choose the First Orientation Offset file');
+            [handles.FileNameOffset2,handles.PathNameOffset2,FilterIndex] = uigetfile('*.coil','Please choose the Second Orientation Offset file');
+            handles.PathNameofFiles = uigetdir(cd,'Please choose the folder where the coil files are saved');
+                handles.segment_number.String = '0';
+                handles.experimentdata = {};
+            
+        else
+                handles.segment_number.String = '0';
+                handles.experimentdata = {};
+        end
+             guidata(hObject,handles)
     otherwise
         
         
@@ -3372,7 +3377,7 @@ function load_spread_sheet_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Prompt user for experimental file
-[FileName,PathName,FilterIndex] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet where the data will be exported');
+[FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the experimental batch file where the data will be exported');
 
 handles.ss_PathName = PathName;
 handles.ss_FileName = FileName;
@@ -3391,16 +3396,61 @@ function export_data_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.export_data.BackgroundColor = [1    1    0];
 pause(0.1);
-cd(handles.ss_PathName);
-if handles.ispc.flag
-[status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
-else
-    A = importdata(handles.ss_FileName)
-    names = fieldnames(A.textdata);
-    sheets = strrep(names,'0x2D','-')';
+if (~isempty({handles.exp_spread_sheet_name.String}) | strcmp({handles.exp_spread_sheet_name.String},'0')) && exist(handles.exp_spread_sheet_name.String)
+    cd(handles.ss_PathName);
+    expRecords = load(handles.exp_spread_sheet_name.String)
+    
+    if length(handles.worksheet_name.String)> 31
+        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
+    end
+    
+    handles.experimentdata = getappdata(hObject,'data');
+    rmvinds = strfind(handles.experimentdata(:,1),'.mat');
+for k=1:length(rmvinds)
+    
+    temp = handles.experimentdata{k,1};
+    
+    temp(rmvinds{k}:rmvinds{k}+3) = '';
+    
+    handles.experimentdata{k,1} = temp;
 end
+    temp = handles.worksheet_name.String;
+    temp(temp=='-') = '_';
+    if any(strcmp(fieldnames(expRecords),temp))
+        segs = size(handles.experimentdata);
+        for rs = 1:segs(1)
+            if any(strcmp([handles.experimentdata(rs,1)],expRecords.(temp).File_Name))
+                replaceInd = [find(strcmp(expRecords.(temp).File_Name,[handles.experimentdata(rs,1)]))];
+                expRecords.(temp)(replaceInd,:)=[handles.experimentdata(rs,:)];
+            else
+                expRecords.(temp)(end+1,:) = [handles.experimentdata(rs,:)]
+            end
+        end
+    else
+        expRecords.(temp) = [];
+       segs = size(handles.experimentdata);
+       labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
+        expRecords.(temp) = cell2table([handles.experimentdata],'VariableNames',labels) 
+    end
 
-handles.experimentdata = getappdata(hObject,'data');
+save(handles.exp_spread_sheet_name.String,'-struct','expRecords')
+writetable(expRecords.(temp),[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
+
+else
+prompt = {'Enter the desired file name without extensions'};
+title = 'File Name';
+dims = [1 35];
+definput = {[handles.params.subj_id ' Experiment Records']};
+handles.ss_FileName = inputdlg(prompt,title,dims,definput)
+handles.ss_PathName = uigetdir(cd,'Choose directory where files will be saved')
+set(handles.exp_spread_sheet_name,'String',[handles.ss_FileName{1} '.mat']);
+cd(handles.ss_PathName);
+labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
+    if length(handles.worksheet_name.String)> 31
+        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
+    end
+    
+    handles.experimentdata = getappdata(hObject,'data');
 
 
 rmvinds = strfind(handles.experimentdata(:,1),'.mat');
@@ -3411,56 +3461,16 @@ for k=1:length(rmvinds)
     temp(rmvinds{k}:rmvinds{k}+3) = '';
     
     handles.experimentdata{k,1} = temp;
+end 
+temp = handles.worksheet_name.String;
+temp(temp=='-') = '_';
+var = genvarname(temp);
+t = cell2table([handles.experimentdata],'VariableNames',labels);
+eval([var '=t']);
+save(handles.exp_spread_sheet_name.String,var);
+writetable(t,[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
 end
 
-
-if ismember(handles.worksheet_name.String, sheets)
-    segs = size(handles.experimentdata);
-    [num1, txt1, raw1] = xlsread(handles.exp_spread_sheet_name.String, handles.worksheet_name.String,'A:A');
-    oldVals = size(txt1);
-    newEntry = 0;
-    if handles.ispc.flag
-        for rs = 1:segs(1)
-            if ismember([handles.experimentdata(rs,1)],txt1)
-                replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-                xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
-                
-            else
-                xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
-                newEntry = newEntry+1;
-            end
-        end
-    else
-        for rs = 1:segs(1)
-            if ismember([handles.experimentdata(rs,1)],txt1)
-                replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-                Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false)
-            else
-                Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false)
-                newEntry = newEntry+1;
-            end
-        end
-    end
-else
-    labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
-    % Check if the length of the Sheet name is > 31 chars
-    if length(handles.worksheet_name.String)> 31
-        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
-    end
-    if handles.ispc.flag
-        xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
-        segs = size(handles.experimentdata);
-        xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
-    else
-        Tlabels = cell2table(labels);
-        Tdata = cell2table([handles.experimentdata]);
-        segs = size(handles.experimentdata);
-        writetable(Tlabels,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range','A1:Q1','WriteVariableNames',false)
-        writetable(Tdata,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range',['A2:Q',num2str(segs(1)+1)],'WriteVariableNames',false)
-    end
-end
 handles.export_data.BackgroundColor = [0    1    0];
 pause(1);
 handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
@@ -3534,7 +3544,7 @@ switch handles.choice.stim
     case 4 % Electrical Only
         handles.stim_mag = handles.Segment.Stim_Trig;
         trace = handles.Segment.Stim_Trig;
-        case 5 % Pupil Labs
+     case 6 % Pupil Labs
         window = 500;
         b = (1/window)*ones(1,window);
         a = 1;
@@ -3553,7 +3563,7 @@ switch handles.choice.stim
         handles.Segment.HeadMPUVel_Z = handles.Segment.HeadMPUVel_Z - zVal;
         handles.stim_mag = sqrt((handles.Segment.HeadMPUVel_X.^2) + (handles.Segment.HeadMPUVel_Y.^2) + (handles.Segment.HeadMPUVel_Z.^2)); % Calculating the magnitude of the X Y and Z velocities
         trace = handles.stim_mag;
-    end
+end
     
 mask = zeros(length(trace),1);
 handles.thresh_plot = figure('Name','Choose Threshold', 'NumberTitle','off');
@@ -3562,7 +3572,7 @@ ax1 = axes;
 ax1.Position = [0.06 0.2 0.9 0.75];
 
     switch handles.choice.stim
-        case {3,5} % Mechanical Sinusoids
+        case {3,6} % Mechanical Sinusoids & Pupil Labs
         handles.xVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_X,'color',[1 0.65 0],'LineStyle',':','DisplayName','MPU-GYRO-X');
         hold on
         handles.yVel = plot(ax1,handles.Segment.Time_Stim(:,1),handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':','DisplayName','MPU-GYRO-Y');
@@ -3603,7 +3613,7 @@ switch handles.choice.stim
         
         [c,d] = findpeaks(diff(end_inds),'Threshold',15);
         end_inds_final = end_inds([d length(end_inds)]);
-        case 5 % Pupil Labs
+        case 6 % Pupil Labs
                     onset_inds_final = onset_inds([true diff(onset_inds)>2000]); % Take the backwards difference of the index values, keep the first index (true),disregard any differences less than 200
         % Keeping the first index allows for the initial onset to be selected
         end_inds_final = end_inds([diff(end_inds)>2000 true]); % Take the backwards difference of the index values, keep the last index (true), disregard any differences less than 200
@@ -3724,7 +3734,7 @@ if length(onset_inds_final) ~= length(end_inds_final)
 end
 check = 1;
 go = 1;
-if handles.choice.stim == 5
+if handles.choice.stim == 6
     bound = 3700;
 else
 bound = 300;
@@ -3753,7 +3763,7 @@ for plots = 1:length(end_inds_final)
     handles.ax1.Position = [0.09 0.1 0.72 0.85];
     
     switch handles.choice.stim
-        case {3,5} % Mechanical Sinusoids
+        case {3,6} % Mechanical Sinusoids & Pupil Labs
         handles.HeadMPUVel_Z_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Z,'color','r','LineStyle',':');
         hold on
         handles.HeadMPUVel_Y_plot = plot(handles.ax1,handles.Segment.Time_Stim,handles.Segment.HeadMPUVel_Y,'color',[0.55 0.27 0.07],'LineStyle',':');
