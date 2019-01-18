@@ -82,6 +82,9 @@ handles.params.stim_frequency = '';
 handles.params.stim_intensity = '';
 handles.folder_name = '';
 handles.params.suffix = '';
+handles.exportCond = 0;
+handles.load_spread_sheet.BackgroundColor = 'y';
+handles.load_spread_sheet.Enable = 'off';
 
 handles.right_extra = 300;
 handles.left_extra = 300;
@@ -496,6 +499,7 @@ if handles.params.reloadflag == 0
     handles.exp_spread_sheet_name.String = '';
     handles.worksheet_name.String = '';
     handles.experimentdata = {};
+    handles.exportCond = 0;
     
 else
     
@@ -1840,6 +1844,8 @@ function subj_id_Callback(hObject, eventdata, handles)
 % hObject    handle to subj_id (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.load_spread_sheet.BackgroundColor = 'white'
+handles.load_spread_sheet.Enable = 'on';
 handles.params.subj_id = get(hObject,'String');
 [handles] = update_seg_filename(hObject, eventdata, handles);
 guidata(hObject,handles)
@@ -3375,14 +3381,26 @@ function load_spread_sheet_Callback(hObject, eventdata, handles)
 % hObject    handle to load_excel_sheet (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+answer = questdlg('Has a .mat or .xlsx Experiment Records file been created for this subject?', ...
+	'Exporting Data', ...
+	'Just .xlsx','.mat','Neither');
+% Handle response
+switch answer
+    case 'Just .xlsx'
+        handles.exportCond = 1;
 
-% Prompt user for experimental file
-[FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the experimental batch file where the data will be exported');
-
-handles.ss_PathName = PathName;
-handles.ss_FileName = FileName;
-
-set(handles.exp_spread_sheet_name,'String',FileName);
+    case '.mat'
+        [FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the experimental batch file where the data will be exported');
+        handles.ss_PathName = PathName;
+        handles.ss_FileName = FileName;
+        set(handles.exp_spread_sheet_name,'String',FileName);
+        handles.exportCond = 2;
+    case 'Neither'
+        handles.ss_FileName = [handles.subj_id.String '_ExperimentRecords']
+        set(handles.exp_spread_sheet_name,'String',[handles.ss_FileName '.mat']);
+        handles.exportCond = 3;
+        
+end
 guidata(hObject,handles)
 end
 
@@ -3396,85 +3414,82 @@ function export_data_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.export_data.BackgroundColor = [1    1    0];
 pause(0.1);
-if (~isempty({handles.exp_spread_sheet_name.String}) | strcmp({handles.exp_spread_sheet_name.String},'0')) && exist(handles.exp_spread_sheet_name.String)
-    cd(handles.ss_PathName);
-    expRecords = load(handles.exp_spread_sheet_name.String)
-    
-    if length(handles.worksheet_name.String)> 31
-        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
-    end
-    
-    handles.experimentdata = getappdata(hObject,'data');
-    rmvinds = strfind(handles.experimentdata(:,1),'.mat');
-for k=1:length(rmvinds)
-    
-    temp = handles.experimentdata{k,1};
-    
-    temp(rmvinds{k}:rmvinds{k}+3) = '';
-    
-    handles.experimentdata{k,1} = temp;
-end
-    temp = handles.worksheet_name.String;
-    temp(temp=='-') = '_';
-    if any(strcmp(fieldnames(expRecords),temp))
-        segs = size(handles.experimentdata);
-        for rs = 1:segs(1)
-            if any(strcmp([handles.experimentdata(rs,1)],expRecords.(temp).File_Name))
-                replaceInd = [find(strcmp(expRecords.(temp).File_Name,[handles.experimentdata(rs,1)]))];
-                expRecords.(temp)(replaceInd,:)=[handles.experimentdata(rs,:)];
-            else
-                expRecords.(temp)(end+1,:) = [handles.experimentdata(rs,:)]
-            end
+switch handles.exportCond
+    case 0 
+        
+    case {1,2}
+        cd(handles.ss_PathName);
+        expRecords = load(handles.exp_spread_sheet_name.String)
+        if length(handles.worksheet_name.String)> 31
+            handles.worksheet_name.String = handles.worksheet_name.String(1:31);
         end
-    else
-        expRecords.(temp) = [];
-       segs = size(handles.experimentdata);
-       labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
-        expRecords.(temp) = cell2table([handles.experimentdata],'VariableNames',labels) 
+        handles.experimentdata = getappdata(hObject,'data');
+        handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat','');
+%         rmvinds = strfind(handles.experimentdata(:,1),'.mat');
+%             for k=1:length(rmvinds)
+%                 temp = handles.experimentdata{k,1};
+%                 temp(rmvinds{k}:rmvinds{k}+3) = '';
+%                 handles.experimentdata{k,1} = temp;
+%             end 
+        temp = handles.worksheet_name.String;
+        temp(temp=='-') = '_';
+        if any(strcmp(fieldnames(expRecords),temp))
+            segs = size(handles.experimentdata);
+            for rs = 1:segs(1)
+                if any(strcmp([handles.experimentdata(rs,1)],expRecords.(temp).File_Name))
+                    replaceInd = [find(strcmp(expRecords.(temp).File_Name,[handles.experimentdata(rs,1)]))];
+                    expRecords.(temp)(replaceInd,:)=[handles.experimentdata(rs,:)];
+                else
+                    expRecords.(temp)(end+1,:) = [handles.experimentdata(rs,:)]
+                end
+            end
+        else
+            expRecords.(temp) = [];
+           segs = size(handles.experimentdata);
+           labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
+            expRecords.(temp) = cell2table([handles.experimentdata],'VariableNames',labels) 
+        end
+        save(handles.exp_spread_sheet_name.String,'-struct','expRecords')
+        writetable(expRecords.(temp),[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
+        handles.export_data.BackgroundColor = [0    1    0];
+        pause(1);
+        handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
+        guidata(hObject,handles)
+    case 3
+        prompt = {'Enter the desired file name without extensions'};
+        title = 'File Name';
+        dims = [1 35];
+        definput = {[handles.params.subj_id '_ExperimentRecords']};
+        handles.ss_FileName = inputdlg(prompt,title,dims,definput)
+        handles.ss_PathName = uigetdir(cd,'Choose directory where files will be saved')
+        set(handles.exp_spread_sheet_name,'String',[handles.ss_FileName{1} '.mat']);
+        cd(handles.ss_PathName);
+        labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
+            if length(handles.worksheet_name.String)> 31
+                handles.worksheet_name.String = handles.worksheet_name.String(1:31);
+            end
+        handles.experimentdata = getappdata(hObject,'data');
+        handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat','');
+%         rmvinds = strfind(handles.experimentdata(:,1),'.mat');
+%             for k=1:length(rmvinds)
+%                 temp = handles.experimentdata{k,1};
+%                 temp(rmvinds{k}:rmvinds{k}+3) = '';
+%                 handles.experimentdata{k,1} = temp;
+%             end 
+        temp = handles.worksheet_name.String;
+        temp(temp=='-') = '_';
+        var = genvarname(temp);
+        t = cell2table([handles.experimentdata],'VariableNames',labels);
+        eval([var '=t']);
+        save(handles.exp_spread_sheet_name.String,var);
+        writetable(t,[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
+        handles.export_data.BackgroundColor = [0    1    0];
+        pause(1);
+        handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
+        handles.exportCond = 2;
+        guidata(hObject,handles)      
     end
 
-save(handles.exp_spread_sheet_name.String,'-struct','expRecords')
-writetable(expRecords.(temp),[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
-
-else
-prompt = {'Enter the desired file name without extensions'};
-title = 'File Name';
-dims = [1 35];
-definput = {[handles.params.subj_id ' Experiment Records']};
-handles.ss_FileName = inputdlg(prompt,title,dims,definput)
-handles.ss_PathName = uigetdir(cd,'Choose directory where files will be saved')
-set(handles.exp_spread_sheet_name,'String',[handles.ss_FileName{1} '.mat']);
-cd(handles.ss_PathName);
-labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
-    if length(handles.worksheet_name.String)> 31
-        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
-    end
-    
-    handles.experimentdata = getappdata(hObject,'data');
-
-
-rmvinds = strfind(handles.experimentdata(:,1),'.mat');
-for k=1:length(rmvinds)
-    
-    temp = handles.experimentdata{k,1};
-    
-    temp(rmvinds{k}:rmvinds{k}+3) = '';
-    
-    handles.experimentdata{k,1} = temp;
-end 
-temp = handles.worksheet_name.String;
-temp(temp=='-') = '_';
-var = genvarname(temp);
-t = cell2table([handles.experimentdata],'VariableNames',labels);
-eval([var '=t']);
-save(handles.exp_spread_sheet_name.String,var);
-writetable(t,[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
-end
-
-handles.export_data.BackgroundColor = [0    1    0];
-pause(1);
-handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
-guidata(hObject,handles)
 end
 
 function implant_Callback(hObject, eventdata, handles)
