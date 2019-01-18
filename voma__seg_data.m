@@ -808,7 +808,7 @@ switch handles.params.system_code
         
         Data.HeadMPUVel_X = XAxisVelHead';
         Data.HeadMPUVel_Y = YAxisVelHead';
-        Data.HeadMPUVel_Z = ZAxisVelHead'; mn
+        Data.HeadMPUVel_Z = ZAxisVelHead';
         
         Data.HeadMPUAccel_X = XAxisAccelHead';
         Data.HeadMPUAccel_Y = YAxisAccelHead';
