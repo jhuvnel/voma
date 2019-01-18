@@ -55,13 +55,6 @@ function voma__convert_raw2qpr_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to voma__convert_raw2qpr (see VARARGIN)
 
-if ispc
-    handles.ispc.flag = true;
-    handles.ispc.slash = '\';
-else
-    handles.ispc.flag = false;
-    handles.ispc.slash = '/';
-end
 
 % Choose default command line output for voma__convert_raw2qpr
 handles.output = hObject;
@@ -115,32 +108,30 @@ function load_excel_sheet_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Prompt user for experimental file
-[FileName,PathName,FilterIndex] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet for analysis');
-if FileName ~= 0
-    handles.params.xlsname = FileName;
-    handles.params.xlspath = PathName;
-if handles.ispc.flag
-[status,sheets,xlFormat] = xlsfinfo([PathName FileName]);
-else
-    A = load([PathName FileName],'-mat')
-    if size(A.textdata) ~= [1 1]
-    sheets = A.textdata{2}(7:24);
-    else
-    names = fieldnames(A.textdata);
-    sheets = strrep(names,'0x2D','-')';
-    end
+answer = questdlg('Has a .mat or .xlsx Experiment Records file been created for this subject?', ...
+	'Exporting Data', ...
+	'Just .xlsx','.mat','.mat');
+switch answer
+    case 'Just .xlsx'
+        handles.exportCond = 1;
+        [FileName,PathName] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet where the data will be exported');
+        ExperimentRecords = ExperimentRecordsExcel2MAT([PathName,FileName]);
+        FileName = [FileName(1:end-4) 'mat']
+
+    case '.mat'
+        [FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the experimental batch file where the data will be exported');
+        set(handles.excel_sheet_text,'String',FileName);
+        handles.exportCond = 2;
 end
-    
-    set(handles.excel_sheet_list,'String',sheets);
+cd(PathName)
+        handles.ExperimentRecords = load(FileName);
+        handles.sheets = fields(handles.ExperimentRecords)
+    set(handles.excel_sheet_list,'String',handles.sheets);
     set(handles.excel_sheet_text,'String',FileName);
     
     % Assume the user is loading the first sheet
+    handles.params.raw = table2cell(handles.ExperimentRecords.(handles.sheets{1}));
 
-    [num1,txt1,raw1] = xlsread([handles.params.xlspath handles.params.xlsname],1);
-
-    
-    handles.params.raw = raw1;
-end
 guidata(hObject,handles)
 
 % --- Executes on selection change in system_config.
@@ -1718,6 +1709,9 @@ if save_flag
     str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
     save([str{1} '.voma'],'Data_QPR')
 end
+handles.start_conversion.BackgroundColor = 'green';
+pause(1);
+handles.start_conversion.BackgroundColor = [0.94 0.94 0.94];
 
 % --- Executes on selection change in excel_sheet_list.
 function excel_sheet_list_Callback(hObject, eventdata, handles)
@@ -1725,9 +1719,7 @@ function excel_sheet_list_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 sheet_id = get(hObject,'Value');
-ExperimentRecords = handles.ExperimentRecords;
-sheets = handles.params.sheets;
-handles.params.raw = [ExperimentRecords.(sheets{sheet_id}).Properties.VariableNames;table2cell(ExperimentRecords.(sheets{sheet_id}))];
+handles.params.raw = table2cell(handles.ExperimentRecords.(handles.sheets{sheet_id}));
 guidata(hObject,handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns excel_sheet_list contents as cell array

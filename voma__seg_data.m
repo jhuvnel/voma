@@ -1618,6 +1618,9 @@ hold off
         
         Data.Stim_Trig = Stim;
         handles.string_addon = [];
+        handles.load_raw.BackgroundColor = 'green';
+        pause(1)
+        handles.load_raw.BackgroundColor = [0.94 0.94 0.94];
              guidata(hObject,handles)
             case 4 
         if handles.params.reloadflag == 0
@@ -1844,7 +1847,7 @@ function subj_id_Callback(hObject, eventdata, handles)
 % hObject    handle to subj_id (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.load_spread_sheet.BackgroundColor = 'white'
+handles.load_spread_sheet.BackgroundColor = [0.94 0.94 0.94];
 handles.load_spread_sheet.Enable = 'on';
 handles.params.subj_id = get(hObject,'String');
 [handles] = update_seg_filename(hObject, eventdata, handles);
@@ -3383,11 +3386,16 @@ function load_spread_sheet_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 answer = questdlg('Has a .mat or .xlsx Experiment Records file been created for this subject?', ...
 	'Exporting Data', ...
-	'Just .xlsx','.mat','Neither');
+	'Just .xlsx','.mat','Neither','Neither');
 % Handle response
 switch answer
     case 'Just .xlsx'
         handles.exportCond = 1;
+        [FileName,PathName] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet where the data will be exported');
+        ExperimentRecords = ExperimentRecordsExcel2MAT([PathName,FileName]);
+        set(handles.exp_spread_sheet_name,'String',[FileName(1:end-4) 'mat']);
+        handles.ss_PathName = PathName;
+        handles.ss_FileName = [FileName(1:end-4) 'mat'];
 
     case '.mat'
         [FileName,PathName,FilterIndex] = uigetfile('*.mat','Please choose the experimental batch file where the data will be exported');
@@ -3396,7 +3404,7 @@ switch answer
         set(handles.exp_spread_sheet_name,'String',FileName);
         handles.exportCond = 2;
     case 'Neither'
-        handles.ss_FileName = [handles.subj_id.String '_ExperimentRecords']
+        handles.ss_FileName = [handles.subj_id.String{handles.subj_id.Value} '_ExperimentRecords']
         set(handles.exp_spread_sheet_name,'String',[handles.ss_FileName '.mat']);
         handles.exportCond = 3;
         
@@ -3424,15 +3432,10 @@ switch handles.exportCond
             handles.worksheet_name.String = handles.worksheet_name.String(1:31);
         end
         handles.experimentdata = getappdata(hObject,'data');
-        handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat','');
-%         rmvinds = strfind(handles.experimentdata(:,1),'.mat');
-%             for k=1:length(rmvinds)
-%                 temp = handles.experimentdata{k,1};
-%                 temp(rmvinds{k}:rmvinds{k}+3) = '';
-%                 handles.experimentdata{k,1} = temp;
-%             end 
+        handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat',''); 
         temp = handles.worksheet_name.String;
         temp(temp=='-') = '_';
+        temp(temp==' ') = '';
         if any(strcmp(fieldnames(expRecords),temp))
             segs = size(handles.experimentdata);
             for rs = 1:segs(1)
@@ -3450,7 +3453,7 @@ switch handles.exportCond
             expRecords.(temp) = cell2table([handles.experimentdata],'VariableNames',labels) 
         end
         save(handles.exp_spread_sheet_name.String,'-struct','expRecords')
-        writetable(expRecords.(temp),[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
+        writetable(expRecords.(temp),[handles.ss_FileName(1:end-4) '.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true)
         handles.export_data.BackgroundColor = [0    1    0];
         pause(1);
         handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
@@ -3470,19 +3473,14 @@ switch handles.exportCond
             end
         handles.experimentdata = getappdata(hObject,'data');
         handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat','');
-%         rmvinds = strfind(handles.experimentdata(:,1),'.mat');
-%             for k=1:length(rmvinds)
-%                 temp = handles.experimentdata{k,1};
-%                 temp(rmvinds{k}:rmvinds{k}+3) = '';
-%                 handles.experimentdata{k,1} = temp;
-%             end 
         temp = handles.worksheet_name.String;
         temp(temp=='-') = '_';
+        temp(temp==' ') = '';
         var = genvarname(temp);
         t = cell2table([handles.experimentdata],'VariableNames',labels);
         eval([var '=t']);
         save(handles.exp_spread_sheet_name.String,var);
-        writetable(t,[handles.ss_FileName{1} '.xlsx'],'Sheet',handles.worksheet_name.String,'Range','A:Q','WriteVariableNames',true)
+        writetable(t,[handles.ss_FileName{1} '.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true)
         handles.export_data.BackgroundColor = [0    1    0];
         pause(1);
         handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
@@ -4016,6 +4014,11 @@ else
     
 end
 
+if (i_end_stim-i_start_stim)>(i_end_eye-i_start_eye)
+    i_start_stim= i_start_stim - 1;
+else
+    i_start_stim= i_start_stim + 1;
+end
 handles.i_start_eye = i_start_eye;
 handles.i_end_eye = i_end_eye;
 handles.i_start_stim = i_start_stim;

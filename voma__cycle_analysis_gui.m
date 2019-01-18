@@ -593,7 +593,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         % If it is not empty, find the minimum difference between stimulus
         % start indicies
         if isempty(stim_ind)
-            handles.len = length(CurrData.VOMA_data.Eye_t)-1;
+            handles.len = length(handles.CurrData.VOMA_data.Eye_t)-1;
             handles.len_stim = handles.len;
             
             
