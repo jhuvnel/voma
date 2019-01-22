@@ -74,6 +74,14 @@ handles.params.interp_ldvog_mpu = true;
 
 handles.Yaxis_MPU_Rot_theta = str2double(get(handles.Yaxis_Rot_Theta,'String'));
 
+if ispc
+    handles.ispc.flag = true;
+    handles.ispc.slash = '\';
+else
+    handles.ispc.flag = false;
+    handles.ispc.slash = '/';
+end
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -99,24 +107,24 @@ function load_excel_sheet_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Prompt user for experimental file
-[FileName,PathName,FilterIndex] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet for analysis');
-
+[FileName,PathName,~] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet for analysis. Matching .mat file should be in the same directory.');
 if FileName ~= 0
     handles.params.xlsname = FileName;
     handles.params.xlspath = PathName;
-    
-    [status,sheets] = xlsfinfo([PathName FileName]);
-    
+    if(exist([PathName,FileName(1:end-4),'mat'],'file')==2)
+        load([PathName,FileName(1:end-4),'mat'],'ExperimentRecords');
+    else
+        ExperimentRecords = ExperimentRecordsExcel2MAT([PathName,FileName]);
+        msgbox('This experimental records sheet did not have a corresponding .mat file so one was created.');
+    end
+    sheets = fieldnames(ExperimentRecords);
     set(handles.excel_sheet_list,'String',sheets);
-    
     set(handles.excel_sheet_text,'String',FileName);
-    
-    % Assume the user is loading the first sheet
-    [num1,txt1,raw1] = xlsread([handles.params.xlspath handles.params.xlsname],1);
-    
-    handles.params.raw = raw1;
+    % Assume the user is loading the first sheet as a defualt
+    handles.params.raw = [ExperimentRecords.(sheets{1}).Properties.VariableNames;table2cell(ExperimentRecords.(sheets{1}))];
+    handles.ExperimentRecords = ExperimentRecords;
+    handles.params.sheets = sheets;
 end
-
 guidata(hObject,handles)
 
 % --- Executes on selection change in system_config.
@@ -1656,14 +1664,11 @@ switch handles.params.file_format
         end 
 end
 
-
-
 if save_flag
-cd(handles.params.output_data_path)
-str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
-
-save([str{1} '.voma'],'Data_QPR')
-   end
+    cd(handles.params.output_data_path)
+    str = inputdlg('Please enter the name of the output file (WITHOUT any suffix)','Output File', [1 50]);
+    save([str{1} '.voma'],'Data_QPR')
+end
 
 % --- Executes on selection change in excel_sheet_list.
 function excel_sheet_list_Callback(hObject, eventdata, handles)
@@ -1671,10 +1676,9 @@ function excel_sheet_list_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 sheet_id = get(hObject,'Value');
-
-[num1,txt1,raw1] = xlsread([handles.params.xlspath handles.params.xlsname],sheet_id);
-
-handles.params.raw = raw1;
+ExperimentRecords = handles.ExperimentRecords;
+sheets = handles.params.sheets;
+handles.params.raw = [ExperimentRecords.(sheets{sheet_id}).Properties.VariableNames;table2cell(ExperimentRecords.(sheets{sheet_id}))];
 guidata(hObject,handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns excel_sheet_list contents as cell array

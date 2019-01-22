@@ -2502,11 +2502,23 @@ function export_data_Callback(hObject, eventdata, handles)
 handles.export_data.BackgroundColor = [1    1    0];
 pause(0.1);
 cd(handles.ss_PathName);
-[status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+if handles.ispc.flag
+    [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
+else
+    A = importdata(handles.ss_FileName);
+    if(isempty(A))
+        disp('There are no sheets detected in this document at all.')
+        return;
+    elseif(iscell(A))
+        disp('There is only one sheet in this excel document. Please add another sheet and add characters to one cell and a number to another cell.')
+        return;
+    else
+        names = fieldnames(A.textdata);
+        sheets = strrep(names,'0x2D','-')';
+    end
+end
 
 handles.experimentdata = getappdata(hObject,'data');
-
-
 rmvinds = strfind(handles.experimentdata(:,1),'.mat');
 for k=1:length(rmvinds)
     
@@ -2523,6 +2535,7 @@ if ismember(handles.worksheet_name.String, sheets)
     [num1, txt1, raw1] = xlsread(handles.exp_spread_sheet_name.String, handles.worksheet_name.String,'A:A');
     oldVals = size(txt1);
     newEntry = 0;
+    [~,sheetnum] = ismember(handles.worksheet_name.String, sheets);
     if handles.ispc.flag
         for rs = 1:segs(1)
             if ismember([handles.experimentdata(rs,1)],txt1)
@@ -2538,11 +2551,11 @@ if ismember(handles.worksheet_name.String, sheets)
         for rs = 1:segs(1)
             if ismember([handles.experimentdata(rs,1)],txt1)
                 replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-                Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false)
+                Tdata = cell2table([handles.experimentdata(rs,:)]);
+                writetable(Tdata,handles.ss_FileName,'Sheet',sheetnum,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false)
             else
-                Tdata = cell2table([handles.experimentdata(rs,:)])
-                writetable(Tdata,handles.ss_FileName,'Sheet',handles.worksheet_name.String,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false)
+                Tdata = cell2table([handles.experimentdata(rs,:)]);
+                writetable(Tdata,handles.ss_FileName,'Sheet',sheetnum,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false)
                 newEntry = newEntry+1;
             end
         end

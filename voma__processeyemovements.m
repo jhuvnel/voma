@@ -24,6 +24,7 @@ function [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzer
 %           Frame-to-Head and Coil-to-Eye coordinate system changes.
 %           Added option to choose the output format.
 %
+%
 %   data_rot:
 %       1: Apply no coordinate system transformations to raw data
 %       2: Apply a -pi/2 YAW reorientation of the raw data
