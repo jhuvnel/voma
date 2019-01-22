@@ -2570,16 +2570,21 @@ switch handles.exportCond
                 elseif segs(2) < length(labels)
                     t(rs,(segs(2)+1):length(labels)) = cell2table(cell(1,length((segs(2)+1):length(labels))));
                 end
-                %Makes the ExperimentalRecords line by line instead of
-                %batch but let us do it in a for-loop
-                if any(strcmp(t{rs,1},ExperimentRecords.(temp).File_Name))
+                %Needed for table concatentation
+                t.Properties.VariableNames = labels;
+                %Check if the table already exists
+                if ~any(ismember(fieldnames(ExperimentRecords),temp))
+                    ExperimentRecords.(temp) = cell2table(cell(0,length(labels)));
+                    ExperimentRecords.(temp).Properties.VariableNames = labels;
+                end
+                if ~isempty(ExperimentRecords.(temp).File_Name) && any(strcmp(ExperimentRecords.(temp).File_Name,t{rs,1}))
                     ExperimentRecords.(temp)(strcmp(ExperimentRecords.(temp).File_Name,t{rs,1}),1:length(labels))= t(rs,1:length(labels));
                 else
-                    ExperimentRecords.(temp)(end+1,1:length(labels)) = t(rs,1:length(labels));
+                    ExperimentRecords.(temp) = [ExperimentRecords.(temp);t(rs,1:length(labels))];
                 end
             end
             save(handles.exp_spread_sheet_name.String,'ExperimentRecords')
-            writetable(ExperimentRecords.(temp),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true)
+            writetable([strrep(labels,'_',' ');ExperimentRecords.(temp)],[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',false)
             pause(1);
         end
     case 3
@@ -2605,7 +2610,7 @@ switch handles.exportCond
         t.Properties.VariableNames = labels;
         ExperimentRecords.(temp) = t;
         save(handles.exp_spread_sheet_name.String,'ExperimentRecords');
-        writetable(t,[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true)
+        writetable([strrep(labels,'_',' ');t],[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',false)
         handles.export_data.BackgroundColor = [0    1    0];
         handles.exportCond = 2; 
         pause(1);         
