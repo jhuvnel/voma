@@ -230,6 +230,10 @@ function raw_files_btn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 rootpath = uigetdir(pwd,'Please locate the path containing the raw data to be converted');
 
+if rootpath(end) ~= '\'
+    rootpath = [rootpath '\'];
+end
+
 set(handles.raw_files_loc,'String',rootpath);
 
 handles.params.raw_data_path = rootpath;
@@ -243,6 +247,10 @@ function output_files_btn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 rootpath = uigetdir(pwd,'Please choose the location to save the output file');
+
+if rootpath(end) ~= '\'
+    rootpath = [rootpath '\'];
+end
 
 set(handles.output_files_loc,'String',rootpath);
 
@@ -260,6 +268,10 @@ function field_gains_btn_Callback(hObject, eventdata, handles)
 
 handles.params.fieldgain_name = FileName;
 handles.params.fieldgain_path = PathName;
+
+if handles.params.fieldgain_path(end) ~= '\'
+    handles.params.fieldgain_path = [handles.params.fieldgain_path '\'];
+end
 
 set(handles.field_gains_txt,'String',FileName);
 
@@ -283,13 +295,15 @@ switch handles.params.file_format
             case 1 % Ross 710 - Lasker System
                 filepath = handles.params.raw_data_path;
                 
+           
+                
                 
                 raw = handles.params.raw;
                 
                 data_fldr = handles.params.raw_data_path;
                 cd(data_fldr)
                 
-                fieldgainname = handles.params.fieldgain_name;
+                fieldgainname = [handles.params.fieldgain_path handles.params.fieldgain_name];
                 delimiter = '\t';
                 formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
                 
@@ -310,9 +324,14 @@ switch handles.params.file_format
                 % filepath = 'F:\Boutros_Data_Local_Copy\MoMo\2016-06-13_RhMoMo';
                 
                 
-                for n = 2:length(raw)
+                for n = 2:size(raw,1)
                     
-                    FileName = [raw{n,18} '.' sprintf('%04d',raw{n,1})];
+                    switch handles.params.file_format
+                        case {1,2}
+                            FileName = [raw{n,18} '.' sprintf('%04d',raw{n,1})];
+                        case {3}
+                            FileName =  raw{n,1};
+                    end
                     
                     switch raw{n,10}
                         
@@ -461,13 +480,13 @@ switch handles.params.file_format
                         case 3
                             DAQ_code = 3; % This is the code used in the 'processeyemovements' code to indicate we are dealing with a file that was only recorded using a CED system
                     end
-                    
-                    [Data] = voma__processeyemovements(filepath,filename,FieldGains,coilzeros,ref,data_rot,DAQ_code);
+                    OutputFormat = 1; % Fick Coords.
+                    [Data] = voma__processeyemovements(filepath,FileName,FieldGains,coilzeros,ref,data_rot,DAQ_code,OutputFormat);
                     
                     Fs{n-1} = {Data.Fs};
                     
-                    Eye_t{n-1} = {[0:length(Data.lz)-1]/Fs{n-1}{1}};
-                    Stim_t{n-1} = {Eye_t{n-1}};
+                    Eye_t{n-1} = {[0:length(Data.LE_Vel_X)-1]/Fs{n-1}{1}};
+                    Stim_t{n-1} =  Eye_t{n-1};
                     
                     Data_LE_Pos_X{n-1} = {Data.LE_Pos_X};
                     Data_LE_Pos_Y{n-1} = {Data.LE_Pos_Y};
@@ -491,9 +510,9 @@ switch handles.params.file_format
                     
                     switch handles.params.lasker_stim_chan
                         case 1
-                            Stimulus{n-1} = {Data.angvel};
+                            Stimulus{n-1} = {Data.Var_x083};
                         case 2
-                            angvel_calc_temp = gradient(Data.angpos)*Data.Fs;
+                            angvel_calc_temp = gradient(Data.Var_x081)*Data.Fs;
                     end
                     
                     useradjust = 'n';
@@ -553,6 +572,17 @@ switch handles.params.file_format
                             Parameters(n-1).DAQ_code = 3;
                     end
                     
+                    % Check if the 'Output Format' above was set to 'Fick
+                    % Angles'. If so, change the DAQ string. NOTE: 'DAQ'
+                    % string here is a misnomer, it should be
+                    % 'DataCoordSys'. I left it as is to be compatible with
+                    % legacy data files.
+                    switch OutputFormat
+                        case 1
+                            Parameters(n-1).DAQ = 'Fick Angles';
+                        case 2
+                            Parameters(n-1).DAQ = 'RotVect';
+                    end
                 end
                 
                 

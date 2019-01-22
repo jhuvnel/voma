@@ -286,7 +286,7 @@ else
     handles.stim_list(CurrData.cyc2plot) = true(1);
     
     handles.params.plot_cycle_val = CurrData.cyc2plot(1);
-    
+    set(handles.plot_cycle_val,'String',num2str(handles.params.plot_cycle_val))
     if handles.params.plot_cycle_val == 1
         set(handles.prev_cycle,'Enable','off')
     end

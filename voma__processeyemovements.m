@@ -1059,6 +1059,7 @@ f32 = nz .* ny .* (1-cs) + nx .* sn;
 clear sn cs
 clear nx ny nz
 
+% See Haslwanter et al., 1995 Eq. A4
 vert = asin(f31);
 horz = asin(f21 ./ cos(vert));
 tors = asin(f32 ./ cos(vert));
