@@ -3917,37 +3917,61 @@ switch handles.params.pos_filt_trace
     
     case 1
         if numel(handles.CurrData.QPparams.APAQPR.Array.LE_X) > 0
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X{end}));
+            else
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X(:,:,end)));
+            end
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_X));
         end
     case 2
         if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Y) > 0
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Y)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y{end}));
+            else
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y(:,:,end)));
+            end
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Y));
         end
     case 3
         if numel(handles.CurrData.QPparams.APAQPR.Array.LE_Z) > 0
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Z)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z{end}));
+            else
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z(:,:,end)));
+            end
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.LE_Z));
         end
     case 4
         if numel(handles.CurrData.QPparams.APAQPR.Array.RE_X) > 0
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_X)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X{end}));
+            else
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X(:,:,end)));
+            end
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_X));
         end
     case 5
         if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Y) > 0
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Y)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y{end}));
+            else
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y(:,:,end)));
+            end
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Y));
         end
     case 6
         if numel(handles.CurrData.QPparams.APAQPR.Array.RE_Z) > 0
-            set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Z)
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z{end}));
+            else
+                set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z(:,:,end)));
+            end
         else
             set(handles.APAQPR_table,'Data',handles.CurrData.VOMA_data.Eye_t(handles.CurrData.QPparams.APAQPR.Array.RE_Z));
         end
@@ -6281,7 +6305,7 @@ function fit_line_btwn_QPs_Callback(hObject, eventdata, handles)
 % happens in extreme angular position values (>abs(17deg)). To avoid this,
 % we wont run this routine on angular position values above this threshold.
 % I will monitor this to see if this causes us to exclude data.
-mag_thresh = 30;
+mag_thresh = 50;
 
 
 switch handles.params.pos_filt_trace
@@ -6364,14 +6388,13 @@ switch handles.params.pos_filt_trace
         handles.CurrData.VOMA_data.Filtered.LinFitAngVel.Data_LE_Vel_Y = Trace2;
     case 3
         handles.CurrData.VOMA_data.Filtered.LinFitAngVel.Data_LE_Vel_Z = Trace2;
-        
     case 4
         handles.CurrData.VOMA_data.Filtered.LinFitAngVel.Data_RE_Vel_X = Trace2;
     case 5
         handles.CurrData.VOMA_data.Filtered.LinFitAngVel.Data_RE_Vel_Y = Trace2;
     case 6
-        
         handles.CurrData.VOMA_data.Filtered.LinFitAngVel.Data_RE_Vel_Z = Trace2;
+        
 end
 
 % [handles] = plot_smth_data(hObject,eventdata,handles);
@@ -6389,7 +6412,7 @@ set(handles.filt_params,'Data',filt_params);
 
 
 Trace2(Trace2==0) = nan(length(Trace2(Trace2==0)),1);
-plot(pbp_deriv,handles.CurrData.VOMA_data.Eye_t,Trace2,'k*')
+% plot(handles.pbp_deriv,handles.CurrData.VOMA_data.Eye_t,Trace2,'k*')
 
 guidata(hObject,handles)
 
@@ -7349,42 +7372,72 @@ switch handles.params.pos_filt_trace
         if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_X')
             handles.CurrData.QPparams.APAQPR.Array.LE_X = {sacc_inds};
         else
-            handles.CurrData.QPparams.APAQPR.Array.LE_X{end+1} = sacc_inds;
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_X)
+                handles.CurrData.QPparams.APAQPR.Array.LE_X{end+1} = sacc_inds;
+            else
+                handles.CurrData.QPparams.APAQPR.Array.LE_X = {handles.CurrData.QPparams.APAQPR.Array.LE_X};
+                handles.CurrData.QPparams.APAQPR.Array.LE_X{end+1} = sacc_inds;
+            end
         end
         handles.CurrData.QPparams.APAQPR.Flag.LE_X = true;
     case 2
         if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_Y')
             handles.CurrData.QPparams.APAQPR.Array.LE_Y = {sacc_inds};
         else
-            handles.CurrData.QPparams.APAQPR.Array.LE_Y{end+1} = sacc_inds;
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Y)
+                handles.CurrData.QPparams.APAQPR.Array.LE_Y{end+1} = sacc_inds;
+            else
+                handles.CurrData.QPparams.APAQPR.Array.LE_Y = {handles.CurrData.QPparams.APAQPR.Array.LE_Y};
+                handles.CurrData.QPparams.APAQPR.Array.LE_Y{end+1} = sacc_inds;
+            end
         end
         handles.CurrData.QPparams.APAQPR.Flag.LE_Y = true;
     case 3
         if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'LE_Z')
             handles.CurrData.QPparams.APAQPR.Array.LE_Z = {sacc_inds};
         else
-            handles.CurrData.QPparams.APAQPR.Array.LE_Z{end+1} = sacc_inds;
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.LE_Z)
+                handles.CurrData.QPparams.APAQPR.Array.LE_Z{end+1} = sacc_inds;
+            else
+                handles.CurrData.QPparams.APAQPR.Array.LE_Z = {handles.CurrData.QPparams.APAQPR.Array.LE_Z};
+                handles.CurrData.QPparams.APAQPR.Array.LE_Z{end+1} = sacc_inds;
+            end
         end
         handles.CurrData.QPparams.APAQPR.Flag.LE_Z = true;
     case 4
         if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_X')
             handles.CurrData.QPparams.APAQPR.Array.RE_X = {sacc_inds};
         else
-            handles.CurrData.QPparams.APAQPR.Array.RE_X{end+1} = sacc_inds;
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_X)
+                handles.CurrData.QPparams.APAQPR.Array.RE_X{end+1} = sacc_inds;
+            else
+                handles.CurrData.QPparams.APAQPR.Array.RE_X = {handles.CurrData.QPparams.APAQPR.Array.RE_X};
+                handles.CurrData.QPparams.APAQPR.Array.RE_X{end+1} = sacc_inds;
+            end
         end
         handles.CurrData.QPparams.APAQPR.Flag.RE_X = true;
     case 5
         if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_Y')
             handles.CurrData.QPparams.APAQPR.Array.RE_Y = {sacc_inds};
         else
-            handles.CurrData.QPparams.APAQPR.Array.RE_Y{end+1} = sacc_inds;
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Y)
+                handles.CurrData.QPparams.APAQPR.Array.RE_Y{end+1} = sacc_inds;
+            else
+                handles.CurrData.QPparams.APAQPR.Array.RE_Y = {handles.CurrData.QPparams.APAQPR.Array.RE_Y};
+                handles.CurrData.QPparams.APAQPR.Array.RE_Y{end+1} = sacc_inds;
+            end
         end
         handles.CurrData.QPparams.APAQPR.Flag.RE_Y = true;
     case 6
         if ~isfield(handles.CurrData.QPparams.APAQPR.Array,'RE_Z')
             handles.CurrData.QPparams.APAQPR.Array.RE_Z = {sacc_inds};
         else
-            handles.CurrData.QPparams.APAQPR.Array.RE_Z{end+1} = sacc_inds;
+            if iscell(handles.CurrData.QPparams.APAQPR.Array.RE_Z)
+                handles.CurrData.QPparams.APAQPR.Array.RE_Z{end+1} = sacc_inds;
+            else
+                handles.CurrData.QPparams.APAQPR.Array.RE_Z = {handles.CurrData.QPparams.APAQPR.Array.RE_Z};
+                handles.CurrData.QPparams.APAQPR.Array.RE_Z{end+1} = sacc_inds;
+            end
         end
         handles.CurrData.QPparams.APAQPR.Flag.RE_Z = true;
 end
