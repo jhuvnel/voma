@@ -107,21 +107,65 @@ function load_excel_sheet_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Prompt user for experimental file
-[FileName,PathName,~] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet for analysis. Matching .mat file should be in the same directory.');
+answer = questdlg('Would you like to load the .xlsx or the .mat file for this subject?', ...
+	'Exporting Data', ...
+	'.xlsx','.mat','.mat');
+switch answer
+    case '.xlsx'
+        [FileName,PathName] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet where the data will be exported');
+        if FileName ~=0
+            %Make a .mat file if it doesn't already exist
+            if ~exist([PathName,FileName(1:end-4),'mat'],'file')
+                ExperimentRecords = ExperimentRecordsExcel2MAT([PathName,FileName]);
+                msgbox('This experimental records excel sheet did not have a corresponding .mat file so one was created.');
+                FileName = [FileName(1:end-4),'mat'];
+            else
+                FileName = [FileName(1:end-4),'mat'];
+                load([PathName,FileName],'ExperimentRecords')
+                if ~exist('ExperimentRecords','var')
+                    ExperimentRecords = [];
+                    f = warndlg('The paired .mat file does not have a variable named ExperimentRecords.');
+                    uiwait(f);
+                elseif ~isstruct(ExperimentRecords)
+                    ExperimentRecords = [];
+                    f = warndlg('The [paired .mat file does not have a struct named ExperimentRecords.');
+                    uiwait(f);
+                end
+            end
+            handles.exportCond = 1;
+        end
+    case '.mat'
+        [FileName,PathName] = uigetfile('*.mat','Please choose the experimental batch file where the data will be exported');
+        if FileName ~=0
+            load([PathName,FileName],'ExperimentRecords')
+            if ~exist('ExperimentRecords','var')
+                ExperimentRecords = [];
+                f = warndlg('This .mat file does not have a variable named ExperimentRecords.');
+                uiwait(f);
+            elseif ~isstruct(ExperimentRecords)
+                ExperimentRecords = [];
+                f = warndlg('This .mat file does not have a struct named ExperimentRecords.');
+                uiwait(f);
+            end
+            handles.exportCond = 2;
+        end
+    case ''
+        FileName = 0;
+end
 if FileName ~= 0
     handles.params.xlsname = FileName;
-    handles.params.xlspath = PathName;
-    if(exist([PathName,FileName(1:end-4),'mat'],'file')==2)
-        load([PathName,FileName(1:end-4),'mat'],'ExperimentRecords');
+    handles.params.xlspath = PathName; 
+    if(~isempty(ExperimentRecords))
+        sheets = fieldnames(ExperimentRecords);
+        % Assume the user is loading the first sheet as a defualt
+        raw1 = [ExperimentRecords.(sheets{1}).Properties.VariableNames;table2cell(ExperimentRecords.(sheets{1}))];
     else
-        ExperimentRecords = ExperimentRecordsExcel2MAT([PathName,FileName]);
-        msgbox('This experimental records sheet did not have a corresponding .mat file so one was created.');
+        sheets = {'Invalid Input'};
+        raw1 = [];
     end
-    sheets = fieldnames(ExperimentRecords);
     set(handles.excel_sheet_list,'String',sheets);
     set(handles.excel_sheet_text,'String',FileName);
-    % Assume the user is loading the first sheet as a defualt
-    handles.params.raw = [ExperimentRecords.(sheets{1}).Properties.VariableNames;table2cell(ExperimentRecords.(sheets{1}))];
+    handles.params.raw = raw1;
     handles.ExperimentRecords = ExperimentRecords;
     handles.params.sheets = sheets;
 end
@@ -132,15 +176,10 @@ function system_config_Callback(hObject, eventdata, handles)
 % hObject    handle to system_config (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
 index_selected = get(hObject,'Value');
-
-
 switch index_selected
     case 1 % Ross 710 - Lasker System
         set(handles.lasker_stim_chan,'Visible','On')
-        
         set(handles.rawfile_opt1,'Visible','On')
         set(handles.rawfile_opt1,'String','VORDAQ-Only Files ')
         set(handles.rawfile_opt2,'Visible','On')

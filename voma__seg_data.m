@@ -64,6 +64,9 @@ else
     handles.ispc.slash = '/';
 end
 
+% Initialize file export condition
+handles.exportCond = 0;
+
 % Choose default command line output for voma__seg_data
 handles.output = hObject;
 
@@ -145,19 +148,14 @@ temp_path = mfilename('fullpath');
 temp_pth_ind = [strfind(temp_path,'\') strfind(temp_path,'/')];
 
 if exist([temp_path(1:temp_pth_ind(end)) 'initialize.mat'],'file')
-    
     handles.initialize = load([temp_path(1:temp_pth_ind(end)) 'initialize.mat']);
     handles.initializePathName = temp_path(1:temp_pth_ind(end));
-    
 else
-    
     [FileName,PathName,FilterIndex] = uigetfile([temp_path(1:temp_pth_ind(end)) '*.mat'],'Please choose the initialization file containing the information for the experiment parameters.');
     handles.initializePathName = PathName;
     cd(handles.initializePathName)
     handles.initialize = load('initialize.mat');
-    
 end
-
 
 handles.initialize = handles.initialize.initialize;
 handles.subj_id.String = handles.initialize.ID;
@@ -2482,12 +2480,51 @@ function load_spread_sheet_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Prompt user for experimental file
-[FileName,PathName,FilterIndex] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet where the data will be exported');
-
-handles.ss_PathName = PathName;
-handles.ss_FileName = FileName;
-
-set(handles.exp_spread_sheet_name,'String',FileName);
+answer = questdlg('Would you like to load a .mat or .xlsx Experiment Records file for this subject?', ...
+	'Exporting Data', ...
+	'.mat','.xlsx','Make New Record Files','Make New Record Files');
+% Handle response
+switch answer
+    case '.xlsx'
+        [FileName,PathName] = uigetfile('*.xlsx','Please choose the experimental batch spreadsheet where the data will be exported');
+        if FileName ~= 0
+            handles.exportCond = 1;
+            FileName = FileName(1:end-5);
+            %Make a .mat file if it doesn't already exist
+            if(exist([PathName,FileName,'.mat'],'file')~=2)
+                ExperimentRecordsExcel2MAT([PathName,FileName,'.xlsx']);
+                msgbox('This experimental records excel sheet did not have a corresponding .mat file so one was created.');
+            end
+            handles.exportCond = 1;
+            set(handles.exp_spread_sheet_name,'String',[FileName,'.mat']);
+            handles.ss_PathName = PathName;
+            handles.ss_FileName = [FileName,'.mat'];
+        end
+    case '.mat'
+        [FileName,PathName] = uigetfile('*.mat','Please choose the experimental batch file where the data will be exported');
+        if FileName ~= 0
+            handles.exportCond = 2;
+            handles.ss_PathName = PathName;
+            handles.ss_FileName = FileName;
+            set(handles.exp_spread_sheet_name,'String',FileName);
+        end
+    case 'Make New Record Files'
+        prompt = {'Enter the desired file name without extensions'};
+        title = 'File Name';
+        dims = [1 35];
+        definput = {[handles.params.subj_id '_ExperimentRecords']};
+        in_FileName = inputdlg(prompt,title,dims,definput);
+        in_PathName = uigetdir(cd,'Choose directory where files will be saved');
+        if ~isempty(in_FileName{:}) && ischar(in_PathName)
+            handles.exportCond = 3;
+            handles.ss_FileName = [in_FileName{:},'.mat'];
+            handles.ss_PathName = in_PathName;
+            set(handles.exp_spread_sheet_name,'String',[in_FileName{:},'.mat']);    
+        else
+            f = warndlg('Invalid file name or path name. Try process again.');
+            uiwait(f);
+        end
+end
 guidata(hObject,handles)
 end
 
@@ -2501,85 +2538,78 @@ function export_data_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.export_data.BackgroundColor = [1    1    0];
 pause(0.1);
-cd(handles.ss_PathName);
-if handles.ispc.flag
-    [status,sheets,xlFormat] = xlsfinfo(handles.ss_FileName);
-else
-    A = importdata(handles.ss_FileName);
-    if(isempty(A))
-        disp('There are no sheets detected in this document at all.')
-        return;
-    elseif(iscell(A))
-        disp('There is only one sheet in this excel document. Please add another sheet and add characters to one cell and a number to another cell.')
-        return;
-    else
-        names = fieldnames(A.textdata);
-        sheets = strrep(names,'0x2D','-')';
-    end
-end
-
-handles.experimentdata = getappdata(hObject,'data');
-rmvinds = strfind(handles.experimentdata(:,1),'.mat');
-for k=1:length(rmvinds)
-    
-    temp = handles.experimentdata{k,1};
-    
-    temp(rmvinds{k}:rmvinds{k}+3) = '';
-    
-    handles.experimentdata{k,1} = temp;
-end
-
-
-if ismember(handles.worksheet_name.String, sheets)
-    segs = size(handles.experimentdata);
-    [num1, txt1, raw1] = xlsread(handles.exp_spread_sheet_name.String, handles.worksheet_name.String,'A:A');
-    oldVals = size(txt1);
-    newEntry = 0;
-    [~,sheetnum] = ismember(handles.worksheet_name.String, sheets);
-    if handles.ispc.flag
-        for rs = 1:segs(1)
-            if ismember([handles.experimentdata(rs,1)],txt1)
-                replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-                xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))]);
-                
-            else
-                xlswrite(handles.ss_FileName, [handles.experimentdata(rs,:)], handles.worksheet_name.String, ['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)]);
-                newEntry = newEntry+1;
+labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
+switch handles.exportCond
+    case 0 
+        f = warndlg('A valid file has not yet been selected or made. Press the "Load Spread Sheet" button to select or make a file.');
+        uiwait(f);
+    case {1,2}
+        cd(handles.ss_PathName);
+        load(handles.exp_spread_sheet_name.String,'ExperimentRecords');
+        if ~exist('ExperimentRecords','var')
+            f = warndlg('This .mat file does not have a variable named ExperimentRecords.');
+            uiwait(f);
+        elseif ~isstruct(ExperimentRecords)
+            f = warndlg('The variable ExperimentRecords is not a struct in this .mat file.');
+            uiwait(f);
+        else
+            if length(handles.worksheet_name.String)> 31
+                handles.worksheet_name.String = handles.worksheet_name.String(1:31);
             end
-        end
-    else
-        for rs = 1:segs(1)
-            if ismember([handles.experimentdata(rs,1)],txt1)
-                replaceInd = [find(ismember(txt1,[handles.experimentdata(rs,1)]))];
-                Tdata = cell2table([handles.experimentdata(rs,:)]);
-                writetable(Tdata,handles.ss_FileName,'Sheet',sheetnum,'Range',['A',num2str(replaceInd(1)),':Q',num2str(replaceInd(1))],'WriteVariableNames',false)
-            else
-                Tdata = cell2table([handles.experimentdata(rs,:)]);
-                writetable(Tdata,handles.ss_FileName,'Sheet',sheetnum,'Range',['A',num2str(oldVals(1)+1+newEntry),':Q',num2str(oldVals(1)+1+newEntry)],'WriteVariableNames',false)
-                newEntry = newEntry+1;
+            handles.experimentdata = getappdata(hObject,'data');
+            handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat',''); 
+            temp = handles.worksheet_name.String;
+            temp(temp=='-') = '_';
+            temp(temp==' ') = '';
+            t = cell2table(handles.experimentdata);
+            segs = size(t);
+            for rs = 1:segs(1)
+                %Make sure the table is the right size first
+                if segs(2) > length(labels) %Puts anything that would be cut off in the 'Notes' column
+                    t{rs,length(labels)} = {strjoin(t{rs,length(labels):segs(2)})};
+                elseif segs(2) < length(labels)
+                    t(rs,(segs(2)+1):length(labels)) = cell2table(cell(1,length((segs(2)+1):length(labels))));
+                end
+                %Makes the ExperimentalRecords line by line instead of
+                %batch but let us do it in a for-loop
+                if any(strcmp(t{rs,1},ExperimentRecords.(temp).File_Name))
+                    ExperimentRecords.(temp)(strcmp(ExperimentRecords.(temp).File_Name,t{rs,1}),1:length(labels))= t(rs,1:length(labels));
+                else
+                    ExperimentRecords.(temp)(end+1,1:length(labels)) = t(rs,1:length(labels));
+                end
             end
+            save(handles.exp_spread_sheet_name.String,'ExperimentRecords')
+            writetable(ExperimentRecords.(temp),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true)
+            pause(1);
         end
-    end
-else
-    labels = {'File Name','Date','Subject','Implant','Eye Recorded','Compression','Max PR [pps]','Baseline [pps]','Function','Mod Canal','Mapping Type','Frequency [Hz]','Max Velocity [dps]','Phase [degrees]','Cycles','Phase Direction','Notes'};
-    % Check if the length of the Sheet name is > 31 chars
-    if length(handles.worksheet_name.String)> 31
-        handles.worksheet_name.String = handles.worksheet_name.String(1:31);
-    end
-    if handles.ispc.flag
-        xlswrite(handles.exp_spread_sheet_name.String, labels, handles.worksheet_name.String,'A1:Q1')
-        segs = size(handles.experimentdata);
-        xlswrite(handles.exp_spread_sheet_name.String, [handles.experimentdata], handles.worksheet_name.String, ['A2:Q',num2str(segs(1)+1)]);
-    else
-        Tlabels = cell2table(labels);
-        Tdata = cell2table([handles.experimentdata]);
-        segs = size(handles.experimentdata);
-        writetable(Tlabels,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range','A1:Q1','WriteVariableNames',false)
-        writetable(Tdata,handles.exp_spread_sheet_name.String,'Sheet',handles.worksheet_name.String,'Range',['A2:Q',num2str(segs(1)+1)],'WriteVariableNames',false)
-    end
+    case 3
+        if length(handles.worksheet_name.String)> 31
+            handles.worksheet_name.String = handles.worksheet_name.String(1:31);
+        end
+        handles.experimentdata = getappdata(hObject,'data');
+        handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat','');
+        temp = handles.worksheet_name.String;
+        temp(temp=='-') = '_';
+        temp(temp==' ') = '';
+        t = cell2table([handles.experimentdata]);
+        if size(t,2) > length(labels)
+            f = warndlg('More output arguments (columns) in the table than expected. Extra data will be added to the last column.');
+            uiwait(f);
+            for i=1:size(t,1)
+                t{i,length(labels)} = {strjoin(t{i,length(labels):size(t,2)})};
+            end
+            t = t(:,1:length(labels));
+        elseif size(t,2) < length(labels)
+            t(:,size(t,2)+1:length(labels)) = cell2table(cell(size(t,1),length(size(t,2)+1:length(labels))));
+        end
+        t.Properties.VariableNames = labels;
+        ExperimentRecords.(temp) = t;
+        save(handles.exp_spread_sheet_name.String,'ExperimentRecords');
+        writetable(t,[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true)
+        handles.export_data.BackgroundColor = [0    1    0];
+        handles.exportCond = 2; 
+        pause(1);         
 end
-handles.export_data.BackgroundColor = [0    1    0];
-pause(1);
 handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
 guidata(hObject,handles)
 end
@@ -3507,9 +3537,6 @@ for n =1:length(overrun_inds)
 end
 % Subtract the first time point
 Time_Eye = Time_Eye - Time_Eye(1);
-
-
-
 %     if (Calibration_Script_Type == MATLAB)
 
 Eye = 'Left';
