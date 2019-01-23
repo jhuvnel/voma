@@ -373,12 +373,12 @@ switch handles.params.file_format
                 
                 for n = 2:size(raw,1)
                     
-                    switch handles.params.file_format
-                        case {1,2}
-                            FileName = [raw{n,18} '.' sprintf('%04d',raw{n,1})];
-                        case {3}
-                            FileName =  raw{n,1};
-                    end
+                    %                     switch handles.params.file_format
+                    %                         case {1,2}
+                    %                             FileName = [raw{n,18} '.' sprintf('%04d',raw{n,1})];
+                    %                         case {3}
+                    FileName =  raw{n,1};
+                    %                     end
                     
                     switch raw{n,10}
                         
