@@ -2584,7 +2584,8 @@ switch handles.exportCond
                 end
             end
             save(handles.exp_spread_sheet_name.String,'ExperimentRecords')
-            writetable([strrep(labels,'_',' ');ExperimentRecords.(temp)],[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',false)
+            writetable(cell2table(strrep(labels,'_',' ')),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A1:Q1','WriteVariableNames',false)
+            writetable(ExperimentRecords.(temp),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range',['A2:Q',num2str(size(ExperimentRecords.(temp),2)+1)],'WriteVariableNames',false)
             pause(1);
         end
     case 3
@@ -2610,7 +2611,8 @@ switch handles.exportCond
         t.Properties.VariableNames = labels;
         ExperimentRecords.(temp) = t;
         save(handles.exp_spread_sheet_name.String,'ExperimentRecords');
-        writetable([strrep(labels,'_',' ');t],[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',false)
+        writetable(cell2table(strrep(labels,'_',' ')),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A1:Q1','WriteVariableNames',false)
+        writetable(t,[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range',['A2:Q',num2str(size(t,2)+1)],'WriteVariableNames',false)
         handles.export_data.BackgroundColor = [0    1    0];
         handles.exportCond = 2; 
         pause(1);         
