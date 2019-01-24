@@ -2561,31 +2561,49 @@ switch handles.exportCond
             temp = handles.worksheet_name.String;
             temp(temp=='-') = '_';
             temp(temp==' ') = '';
-            t = cell2table(handles.experimentdata);
-            segs = size(t);
+            %Make a field of the struct if it doesn't already exist
+            if ~any(ismember(fieldnames(ExperimentRecords),temp))
+                ExperimentRecords.(temp) = cell2table(cell(0,length(labels)));
+                ExperimentRecords.(temp).Properties.VariableNames = labels;
+            end
+            c = handles.experimentdata;
+            segs = size(c);
+            %Make sure the data are right size
+            if segs(2) > length(labels) %Puts anything that would be cut off into the 'Notes' column
+                for row = 1:segs(1)
+                    str_cell = cell(1,length(length(labels):segs(2)));
+                    for col = length(labels):segs(2)
+                        ind = col-length(labels)+1;
+                        if(ischar(c{row,col})&&~isempty(c{row,col}))
+                            str_cell(1,ind) = c(row,col);
+                        elseif(isnumeric(c{row,col})&&~isempty(c{row,col}))
+                            str_cell{1,ind} = num2str(c{row,col});
+                        else
+                            str_cell(1,ind) = {[]};
+                        end
+                    end
+                    str_cell(cellfun(@isempty,str_cell)) = [];
+                    c{row,length(labels)} = strjoin(str_cell);
+                end
+            elseif segs(2) < length(labels) %Makes empty arrays to ensure every row has the same number of columns as there are labels
+                empty_temp = cell(1,length(labels));
+                empty_temp(12:13) = {NaN,NaN};
+                full_temp = repmat(empty_temp,segs(1),1);
+                full_temp(:,1:segs(2)) = c;
+                c = full_temp;
+            end
+            t = cell2table(c(:,1:length(labels)));
+            t.Properties.VariableNames = labels;
             for rs = 1:segs(1)
-                %Make sure the table is the right size first
-                if segs(2) > length(labels) %Puts anything that would be cut off in the 'Notes' column
-                    t{rs,length(labels)} = {strjoin(t{rs,length(labels):segs(2)})};
-                elseif segs(2) < length(labels)
-                    t(rs,(segs(2)+1):length(labels)) = cell2table(cell(1,length((segs(2)+1):length(labels))));
-                end
-                %Needed for table concatentation
-                t.Properties.VariableNames = labels;
-                %Check if the table already exists
-                if ~any(ismember(fieldnames(ExperimentRecords),temp))
-                    ExperimentRecords.(temp) = cell2table(cell(0,length(labels)));
-                    ExperimentRecords.(temp).Properties.VariableNames = labels;
-                end
                 if ~isempty(ExperimentRecords.(temp).File_Name) && any(strcmp(ExperimentRecords.(temp).File_Name,t{rs,1}))
-                    ExperimentRecords.(temp)(strcmp(ExperimentRecords.(temp).File_Name,t{rs,1}),1:length(labels))= t(rs,1:length(labels));
+                    ExperimentRecords.(temp)(strcmp(ExperimentRecords.(temp).File_Name,t{rs,1}),:)= t(rs,:);
                 else
-                    ExperimentRecords.(temp) = [ExperimentRecords.(temp);t(rs,1:length(labels))];
+                    ExperimentRecords.(temp) = [ExperimentRecords.(temp);t(rs,:)];
                 end
             end
             save(handles.exp_spread_sheet_name.String,'ExperimentRecords')
-            writetable(cell2table(strrep(labels,'_',' ')),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A1:Q1','WriteVariableNames',false)
-            writetable(ExperimentRecords.(temp),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range',['A2:Q',num2str(size(ExperimentRecords.(temp),2)+1)],'WriteVariableNames',false)
+            writetable(cell2table(strrep(labels,'_',' ')),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',strrep(temp,'_','-'),'Range','A1:Q1','WriteVariableNames',false)
+            writetable(ExperimentRecords.(temp),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',strrep(temp,'_','-'),'Range',['A2:Q',num2str(size(ExperimentRecords.(temp),1)+1)],'WriteVariableNames',false)
             pause(1);
         end
     case 3
@@ -2597,22 +2615,38 @@ switch handles.exportCond
         temp = handles.worksheet_name.String;
         temp(temp=='-') = '_';
         temp(temp==' ') = '';
-        t = cell2table([handles.experimentdata]);
-        if size(t,2) > length(labels)
-            f = warndlg('More output arguments (columns) in the table than expected. Extra data will be added to the last column.');
-            uiwait(f);
-            for i=1:size(t,1)
-                t{i,length(labels)} = {strjoin(t{i,length(labels):size(t,2)})};
+        c = handles.experimentdata;
+        segs = size(c);
+        %Make sure the data are right size
+        if segs(2) > length(labels) %Puts anything that would be cut off into the 'Notes' column
+            for row = 1:segs(1)
+                str_cell = cell(1,length(length(labels):segs(2)));
+                for col = length(labels):segs(2)
+                    ind = col-length(labels)+1;
+                    if(ischar(c{row,col})&&~isempty(c{row,col}))
+                        str_cell(1,ind) = c(row,col);
+                    elseif(isnumeric(c{row,col})&&~isempty(c{row,col}))
+                        str_cell{1,ind} = num2str(c{row,col});
+                    else
+                        str_cell(1,ind) = {[]};
+                    end
+                end
+                str_cell(cellfun(@isempty,str_cell)) = [];
+                c{row,length(labels)} = strjoin(str_cell);
             end
-            t = t(:,1:length(labels));
-        elseif size(t,2) < length(labels)
-            t(:,size(t,2)+1:length(labels)) = cell2table(cell(size(t,1),length(size(t,2)+1:length(labels))));
+        elseif segs(2) < length(labels) %Makes empty arrays to ensure every row has the same number of columns as there are labels
+            empty_temp = cell(1,length(labels));
+            empty_temp(12:13) = {NaN,NaN};
+            full_temp = repmat(empty_temp,segs(1),1);
+            full_temp(:,1:segs(2)) = c;
+            c = full_temp;
         end
+        t = cell2table(c(:,1:length(labels)));
         t.Properties.VariableNames = labels;
         ExperimentRecords.(temp) = t;
         save(handles.exp_spread_sheet_name.String,'ExperimentRecords');
-        writetable(cell2table(strrep(labels,'_',' ')),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range','A1:Q1','WriteVariableNames',false)
-        writetable(t,[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',temp,'Range',['A2:Q',num2str(size(t,2)+1)],'WriteVariableNames',false)
+        writetable(cell2table(strrep(labels,'_',' ')),[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',strrep(temp,'_','-'),'Range','A1:Q1','WriteVariableNames',false)
+        writetable(t,[handles.ss_FileName(1:end-4),'.xlsx'],'Sheet',strrep(temp,'_','-'),'Range',['A2:Q',num2str(size(t,2)+1)],'WriteVariableNames',false)
         handles.export_data.BackgroundColor = [0    1    0];
         handles.exportCond = 2; 
         pause(1);         
