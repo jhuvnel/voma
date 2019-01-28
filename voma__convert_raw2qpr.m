@@ -1371,6 +1371,326 @@ switch handles.params.file_format
         cd(filepath)
         
         raw = handles.params.raw;
+        if handles.exportCond == 2
+        for n=1:size(raw,1)
+            
+            FileName = [raw{n,1} '.mat'];
+            
+            load(FileName)
+            
+            Filenames{n} = {FileName};
+            
+            Fs{n} = {Data.Fs};
+            
+            if isfield(Data,'Time_Eye')
+                Eye_t{n} = {Data.Time_Eye};
+            else
+                Eye_t{n} = {[0:length(Data.LE_Velocity_Z)-1]/Fs{n}{1}};
+            end
+            
+            Stim_t{n} = {Data.Time_Stim};
+            
+            % Extract Position Data
+            Data_LE_Pos_X{n} = {Data.LE_Position_X};
+            Data_LE_Pos_Y{n} = {Data.LE_Position_Y};
+            Data_LE_Pos_Z{n} = {Data.LE_Position_Z};
+            
+            Data_RE_Pos_X{n} = {Data.RE_Position_X};
+            Data_RE_Pos_Y{n} = {Data.RE_Position_Y};
+            Data_RE_Pos_Z{n} = {Data.RE_Position_Z};
+            
+            Data_LE_Vel_X{n} = {Data.LE_Velocity_X};
+            Data_LE_Vel_Y{n} = {Data.LE_Velocity_Y};
+            Data_LE_Vel_LARP{n} = {Data.LE_Velocity_LARP};
+            Data_LE_Vel_RALP{n} = {Data.LE_Velocity_RALP};
+            Data_LE_Vel_Z{n} = {Data.LE_Velocity_Z};
+            
+            Data_RE_Vel_X{n} = {Data.RE_Velocity_X};
+            Data_RE_Vel_Y{n} = {Data.RE_Velocity_Y};
+            Data_RE_Vel_LARP{n} = {Data.RE_Velocity_LARP};
+            Data_RE_Vel_RALP{n} = {Data.RE_Velocity_RALP};
+            Data_RE_Vel_Z{n} = {Data.RE_Velocity_Z};
+            
+            Parameters(n).Stim_Info.Stim_Type = raw(n,9);
+            Parameters(n).Stim_Info.ModCanal = raw(n,10);
+            Parameters(n).Stim_Info.Freq = raw(n,12);
+            Parameters(n).Stim_Info.Max_Vel = raw(n,13);
+            Parameters(n).Stim_Info.Cycles = raw(n,15);
+            Parameters(n).Stim_Info.Notes = raw(n,17);
+            Parameters(n).Mapping.Type = raw(n,11);
+            Parameters(n).Mapping.Compression = raw(n,6);
+            Parameters(n).Mapping.Max_PR = raw(n,7);
+            Parameters(n).Mapping.Baseline = raw(n,8);
+            
+            Parameters(n).SoftwareVer.SegSoftware = Data.segment_code_version;
+            Parameters(n).SoftwareVer.QPRconvGUI = mfilename;
+            
+            if isfield('Data','start_t')
+                Results.raw_start_t = Data.start_t;
+                Results.raw_end_t = Data.end_t;
+            end
+            
+            switch handles.params.system_config
+                
+                case {1,5}
+                    switch handles.params.file_format
+                        case 1
+                            Parameters(n).DAQ = 'Lasker_VORDAQ';
+                            Parameters(n).DAQ_code = 1;
+                        case 2
+                            Parameters(n).DAQ = 'Lasker_VORDAQ+CED';
+                            Parameters(n).DAQ_code = 2;
+                        case 3
+                            Parameters(n).DAQ = 'Lasker_CED';
+                            Parameters(n).DAQ_code = 3;
+                            
+                        case 4
+                            Parameters(n).DAQ = 'Fick Angles';
+                            Parameters(n).DAQ_code = 3;
+                            
+                    end
+                    
+                    if isrow(Data.HeadMPUVel_X)
+                        Data.HeadMPUVel_X = Data.HeadMPUVel_X';
+                    end
+                    if isrow(Data.HeadMPUVel_Y)
+                        Data.HeadMPUVel_Y = Data.HeadMPUVel_Y';
+                    end
+                    if isrow(Data.HeadMPUVel_Z)
+                        Data.HeadMPUVel_Z = Data.HeadMPUVel_Z';
+                    end
+                    
+                    
+                    headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                    
+                    headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                    switch raw{n,9}
+                        
+                        case {'Electrical Only','*ElectricOnly*','ElectricalOnly*'}
+                            Stimulus{n} = {Data.Stim_Trig};
+                            Stim_t{n} = {Data.Time_Stim(:,1)};
+                            
+                            stim_ind{n} ={[]};
+                        otherwise
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n} = {headmpu_lrz(:,1)};
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n} = {headmpu_lrz(:,2)};
+                                    
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n} = {headmpu_lrz(:,3)};
+                                    
+                            end
+                            stim_ind{n} = {[]};
+                    end
+                    
+                case 2
+                    Parameters(n).DAQ = 'McGill';
+                    Parameters(n).DAQ_code = 4;
+                case 3 % MVI VOG
+                    
+                    Parameters(n).DAQ = 'LDVOG';
+                    Parameters(n).DAQ_code = 5;
+                    
+                    if ~isempty(strfind(raw{n,9},'ElectricalOnly')) || ~isempty(strfind(raw{n,9},'ElectricOnly')) || ~isempty(strfind(raw{n,9},'Electrical Only')) || ~isempty(strfind(raw{n,9},'Electric Only'))
+                        
+                        % Create sinusoidal stimulus file
+                        Transitions = abs(diff(Data.Stim_Trig));
+                        inds = [1:length(Data.Stim_Trig)];
+                        transition_inds = inds(Transitions==1);
+                        transition_inds = transition_inds(1:end-1);
+                        
+                        A = raw{n,13};
+                        mean_period = mean(diff(transition_inds))/(Data.Fs);
+                        f = 1/(mean_period);
+                        phi = 0;
+                        t_sine = [0:1/(Data.Fs):((transition_inds(end)-transition_inds(1))/(Data.Fs))+mean_period];
+                        
+                        sine = A*sin(2*pi*f*t_sine + phi);
+                        VirtSine = [zeros(1,transition_inds(1)-1) sine zeros(1,length(Data.Stim_Trig)-(transition_inds(end)+floor(mean_period*(Data.Fs))))];
+                        
+                        Stimulus{n} = {VirtSine};
+                        stim_ind{n} = {transition_inds'};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n} = {Data.Time_Eye};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'65Vector'))
+                        
+                        inds = [1:length(Data.Stim_Trig)];
+                        
+                        temp_inds = [0 ; diff(Data.Stim_Trig)];
+                        
+                        start_ramp = inds(temp_inds > 0);
+                        start_onramp = start_ramp(1:2:end);
+                        start_offramp = start_ramp(2:2:end);
+                        
+                        stop_ramp = inds(temp_inds < 0);
+                        stop_onramp = stop_ramp(1:2:end);
+                        stop_offramp = stop_ramp(2:2:end);
+                        
+                        A = raw{n,13};
+                        
+                        stimwaveform = zeros(length(Data.Stim_Trig),1);
+                        for jjj = 1:length(start_onramp)
+                            stimwaveform(start_onramp(jjj):stop_onramp(jjj)) = linspace(0,A,length(stimwaveform(start_onramp(jjj):stop_onramp(jjj))));
+                            stimwaveform(stop_onramp(jjj):start_offramp(jjj)) = A*ones(length(stimwaveform(stop_onramp(jjj):start_offramp(jjj))),1);
+                            stimwaveform(start_offramp(jjj):stop_offramp(jjj)) = linspace(A,0,length(stimwaveform(start_offramp(jjj):stop_offramp(jjj))));
+                        end
+                        
+                        Stimulus{n} = {stimwaveform};
+                        Stim_t{n} = {Data.Time_Eye};
+                        stim_ind{n} ={start_onramp'};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'Activation')) || ~isempty(strfind(raw{n,9},'Adaptation'))
+                        
+                        Stimulus{n} = {Data.Stim_Trig};
+                        Stim_t{n} = {Data.Time_Eye};
+                        stim_ind{n} ={[]};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'Current Fitting')) || ~isempty(strfind(raw{n,9},'CurrentFitting'))
+                        Stimulus{n} = {Data.Stim_Trig};
+                        
+                        inds = [1:length(Data.Stim_Trig)]';
+                        on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                        off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                        %    stim_ind{n} = {[on_inds off_inds]};
+                        stim_ind{n} ={[]};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n} = {Data.Time_Eye};
+                        
+                    elseif ~isempty(strfind(raw{n,9},'Pulse Train')) || ~isempty(strfind(raw{n,9},'PulseTrain'))
+                        
+                        
+                        
+                        Stimulus{n} = {Data.Stim_Trig};
+                        
+                        inds = [1:length(Data.Stim_Trig)]';
+                        on_inds = inds([false ; diff(Data.Stim_Trig)>0]);
+                        off_inds = inds([false ; diff(Data.Stim_Trig)<0]);
+                        %    stim_ind{n} = {[on_inds off_inds]};
+                        stim_ind{n} ={[]};
+                        % For Elec. Only stimuli w/ the MVI LD goggles,
+                        % the GPIO line is collected w/ the VOG data.
+                        % Thus, we will overwrite the 'Stim_t' time
+                        % vector w/ the VOG time vector.
+                        Stim_t{n} = {Data.Time_Eye};
+                        
+                        
+                        
+                    else
+                        
+                        
+                        headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                        
+                        headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                        
+                        % NOTE: The data acquired on the
+                        % MPU9250 is not time stamped
+                        % identically with the VOG data. Thus,
+                        % the 'Time_Eye' and 'Time_Stim' traces
+                        % are NOT identicle for these files. The user
+                        % has the option to interpolate the MPU data to
+                        % the VOG time stamps.
+                        
+                        if handles.params.interp_ldvog_mpu
+                            
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n} = {interp1(Data.Time_Stim,headmpu_lrz(:,1),Data.Time_Eye)};
+                                    
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n} = {interp1(Data.Time_Stim,headmpu_lrz(:,2),Data.Time_Eye)};
+                                    
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n} = {interp1(Data.Time_Stim,headmpu_lrz(:,3),Data.Time_Eye)};
+                                    
+                            end
+                            Stim_t{n} = {Data.Time_Eye};
+                        else
+                            
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n} = {headmpu_lrz(:,1)};
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n} = {headmpu_lrz(:,2)};
+                                    
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n} = {headmpu_lrz(:,3)};
+                                    
+                            end
+                            
+                        end
+                        stim_ind{n} = {[]};
+                        
+                    end
+                    
+                    
+                case 4 %VNEL Digital Coil System
+                    Parameters(n).DAQ = 'DigCoilSys';
+                    Parameters(n).DAQ_code = 6;
+                case 6 %Ross 710 moog coil
+                    Parameters(n).DAQ = 'MoogCoil';
+                    Parameters(n).DAQ_code = 7;
+                    Stimulus{n} = {Data.HeadMPUVel_Z};
+                    stim_ind{n} = {[]};
+                case 7 %Pupil Labs
+                    Parameters(n).DAQ = 'PupilLabs';
+                    Parameters(n).DAQ_code = 8;
+                    if isrow(Data.HeadMPUVel_X)
+                        Data.HeadMPUVel_X = Data.HeadMPUVel_X';
+                    end
+                    if isrow(Data.HeadMPUVel_Y)
+                        Data.HeadMPUVel_Y = Data.HeadMPUVel_Y';
+                    end
+                    if isrow(Data.HeadMPUVel_Z)
+                        Data.HeadMPUVel_Z = Data.HeadMPUVel_Z';
+                    end
+                    
+                    
+                    headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                    
+                    headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                            switch raw{n,10}
+                                case {'LARP-Axis','LA','LARP','RP'}
+                                    Stimulus{n} = {headmpu_lrz(:,1)};
+                                case {'RALP-Axis','LP','RALP','RA'}
+                                    Stimulus{n} = {headmpu_lrz(:,2)};
+                                    
+                                case {'LHRH-Axis','LH','LHRH','RH'}
+                                    Stimulus{n} = {headmpu_lrz(:,3)};
+                                    
+                            end
+                            stim_ind{n} = {[]};
+            end
+            
+            
+            
+            Raw_Filenames{n} = Data.raw_filename;
+            
+			if ~exist('Stimulus','var')
+                h = questdlg(['ERROR: No stimulus file was extracted for file number: ' num2str(n) '. Please check the ''Function''  listed in your experimental record sheet. Please choose how to proceed.'],'Stimulus Error',...
+                    'Exit','Try Next File','Try Next File');
+                
+                switch h
+                    
+                    case 'Exit'
+                        save_flag = false;
+                        break
+                    case 'Try Next File'
+                        continue
+                end
+                
+                
+            end   
+        end
+        else
         
         for n=2:size(raw,1)
             
@@ -1690,12 +2010,11 @@ switch handles.params.file_format
                 
             end   
         end
+        end
         
         
         
-        
-        [Data_QPR] = voma__qpr_data_convert(Fs,Stimulus,Stim_t,stim_ind,Data_LE_Pos_X,Data_LE_Pos_Y,Data_LE_Pos_Z,Data_RE_Pos_X,Data_RE_Pos_Y,Data_RE_Pos_Z,Data_LE_Vel_X,Data_LE_Vel_Y,Data_LE_Vel_LARP,Data_LE_Vel_RALP,Data_LE_Vel_Z,Data_RE_Vel_X,Data_RE_Vel_Y,Data_RE_Vel_LARP,Data_RE_Vel_RALP,Data_RE_Vel_Z,Eye_t,Filenames,Parameters,Raw_Filenames);
-        
+         
         
 		if save_flag
             

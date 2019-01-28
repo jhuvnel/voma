@@ -2850,7 +2850,6 @@ switch choice.stim
             allNames=test.name;
             handles.totalSegment = length(find(contains(allNames,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH','stim'})));
             handles.string_addon = [];
-            if handles.totalSegment==0
                                     f=figure('Name','Choose the stimulator channels that correspond to the canal');
                     f.Position = [360 278 450 270];
                     set1_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[7 8 9 15],'Position',[300 20 130 200]);
@@ -2865,7 +2864,6 @@ switch choice.stim
                 uiwait(gcf)
                 delete(gcf)
 
-              end
                 handles.canalInfo = getappdata(handles.stim_axis,'axisInfo');
             handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
             if y/z>20
@@ -3061,7 +3059,6 @@ switch choice.stim
                 handles.stim_list_s = uicontrol(handles.seg_plots,'Style','text','String', 'stim','fontsize',10,'Position',[930 205 30 30]);
                 handles.ref_list = uicontrol(handles.seg_plots,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Position',[1040 165 50 90],'CallBack',{@ref_confirm_Callback ,handles},'Value',1);
                 handles.ref_list_s = uicontrol(handles.seg_plots,'Style','text','String', 'ref','fontsize',10,'Position',[1010 205 30 30]);
-%                 handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
                  handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
                 handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
                 handles.suffix_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 60 100 30],'CallBack',{@suffix_confirm_Callback ,handles});
@@ -3162,6 +3159,8 @@ switch choice.stim
                             answer = inputdlg(prompt,t1,dims,definput);
                             handles.stim_frequency.String = {answer{1}};
                             setappdata(handles.stim_frequency,'fq',answer{1});
+                            handles.load_spread_sheet.BackgroundColor = [0.94 0.94 0.94];
+                            handles.load_spread_sheet.Enable = 'on';
 
 %                             if contains(handles.stim_axis.String,'L')
 %                                 handles.implant.String={'Left'};
@@ -3170,8 +3169,8 @@ switch choice.stim
 %                             end
                         end
                         r = find(filename=='r');
-                        stimnum = {filename(dashes(3)+1:r(1)-1)}
-                        switch stimnum
+                        stimnum = {filename(dashes(3)+5:r(1)-1)};
+                        switch stimnum{1}
                             case handles.canalInfo.stimNum{1}
                                 setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{1});
                                 handles.stim_axis.String = handles.canalInfo.stimCanal(1);
@@ -3188,15 +3187,15 @@ switch choice.stim
                                 setappdata(handles.stim_type,'type',handles.stim_type.String{1});
                                 handles.stim_axis_confirm.String = handles.canalInfo.stimCanal{3};
                         end
-                        if ~strcmp(prevStimCanal,getappdata(handles.stim_axis,'ax'))
+                        if ~strcmp(prevStimCanal,getappdata(handles.stim_axis,'ax')) && (str2num(handles.segment_number.String)>1)
                             [handles]=load_spread_sheet_Callback(hObject, eventdata, handles);
                             [handles]=export_data_Callback(hObject, eventdata, handles);
                             
                         end
                             setappdata(handles.stim_type,'type',filename(dashes(3)+1:amp-1));
                             handles.stim_type.String = {filename(dashes(3)+1:amp-1)};
-                            setappdata(handles.stim_intensity,'intensity',filename(amp:dashes(4)-1));
-                            handles.stim_intensity.String = {filename(amp:dashes(4)-1)};
+                            setappdata(handles.stim_intensity,'intensity',filename(amp:dot-1));
+                            handles.stim_intensity.String = {filename(amp:dot-1)};
                             [handles] = update_seg_filename(hObject, eventdata, handles);
                         
                             coilsWithProsthSync = readcoils(directory, filename, 1);
@@ -3305,7 +3304,7 @@ switch choice.stim
                             
                             Time_Stim = TS_idxS./1000';
                             Stim = 1./TS_intervalS./10';
-                            Stim(Stim>10)=20;
+                            Stim(Stim>4)=20;
                             Stim(Stim<20)=0;
                             if length(Time_Stim) ~= length(Segment.Time_Eye)
                                Time_Stim_Interp = Segment.Time_Eye;
