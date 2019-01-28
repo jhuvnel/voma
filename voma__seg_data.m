@@ -99,7 +99,11 @@ handles.params.plot_IPR_flag = 1;
 handles.params.plot_TrigLine = 1;
 handles.params.plot_LEData = 1;
 handles.params.plot_REData = 1;
-
+            handles.prevExportSize = 0;
+                            handles.deletedInds.locs = [];
+                handles.deletedInds.startInds = [];
+                                handles.rmvInds = 1;
+                                handles.totalSegment = 0;
 handles.params.reloadflag = 0;
 
 handles.params.trig_mult = 1;
@@ -450,7 +454,7 @@ if ~isfield(handles,'skip_excel_fill_flag')
 
 segments = segments + 1;
 handles.experimentdata = getappdata(handles.export_data,'data');
-set(handles.worksheet_name,'String',[handles.visit_number.String{handles.visit_number.Value},'-',handles.date.String,'-',handles.exp_type.String{handles.exp_type.Value}]);
+set(handles.worksheet_name,'String',[handles.stim_axis.String{handles.stim_axis.Value},'-',handles.visit_number.String{handles.visit_number.Value},'-',handles.date.String,'-',handles.exp_type.String{handles.exp_type.Value}]);
     handles.experimentdata{segments,1} = [handles.seg_filename.String handles.string_addon];
     handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
 handles.experimentdata{segments,3} = handles.subj_id.String{handles.subj_id.Value};
@@ -1622,7 +1626,7 @@ hold off
         pause(1)
         handles.load_raw.BackgroundColor = [0.94 0.94 0.94];
              guidata(hObject,handles)
-            case 4 
+    case 4 
         if handles.params.reloadflag == 0
             % If requesting a new file, prompt the user to choose the file.
             [handles.FileNameGains,handles.PathNameGains,FilterIndex] = uigetfile('*.txt','Please choose the Gain file');
@@ -1632,10 +1636,17 @@ hold off
             handles.PathNameofFiles = uigetdir(cd,'Please choose the folder where the coil files are saved');
                 handles.segment_number.String = '0';
                 handles.experimentdata = {};
+                handles.deletedInds = [];
+                handles.deletedInds.startInds = [];
+                handles.deletedInds.locs = [];
             
         else
-                handles.segment_number.String = '0';
-                handles.experimentdata = {};
+    handles.segment_number.String = '0';
+    handles.exp_spread_sheet_name.String = '';
+    handles.worksheet_name.String = '';
+    handles.experimentdata = {};
+    setappdata(handles.export_data,'data','')
+    handles.exportCond = 0;
         end
              guidata(hObject,handles)
     otherwise
@@ -2836,30 +2847,307 @@ switch choice.stim
             [z,detect2] = max(a(a<y));
             count = 0;
             test=struct2table(listing);
-            all=test.name;
-            handles.totalSegment = length(find(contains(all,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'})));
-            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
-            if y/z>20               
-                directory = listing(detect).folder;
-                filename = listing(detect).name;
-            coilsWithProsthSync = readcoils(directory, filename, 1);
-            else
+            allNames=test.name;
+            handles.totalSegment = length(find(contains(allNames,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH','stim'})));
+            handles.string_addon = [];
+            if handles.totalSegment==0
+                                    f=figure('Name','Choose the stimulator channels that correspond to the canal');
+                    f.Position = [360 278 450 270];
+                    set1_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[7 8 9 15],'Position',[300 20 130 200]);
+                    set1_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',1,'fontsize',8,'Position',[305 225 100 30]);
+                    set2_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[4 5 6 14],'Position',[165 20 130 200]);
+                    set2_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',2,'fontsize',8,'Position',[170 225 100 30]);
+                    set3_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[1:3],'Position',[30 20 130 200]);
+                    set3_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',3,'fontsize',8,'Position',[35 225 100 30]);
+                    okButton = uicontrol(f,'Style','pushbutton','String','Ok','fontsize',12,'Position',[415 230 30 30],'CallBack',{@ok_axis_Callback, handles});
                 
+                    guidata(f,handles)
+                uiwait(gcf)
+                delete(gcf)
+
+              end
+                handles.canalInfo = getappdata(handles.stim_axis,'axisInfo');
+            handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+            if y/z>20
+                directory = [listing(detect).folder,handles.ispc.slash];
+                filename = listing(detect).name;
+                handles.rawFileName = filename;
+                dashes = find(filename=='_');
+                dot = find(filename=='.');
+                amp = find(filename=='a');  
+                coilsWithProsthSync = readcoils(directory, filename, 1);
+                prosthSync(:,1:2)=coilsWithProsthSync(:,4:5);
+                coils(:,1:3)=coilsWithProsthSync(:,1:3);
+                coils(:,4:15)=coilsWithProsthSync(:,6:17);
+
+                TS_idx=1+find(gradient(prosthSync(:,1)));
+                TS_time = prosthSync(TS_idx, 1)-1 + prosthSync(TS_idx,2)/25000;
+                TS_interval = gradient(TS_time) / 1000;
+
+                [rotRhead,rotLhead,rotRReye,rotLLeye,rotRref,rotLref] = analyzeCoilData(coils, 1, [],GAINSR,GAINSL,ZEROS_R,ZEROS_L);
+                rotRlarpralp = rotRref;
+                rotLlarpralp = rotLref;
+                rotRxyz = rotRReye;
+                rotLxyz = rotLLeye;
+                [pks,locs] = findpeaks(diff(prosthSync(:,1)),'MinPeakHeight',50);
+                handles.startInds = find(pks>500);
+                handles.locs = locs;
+                handles.totalSegment = length(handles.startInds)
+                handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+
+                handles.angularPosL = rot2fick(rotLlarpralp);
+                handles.angularPosR = rot2fick(rotRlarpralp);
+
+
+                newFrameinFrame = fick2rot([45 0 0]);
+
+                rotrotL = rot2rot(newFrameinFrame,rotLlarpralp);
+                rotrotR = rot2rot(newFrameinFrame,rotRlarpralp);
+                rotrotLxyz = rot2rot(newFrameinFrame,rotLxyz);
+                rotrotRxyz = rot2rot(newFrameinFrame,rotRxyz);
+
+
+                handles.AngVelL=rot2angvelBJM20190107(rotrotL)/pi*180 * 1000;
+                handles.AngVelR=rot2angvelBJM20190107(rotrotR)/pi*180 * 1000;
+                handles.AngVelLxyz=rot2angvelBJM20190107(rotrotLxyz)/pi*180 * 1000;
+                handles.AngVelRxyz=rot2angvelBJM20190107(rotrotRxyz)/pi*180 * 1000;
+
+                handles.Time_Eye =1/1000:1/1000:length(handles.AngVelL)/1000;
+                Time_Stim = TS_idx./1000';
+                Stim = 1./TS_interval./10';
+                Stim(Stim>10)=20;
+                Stim(Stim<20)=0;
+                if length(Time_Stim) ~= length(handles.Time_Eye)
+                   handles.Time_Stim_Interp = handles.Time_Eye;
+                   handles.Stim_Interp = interp1(Time_Stim',Stim',handles.Time_Stim_Interp);
+                end
+                handles.Stim_Interp(handles.Stim_Interp<20) = 0;
+                go = 1;
+                stimCheck = 1;
+                rmvCheck = 1;
+                blockRmvInds = 1;
+                while go==1
+                    segments = str2num(handles.segment_number.String);
+                    if ~isempty(handles.deletedInds(1).startInds) && (blockRmvInds == 1)
+                         for r = 1:length(handles.deletedInds)
+                                startRmv = handles.deletedInds(r).startInds;
+                                otherRmv = handles.deletedInds(r).locs
+                                handles.startInds(startRmv) = [];
+                                handles.locs(otherRmv) = [];
+                                handles.startInds(startRmv:end) = handles.startInds(startRmv:end)-length(otherRmv);
+                         end
+                         stimCheck == 1;
+                         removeInds = 0;
+                        handles.totalSegment = handles.totalSegment-length(handles.deletedInds)
+                        handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+                        stimCheck = segments+1;
+                    else
+                    if (isempty(segments==0) || (segments==0)) && (handles.rmvInds == 1)
+                        handles.subj_id.String = {filename(dashes(1)+1:dashes(2)-1)};
+                        handles.visit_number.String = {'NA'};
+                        handles.date.String = filename(1:dashes(1)-1);
+                        handles.exp_type.String = {'ElectricalStim'};
+                        handles.exp_condition.String = {'PulseTrains'};
+                        prompt = {'Enter the stimulation rate (pps):'};
+                        t1 = 'Input';
+                        dims = [1 35];
+                        definput = {'100'};
+                        answer = inputdlg(prompt,t1,dims,definput);
+                        handles.stim_frequency.String = {answer{1}};
+                        setappdata(handles.stim_frequency,'fq',answer{1});
+                        handles.load_spread_sheet.BackgroundColor = [0.94 0.94 0.94];
+                        handles.load_spread_sheet.Enable = 'on';
+                        handles.segName = [];
+                        removeInds = 0;
+                    elseif (stimCheck == 1)
+                        removeInds = 0;
+                        handles.totalSegment = handles.totalSegment-segments 
+                        handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+                        stimCheck = segments+1;
+                    end
+                    end
+                handles.plot_num = stimCheck;
+
+                handles.seg_plots = figure('Name',['Segment: ',num2str(stimCheck)], 'NumberTitle','off');
+                handles.seg_plots.OuterPosition = [220   300   1100   720];
+                handles.ax1 = axes;
+                handles.ax1.Position = [0.09 0.1 0.72 0.85];
+                
+                NFilt = 30;
+                if stimCheck>1
+                    if (length(handles.locs(((stimCheck-1)*20:end)))<20)
+                        bound = [(handles.locs(handles.startInds(stimCheck))) (handles.locs(end))];
+                        handles.bound = [(handles.startInds(stimCheck)) length(handles.locs)];
+                    else
+                        bound = [(handles.locs(handles.startInds(stimCheck))) (handles.locs(stimCheck*20))];
+                        handles.bound = [(handles.startInds(stimCheck)) (stimCheck*20)];
+                    end
+                    if length(handles.locs(((stimCheck-1)*20:end)))<40
+                        NFilt = 2;
+                        filtAngVelL=filtfilt(ones(1,NFilt)/NFilt,1,handles.AngVelL((handles.locs(handles.startInds(stimCheck))-500):(bound(2)+500),:));
+                        
+                        handles.stim_mag = plot(handles.ax1,handles.Time_Stim_Interp((handles.locs(handles.startInds(stimCheck))-500):(bound(2)+500))...
+                            ,handles.Stim_Interp((handles.locs(handles.startInds(stimCheck))-500):(bound(2)+500)),'color','k','LineWidth',2);
+                        hold on
+                        plot(handles.ax1,handles.Time_Eye((handles.locs(handles.startInds(stimCheck))-500):(bound(2)+500)),filtAngVelL(:,3),'r',...
+                            handles.Time_Eye((handles.locs(handles.startInds(stimCheck))-500):(bound(2)+500)), filtAngVelL(:,2),'b',...
+                            handles.Time_Eye((handles.locs(handles.startInds(stimCheck))-500):(bound(2)+500)), filtAngVelL(:,1),'g');
+                        plot(handles.ax1,handles.Time_Eye((handles.locs(handles.startInds(stimCheck)))),linspace(20,20,1),'r*');
+                        plot(handles.ax1,handles.Time_Eye(handles.locs(2+(20*(stimCheck-1))):handles.locs(end)),linspace(20,20,length(handles.locs(((stimCheck-1)*20:end)))),'bo');
+                    else
+                        
+                        filtAngVelL=filtfilt(ones(1,NFilt)/NFilt,1,handles.AngVelL((handles.locs(handles.startInds(stimCheck-1))-500):(handles.locs((stimCheck+1)*20)+500),:));
+                        
+                        handles.stim_mag = plot(handles.ax1,handles.Time_Stim_Interp((handles.locs(handles.startInds(stimCheck-1))-500):(handles.locs((stimCheck+1)*20)+500))...
+                            ,handles.Stim_Interp((handles.locs(handles.startInds(stimCheck-1))-500):(handles.locs((stimCheck+1)*20)+500)),'color','k','LineWidth',2);
+                        hold on
+                        plot(handles.ax1,handles.Time_Eye((handles.locs(handles.startInds(stimCheck-1))-500):(handles.locs((stimCheck+1)*20)+500)),filtAngVelL(:,3),'r',...
+                            handles.Time_Eye((handles.locs(handles.startInds(stimCheck-1))-500):(handles.locs((stimCheck+1)*20)+500)), filtAngVelL(:,2),'b',...
+                            handles.Time_Eye((handles.locs(handles.startInds(stimCheck-1))-500):(handles.locs((stimCheck+1)*20)+500)), filtAngVelL(:,1),'g');
+                        plot(handles.ax1,handles.Time_Eye((handles.locs(handles.startInds(stimCheck)))),linspace(20,20,1),'r*');
+                        plot(handles.ax1,handles.Time_Eye((handles.locs(2+(20*(stimCheck-1)):stimCheck*20))),linspace(20,20,length((handles.locs(2+(20*(stimCheck-1)):stimCheck*20)))),'bo');
+                    end
+                else
+                filtAngVelL=filtfilt(ones(1,NFilt)/NFilt,1,handles.AngVelL((bound(1)-500):(bound(2)+500),:));
+  
+                handles.stim_mag = plot(handles.ax1,handles.Time_Stim_Interp((bound(1)-500):(bound(2)+500)),handles.Stim_Interp((bound(1)-500):(bound(2)+500)),'color','k','LineWidth',2);
+                hold on
+                plot(handles.ax1,handles.Time_Eye((bound(1)-500):(bound(2)+500)),filtAngVelL(:,3),'r',...
+                    handles.Time_Eye((bound(1)-500):(bound(2)+500)), filtAngVelL(:,2),'b',...
+                    handles.Time_Eye((bound(1)-500):(bound(2)+500)), filtAngVelL(:,1),'g');
+                plot(handles.ax1,handles.Time_Eye((handles.locs(handles.startInds(stimCheck)))),linspace(20,20,1),'r*');
+                plot(handles.ax1,handles.Time_Eye((handles.locs(2+(20*(stimCheck-1)):stimCheck*20))),linspace(20,20,length((handles.locs(2+(20*(stimCheck-1)):stimCheck*20)))),'bo');
+                end
+                handles.left_extra = 0;
+                handles.right_extra = 0;
+                handles.ax1.YLim = [-300 300];
+
+                x1 = [-100 -100 600 600];
+                y1 = [-400 300 300 -400];
+                a = handles.Time_Eye(bound(1));
+                b = handles.Time_Eye(bound(2));
+
+                v1 = [handles.ax1.XLim(1) handles.ax1.YLim(1); a handles.ax1.YLim(1); a handles.ax1.YLim(2); handles.ax1.XLim(1) handles.ax1.YLim(2)];
+                f1 = [1 2 3 4];
+                v2 = [b handles.ax1.YLim(1); handles.ax1.XLim(2) handles.ax1.YLim(1); handles.ax1.XLim(2) handles.ax1.YLim(2); b handles.ax1.YLim(2)];
+                f2 = [1 2 3 4];
+                handles.seg_patch1 = patch('Faces',f1,'Vertices',v1,'FaceColor','k','FaceAlpha',.3,'EdgeColor','none');
+                handles.seg_patch2 = patch('Faces',f2,'Vertices',v2,'FaceColor','k','FaceAlpha',.3,'EdgeColor','none');
+                hold off
+    
+                handles.ok_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','OK','fontsize',12,'Position',[975 10 70 30],'CallBack',{@ok_seg_Callback, handles},'KeyPressFcn',{@ok_seg_KeyPressFcn, handles});
+
+                handles.reject_seg = uicontrol(handles.seg_plots,'Style','pushbutton','String','Reject This Segment','fontsize',12,'Position',[15 10 160 30],'CallBack',{@reject_seg_Callback, handles});
+
+                handles.right_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.right_extra,'fontsize',12,'Position',[900 295 60 30]);
+                handles.left_extra_val = uicontrol(handles.seg_plots,'Style','edit','enable','off','String', handles.left_extra,'fontsize',12,'Position',[15 295 60 30]);
+
+                setappdata(handles.ok_seg,'r',(handles.right_extra));
+                setappdata(handles.ok_seg,'l',(handles.left_extra));
+
+                handles.instructions = uicontrol(handles.seg_plots,'Style','text','String','Use the arrows to increase or decrease the number of pulses selected on the corresponding side. If a segment has a pause, adjust the window to encompass the entire segment, save within the first detected component, reject all following components.','fontsize',12,'Position',[895 365 175 240]);
+                handles.inc_right = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25BA;</html>','fontsize',20,'Position',[930 325 30 30],'CallBack',{@inc_right_Callback, handles});
+                handles.dec_right = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25C4;</html>','fontsize',20,'Position',[900 325 30 30],'CallBack',{@dec_right_Callback, handles});
+
+
+                handles.dec_left = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25BA;</html>','fontsize',20,'Position',[45 325 30 30],'CallBack',{@dec_left_Callback, handles});
+                handles.inc_left = uicontrol(handles.seg_plots,'Style','pushbutton','String','<html>&#x25C4;</html>','fontsize',20,'Position',[15 325 30 30],'CallBack',{@inc_left_Callback, handles});
+                handles.stim_axis_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_axis.String,'Value',handles.stim_axis.Value,'fontsize',8,'Position',[990 260 100 30],'CallBack',{@stim_axis_confirm_Callback ,handles});
+                handles.stim_axis_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Axis','fontsize',10,'Position',[910 255 60 30]);
+                handles.stim_freq_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_frequency.String,'Value',handles.stim_frequency.Value,'fontsize',8,'Position',[990 130 100 30],'CallBack',{@stim_freq_confirm_Callback ,handles});
+                handles.stim_freq_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Freq','fontsize',10,'Position',[910 125 70 30]);
+                handles.stim_type_confirm = uicontrol(handles.seg_plots,'Style','edit','String',handles.stim_type.String,'Value',handles.stim_type.Value,'fontsize',8,'Position',[965 170 5 5],'CallBack',{@stim_type_confirm_Callback ,handles});
+                handles.stim_list = uicontrol(handles.seg_plots,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Position',[960 165 50 90],'CallBack',{@stim_confirm_Callback ,handles},'Value',1);
+                handles.stim_list_s = uicontrol(handles.seg_plots,'Style','text','String', 'stim','fontsize',10,'Position',[930 205 30 30]);
+                handles.ref_list = uicontrol(handles.seg_plots,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Position',[1040 165 50 90],'CallBack',{@ref_confirm_Callback ,handles},'Value',1);
+                handles.ref_list_s = uicontrol(handles.seg_plots,'Style','text','String', 'ref','fontsize',10,'Position',[1010 205 30 30]);
+%                 handles.stim_type_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Type','fontsize',10,'Position',[910 160 70 30]);
+                 handles.stim_inten_confirm = uicontrol(handles.seg_plots,'Style','popupmenu','String',handles.stim_intensity.String,'Value',handles.stim_intensity.Value,'fontsize',8,'Position',[990 95 100 30],'CallBack',{@stim_intensity_confirm_Callback ,handles});
+                handles.stim_inten_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Stim Intensity','fontsize',10,'Position',[910 90 70 35]);
+                handles.suffix_confirm = uicontrol(handles.seg_plots,'Style','edit','fontsize',8,'Position',[990 60 100 30],'CallBack',{@suffix_confirm_Callback ,handles});
+                handles.suffix_confirm_s = uicontrol(handles.seg_plots,'Style','text','String', 'Add Suffix','fontsize',10,'Position',[910 55 70 35]);
+                handles.segName_confirm = uicontrol(handles.seg_plots,'Style','listbox','String',handles.segName,'Position',[900 360 190 100],'Value',1);
+                handles.undoSeg = uicontrol(handles.seg_plots,'Style','pushbutton','String','UNDO','fontsize',20,'Position',[200 10 100 30],'CallBack',{@undo_seg_Callback, handles});
+
+                guidata(hObject,handles)
+                uiwait(gcf)
+                if getappdata(handles.ok_seg,'skip') == 0
+                    handles.segName = [{[handles.stim_axis.String{1},'-',handles.stim_type.String{1},'-',handles.stim_frequency.String{1},'-',handles.stim_intensity.String{handles.stim_intensity.Value}]};handles.segName]
+                    stimCheck = stimCheck +1;
+                    handles.totalSegment = handles.totalSegment-1;
+                    blockRmvInds = 0;
+                    handles.rmvInds = 0;
+                elseif getappdata(handles.ok_seg,'skip') == 1
+%                       stimCheck = stimCheck +1;
+                    startRmv = stimCheck- getappdata(handles.ok_seg,'l');
+                    lower = handles.bound(1) - getappdata(handles.ok_seg,'l')
+                    upper = handles.bound(2) + getappdata(handles.ok_seg,'r')
+                    handles.startInds(startRmv) = [];
+                    handles.locs(lower:upper) = [];
+                    handles.startInds(stimCheck:end) = handles.startInds(stimCheck:end)-length((lower:upper))
+                    handles.deletedInds(rmvCheck).locs = [lower:upper];
+                    handles.deletedInds(rmvCheck).startInds = [startRmv]; 
+                    handles.totalSegment = handles.totalSegment-1;
+                    rmvCheck = rmvCheck +1;
+                    blockRmvInds = 0;
+                    handles.rmvInds = 0;
+                elseif getappdata(handles.ok_seg,'skip') == 2
+                    if stimCheck >1
+                    stimCheck = stimCheck -1;
+                    delete([getappdata(handles.save_segment,'foldername'), handles.ispc.slash, handles.prevFileName, '.mat'])
+                    handles.segment_number.String = str2num(handles.segment_number.String)-1;
+                    handles.segName(1,:) = [];
+                    handles.experimentdata = getappdata(handles.export_data,'data')
+                    handles.experimentdata(stimCheck,:) = [];
+                    setappdata(handles.export_data,'data',handles.experimentdata)
+                    handles.totalSegment = handles.totalSegment+1;
+                    else
+                    end
+                end
+                close(handles.seg_plots);
+                handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+
+
+                handles.right_extra = 0;
+                handles.left_extra = 0;
+
+
+                handles.stim_intensity.Value = 1;
+                handles.params.stim_intensity = '';
+                handles.params.suffix = '';
+                setappdata(handles.stim_intensity,'suf','');
+                setappdata(handles.stim_intensity,'intensity','');
+                handles.prevFileName = handles.seg_filename.String;
+                [handles] = update_seg_filename(hObject, eventdata, handles);
+                set(handles.save_indicator,'String','UNSAVED');
+                set(handles.save_indicator,'BackgroundColor','r');
+                handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
+                                           
+                guidata(hObject,handles)
+                    if stimCheck==length(handles.startInds)
+                        go = 0;
+                    end
+                end
+ 
+                
+                
+            else
+                handles.canalInfo = getappdata(handles.stim_axis,'axisInfo');
             segments = str2num(handles.segment_number.String);
             if segments>0
-                s = segments+count
+                s = segments+count;
             else
-                s=1
+                s=1;
             end
+            prevStimCanal = '';
             for fs = s:length(listing)
                     segments = str2num(handles.segment_number.String);
-                    if contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'}) && (listing(fs).bytes>0)
-                        %Need to insert computer flag%%
-                        directory = [listing(fs).folder,'/'];
+                    if contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH','stim'}) && (listing(fs).bytes>0)
+                        directory = [listing(fs).folder,handles.ispc.slash];
                         filename = listing(fs).name;
                         dashes = find(filename=='_');
                         dot = find(filename=='.');
-                        amp = find(filename=='a');
+                        amp = strfind(filename,'amp');
                         
                         if isempty(segments==0) || (segments==0)
                             handles.subj_id.String = {filename(dashes(2)+1:dashes(3)-1)};
@@ -2868,22 +3156,43 @@ switch choice.stim
                             handles.exp_type.String = {'ElectricalStim'};
                             handles.exp_condition.String = {'PulseTrains'};
                             prompt = {'Enter the stimulation rate (pps):'};
-                            title = 'Input';
+                            t1 = 'Input';
                             dims = [1 35];
                             definput = {'100'};
-                            answer = inputdlg(prompt,title,dims,definput);
+                            answer = inputdlg(prompt,t1,dims,definput);
                             handles.stim_frequency.String = {answer{1}};
                             setappdata(handles.stim_frequency,'fq',answer{1});
-                            handles.stim_axis.String = {filename(dot-2:dot-1)};
-                            if contains(handles.stim_axis.String,'L')
-                                handles.implant.String={'Left'};
-                            else
-                                handles.implant.String={'Right'};
-                            end
+
+%                             if contains(handles.stim_axis.String,'L')
+%                                 handles.implant.String={'Left'};
+%                             else
+%                                 handles.implant.String={'Right'};
+%                             end
                         end
-                        
-                            setappdata(handles.stim_axis,'ax',filename(dot-2:dot-1));
-                            handles.stim_axis.String = {filename(dot-2:dot-1)};
+                        r = find(filename=='r');
+                        stimnum = {filename(dashes(3)+1:r(1)-1)}
+                        switch stimnum
+                            case handles.canalInfo.stimNum{1}
+                                setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{1});
+                                handles.stim_axis.String = handles.canalInfo.stimCanal(1);
+                                setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+                                handles.stim_axis_confirm.String = handles.canalInfo.stimCanal{1};
+                            case handles.canalInfo.stimNum{2}
+                                setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{2});
+                                handles.stim_axis.String = handles.canalInfo.stimCanal(2);
+                                setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+                                handles.stim_axis_confirm.String = handles.canalInfo.stimCanal{2};
+                            case handles.canalInfo.stimNum{3}
+                                setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{3});
+                                handles.stim_axis.String = handles.canalInfo.stimCanal(3);
+                                setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+                                handles.stim_axis_confirm.String = handles.canalInfo.stimCanal{3};
+                        end
+                        if ~strcmp(prevStimCanal,getappdata(handles.stim_axis,'ax'))
+                            [handles]=load_spread_sheet_Callback(hObject, eventdata, handles);
+                            [handles]=export_data_Callback(hObject, eventdata, handles);
+                            
+                        end
                             setappdata(handles.stim_type,'type',filename(dashes(3)+1:amp-1));
                             handles.stim_type.String = {filename(dashes(3)+1:amp-1)};
                             setappdata(handles.stim_intensity,'intensity',filename(amp:dashes(4)-1));
@@ -2944,12 +3253,12 @@ switch choice.stim
                             rotrotRxyz = rot2rot(newFrameinFrame,rotRsplitxyz(:,:,1));
                             
                             
-                            filtAngVelL=rot2angvelBJM20190107(rotrotL)/pi*180 * 1000;
-                            filtAngVelR=rot2angvelBJM20190107(rotrotR)/pi*180 * 1000;
-                            filtAngVelLxyz=rot2angvelBJM20190107(rotrotLxyz)/pi*180 * 1000;
-                            filtAngVelRxyz=rot2angvelBJM20190107(rotrotRxyz)/pi*180 * 1000;
+                            AngVelL=rot2angvelBJM20190107(rotrotL)/pi*180 * 1000;
+                            AngVelR=rot2angvelBJM20190107(rotrotR)/pi*180 * 1000;
+                            AngVelLxyz=rot2angvelBJM20190107(rotrotLxyz)/pi*180 * 1000;
+                            AngVelRxyz=rot2angvelBJM20190107(rotrotRxyz)/pi*180 * 1000;
 
-                            t=1/1000:1/1000:length(filtAngVelL)/1000;
+                            t=1/1000:1/1000:length(AngVelL)/1000;
                             
 %                             figure;
 %                             plot(t,filtAngVelL(:,3),'r', t, filtAngVelL(:,2),'b', t, filtAngVelL(:,1),'g');
@@ -2980,17 +3289,17 @@ switch choice.stim
                             Segment.RE_Position_Y = angularPosR(:,2);
                             Segment.RE_Position_Z = angularPosR(:,1);
 
-                            Segment.LE_Velocity_X = filtAngVelLxyz(:,1);
-                            Segment.LE_Velocity_Y = filtAngVelLxyz(:,2);
-                            Segment.LE_Velocity_LARP = filtAngVelL(:,1);
-                            Segment.LE_Velocity_RALP = filtAngVelL(:,2);
-                            Segment.LE_Velocity_Z = filtAngVelL(:,3);
+                            Segment.LE_Velocity_X = AngVelLxyz(:,1);
+                            Segment.LE_Velocity_Y = AngVelLxyz(:,2);
+                            Segment.LE_Velocity_LARP = AngVelL(:,1);
+                            Segment.LE_Velocity_RALP = AngVelL(:,2);
+                            Segment.LE_Velocity_Z = AngVelL(:,3);
 
-                            Segment.RE_Velocity_X = filtAngVelRxyz(:,1);
-                            Segment.RE_Velocity_Y = filtAngVelRxyz(:,2);
-                            Segment.RE_Velocity_LARP = filtAngVelR(:,1);
-                            Segment.RE_Velocity_RALP = filtAngVelR(:,2);
-                            Segment.RE_Velocity_Z = filtAngVelR(:,3);
+                            Segment.RE_Velocity_X = AngVelRxyz(:,1);
+                            Segment.RE_Velocity_Y = AngVelRxyz(:,2);
+                            Segment.RE_Velocity_LARP = AngVelR(:,1);
+                            Segment.RE_Velocity_RALP = AngVelR(:,2);
+                            Segment.RE_Velocity_Z = AngVelR(:,3);
                             Segment.Fs = 1000;
                             Segment.Time_Eye = t';
                             
@@ -3014,28 +3323,29 @@ switch choice.stim
                             Segment.HeadMPUAccel_Y = zeros(1,length(Stim_Interp))';
                             Segment.HeadMPUAccel_Z = zeros(1,length(Stim_Interp))';
 
-handles.Segment = Segment;
+                    handles.Segment = Segment;
 
-segments = str2num(handles.segment_number.String);
-if segments == 0
-    mkdir([directory,'Segments/'])
-    setappdata(handles.save_segment,'foldername',[directory,'Segments/']);
-end
+                    segments = str2num(handles.segment_number.String);
+                    if segments == 0
+                        mkdir([directory,'Segments',handles.ispc.slash])
+                        setappdata(handles.save_segment,'foldername',[directory,'Segments',handles.ispc.slash]);
+                    end
 
-[handles]=save_segment_Callback(hObject, eventdata, handles);
-guidata(hObject,handles)
-                        end
-prosthSync = [];
-coils = [];
-pSync = [];
-rotRsplit = [];
-rotLsplit = [];
-rotRsplitxyz = [];
-rotLsplitxyz = [];
-                    elseif contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH'}) && (listing(fs).bytes==0)
+                    [handles]=save_segment_Callback(hObject, eventdata, handles);
+                    guidata(hObject,handles)
+                                            end
+                    prosthSync = [];
+                    coils = [];
+                    pSync = [];
+                    rotRsplit = [];
+                    rotLsplit = [];
+                    rotRsplitxyz = [];
+                    rotLsplitxyz = [];
+                    elseif contains(listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH','stim'}) && (listing(fs).bytes==0)
                             handles.totalSegment = handles.totalSegment-1;
                             handles.raw_name.String = ['Total of ',num2str(handles.totalSegment),' files to process'];
                     end
+                    prevStimCanal = getappdata(handles.stim_axis,'ax');
                 count = count +1;
             end
             set(handles.save_indicator,'BackgroundColor','b')
@@ -3046,6 +3356,18 @@ rotLsplitxyz = [];
         [handles] = auto_seg_general_Callback(hObject, eventdata, handles);
 
     end
+end
+
+function ok_axis_Callback(hObject, eventdata, handles)
+canalInfo.stimCanal = [eventdata.Source.Parent.Children(2).String(eventdata.Source.Parent.Children(2).Value),...
+    eventdata.Source.Parent.Children(4).String(eventdata.Source.Parent.Children(4).Value),...
+    eventdata.Source.Parent.Children(6).String(eventdata.Source.Parent.Children(6).Value)];
+    
+canalInfo.stimNum = [{eventdata.Source.Parent.Children(3).String(eventdata.Source.Parent.Children(3).Value)},...
+    {eventdata.Source.Parent.Children(5).String(eventdata.Source.Parent.Children(5).Value)},...
+    {eventdata.Source.Parent.Children(7).String(eventdata.Source.Parent.Children(7).Value)}]; 
+setappdata(handles.stim_axis,'axisInfo',canalInfo);
+uiresume(gcbf)
 end
 
 
@@ -3101,7 +3423,7 @@ switch choice
         
     case 'LD VOG Electrical Only'
         options.stim = 4;
-    case 'Ross 710 Mogg Coils'
+    case 'Ross 710 Moog Coils'
         options.stim = 5;
     case 'Pupil Labs'
         options.stim = 6;
@@ -3422,6 +3744,13 @@ function export_data_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.export_data.BackgroundColor = [1    1    0];
 pause(0.1);
+if (handles.choice.stim==5)
+    handles.experimentdata = getappdata(hObject,'data');
+    has = find(~cellfun('isempty', handles.experimentdata(:,1)))
+    emptyC = find(ismember([1:length(handles.experimentdata(:,1))],has')~=1)
+    handles.experimentdata(emptyC,:) = [];
+    setappdata(hObject,'data',handles.experimentdata);
+end
 switch handles.exportCond
     case 0 
         
@@ -3486,7 +3815,11 @@ switch handles.exportCond
         handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
         handles.exportCond = 2;
         guidata(hObject,handles)      
-    end
+end
+    handles.prevExportSize = length(getappdata(handles.export_data,'data'));
+    setappdata(handles.export_data,'data','')
+    handles.experimentdata = [];
+    
 
 end
 
@@ -3869,6 +4202,14 @@ end
 end
 
 function inc_right_Callback(hObject, eventdata, handles)
+if handles.choice.stim==5
+handles.r = str2num(handles.right_extra_val.String)
+handles.r = handles.r + 1;
+handles.right_extra_val.String = handles.r;
+handles.seg_patch2.XData([1 4]) = [handles.Time_Eye(handles.locs(handles.bound(2)+handles.r));handles.Time_Eye(handles.locs(handles.bound(2)+handles.r))];
+setappdata(handles.ok_seg,'r',handles.r);
+guidata(hObject,handles)
+else
 handles.r = str2num(handles.right_extra_val.String)*handles.Data.Fs;
 handles.r = handles.r + 2*handles.Data.Fs;
 handles.right_extra_val.String = handles.r/handles.Data.Fs;
@@ -3876,8 +4217,17 @@ handles.seg_patch2.XData([1 4]) = handles.seg_patch2.XData([1 4]) + [2;2];
 setappdata(handles.ok_seg,'r',handles.end_inds_final(handles.plot_num) + handles.r);
 guidata(hObject,handles)
 end
+end
 
 function dec_right_Callback(hObject, eventdata, handles)
+if handles.choice.stim==5
+handles.r = str2num(handles.right_extra_val.String)
+handles.r = handles.r - 1;
+handles.right_extra_val.String = handles.r;
+handles.seg_patch2.XData([1 4]) = [handles.Time_Eye(handles.locs(handles.bound(2)+handles.r));handles.Time_Eye(handles.locs(handles.bound(2)+handles.r))];
+setappdata(handles.ok_seg,'r',handles.r);
+guidata(hObject,handles)
+else
 handles.r = str2num(handles.right_extra_val.String)*handles.Data.Fs;
 handles.r = handles.r - 2*handles.Data.Fs;
 handles.right_extra_val.String = handles.r/handles.Data.Fs;
@@ -3885,9 +4235,21 @@ handles.seg_patch2.XData([1 4]) = handles.seg_patch2.XData([1 4]) - [2;2];
 setappdata(handles.ok_seg,'r',handles.end_inds_final(handles.plot_num) + handles.r);
 guidata(hObject,handles)
 end
+end
 
 
 function inc_left_Callback(hObject, eventdata, handles)
+if handles.choice.stim==5
+handles.l = str2num(handles.left_extra_val.String)
+handles.l = handles.l + 1;
+if (handles.bound(1)-handles.l)<1
+    handles.l = handles.l - 1;
+end
+handles.left_extra_val.String = handles.l;
+handles.seg_patch1.XData([2 3]) = [handles.Time_Eye(handles.locs(handles.bound(1)-handles.l));handles.Time_Eye(handles.locs(handles.bound(1)-handles.l))];
+setappdata(handles.ok_seg,'l',handles.l);
+guidata(hObject,handles)
+else
 handles.l = str2num(handles.left_extra_val.String)*handles.Data.Fs;
 handles.l = handles.l + 2*handles.Data.Fs;
 handles.left_extra_val.String = handles.l/handles.Data.Fs;
@@ -3895,14 +4257,24 @@ handles.seg_patch1.XData([2 3]) = handles.seg_patch1.XData([2 3]) - [2;2];
 setappdata(handles.ok_seg,'l',handles.onset_inds_final(handles.plot_num) - handles.l);
 guidata(hObject,handles)
 end
+end
 
 function dec_left_Callback(hObject, eventdata, handles)
+if handles.choice.stim==5
+handles.l = str2num(handles.left_extra_val.String)
+handles.l = handles.l - 1;
+handles.left_extra_val.String = handles.l;
+handles.seg_patch1.XData([2 3]) =[handles.Time_Eye(handles.locs(handles.bound(1)-handles.l));handles.Time_Eye(handles.locs(handles.bound(1)-handles.l))];
+setappdata(handles.ok_seg,'l',handles.l);
+guidata(hObject,handles)
+else
 handles.l = str2num(handles.left_extra_val.String)*handles.Data.Fs;
 handles.l = handles.l - 2*handles.Data.Fs;
 handles.left_extra_val.String = handles.l/handles.Data.Fs;
 handles.seg_patch1.XData([2 3]) = handles.seg_patch1.XData([2 3]) + [2;2];
 setappdata(handles.ok_seg,'l',handles.onset_inds_final(handles.plot_num) - handles.l);
 guidata(hObject,handles)
+end
 end
 
 function [handles] = suffix_confirm_Callback(hObject, eventdata, handles)
@@ -3927,6 +4299,72 @@ guidata(hObject,handles)
 [handles] = update_seg_filename(hObject, eventdata, handles);
 % Hints: get(hObject,'String') returns contents of stim_intensity as text
 %        str2double(get(hObject,'String')) returns contents of stim_intensity as a double
+end
+
+function [handles] = undo_seg_Callback(hObject, eventdata, handles)
+setappdata(handles.ok_seg,'skip',2)
+uiresume(gcbf)
+end
+
+function [handles] = ref_confirm_Callback(hObject, eventdata, handles)
+v = get(hObject,'Value');
+if any(strcmp(handles.stim_type.String,''))
+    handles.stim_type.String = {['ref',hObject.String{v}]};
+else
+    if contains(handles.stim_type.String,'stim')
+        if contains(handles.stim_type.String,'ref')
+            place = find(handles.stim_type.String{1}=='r');
+            handles.stim_type.String{1} = [handles.stim_type.String{1}(1:place-1),'ref',hObject.String{v}];
+        else
+            handles.stim_type.String{1} = [handles.stim_type.String{1},'ref',hObject.String{v}];
+        end
+    else
+        handles.stim_type.String{1} = ['ref',hObject.String{v}];
+    end
+end
+setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+handles.stim_type.Value = 1;
+guidata(hObject,handles)
+[handles] = update_seg_filename(hObject, eventdata, handles);
+end
+
+function [handles] = stim_confirm_Callback(hObject, eventdata, handles)
+v = get(hObject,'Value');
+if any(strcmp(handles.stim_type.String,''))
+    handles.stim_type.String = {['stim',hObject.String{v}]};
+else
+    if contains(handles.stim_type.String,'ref')
+        if contains(handles.stim_type.String,'stim')
+            place = find(handles.stim_type.String{1}=='r');
+            handles.stim_type.String{1} = ['stim',hObject.String{v},handles.stim_type.String{1}(place:end)];
+        else
+            handles.stim_type.String{1} = ['stim',hObject.String{v},handles.stim_type.String{1}];
+        end
+    else
+        handles.stim_type.String{1} = ['stim',hObject.String{v}]
+    end
+end
+
+switch hObject.String{v}
+    case handles.canalInfo.stimNum{1}
+        setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{1});
+        handles.stim_axis.String = handles.canalInfo.stimCanal(1);
+        setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+        handles.stim_axis_confirm.String = handles.canalInfo.stimCanal{1};
+    case handles.canalInfo.stimNum{2}
+        setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{2});
+        handles.stim_axis.String = handles.canalInfo.stimCanal(2);
+        setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+        handles.stim_axis_confirm.String = handles.canalInfo.stimCanal{2};
+    case handles.canalInfo.stimNum{3}
+        setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{3});
+        handles.stim_axis.String = handles.canalInfo.stimCanal(3);
+        setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+        handles.stim_axis_confirm.String = handles.canalInfo.stimCanal{3};
+end
+handles.stim_type.Value = 1;
+guidata(hObject,handles)
+[handles] = update_seg_filename(hObject, eventdata, handles);
 end
 
 function [handles] = stim_type_confirm_Callback(hObject, eventdata, handles)
@@ -3988,6 +4426,53 @@ function ok_seg_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [handles] = update_seg_filename(hObject, eventdata, handles);
+if handles.choice.stim==5
+    setappdata(hObject,'skip',0);
+    i_start = handles.locs(handles.bound(1)-getappdata(hObject,'l'))-750;
+    i_end = handles.locs(handles.bound(2)+getappdata(hObject,'r'))+750;
+    handles.i_start_eye = i_start;
+    handles.i_end_eye = i_end;
+    handles.i_start_stim = i_start;
+    handles.i_end_stim = i_end;
+
+    Segment.segment_code_version = mfilename;
+    Segment.raw_filename = handles.rawFileName;
+    Segment.start_t = handles.Time_Eye(i_start);
+    Segment.end_t = handles.Time_Eye(i_end);
+    Segment.LE_Position_X = handles.angularPosL(i_start:i_end,3);
+    Segment.LE_Position_Y = handles.angularPosL(i_start:i_end,2);
+    Segment.LE_Position_Z = handles.angularPosL(i_start:i_end,1);
+
+    Segment.RE_Position_X = handles.angularPosL(i_start:i_end,3);
+    Segment.RE_Position_Y = handles.angularPosL(i_start:i_end,2);
+    Segment.RE_Position_Z = handles.angularPosL(i_start:i_end,1);
+
+    Segment.LE_Velocity_X = handles.AngVelLxyz(i_start:i_end,1);
+    Segment.LE_Velocity_Y = handles.AngVelLxyz(i_start:i_end,2);
+    Segment.LE_Velocity_LARP = handles.AngVelL(i_start:i_end,1);
+    Segment.LE_Velocity_RALP = handles.AngVelL(i_start:i_end,2);
+    Segment.LE_Velocity_Z = handles.AngVelL(i_start:i_end,3);
+
+    Segment.RE_Velocity_X = handles.AngVelRxyz(i_start:i_end,1);
+    Segment.RE_Velocity_Y = handles.AngVelRxyz(i_start:i_end,2);
+    Segment.RE_Velocity_LARP = handles.AngVelR(i_start:i_end,1);
+    Segment.RE_Velocity_RALP = handles.AngVelR(i_start:i_end,2);
+    Segment.RE_Velocity_Z = handles.AngVelR(i_start:i_end,3);
+    Segment.Time_Eye = handles.Time_Eye(i_start:i_end);
+    Segment.Time_Stim = handles.Time_Stim_Interp(i_start:i_end);
+    
+    Segment.HeadMPUVel_X = zeros(1,length(Segment.Time_Stim))';
+    Segment.HeadMPUVel_Y = zeros(1,length(Segment.Time_Stim))';
+    Segment.HeadMPUVel_Z = handles.Stim_Interp(i_start:i_end);
+
+    Segment.HeadMPUAccel_X = zeros(1,length(Segment.Time_Stim))';
+    Segment.HeadMPUAccel_Y = zeros(1,length(Segment.Time_Stim))';
+    Segment.HeadMPUAccel_Z = zeros(1,length(Segment.Time_Stim))';
+
+    Segment.Fs = 1000;
+
+else
+
 if getappdata(hObject,'r') > length(handles.Segment.Time_Stim)
     e = handles.Segment.Time_Stim(end);
 else
@@ -4085,6 +4570,7 @@ Segment.HeadMPUAccel_Z = handles.Segment.HeadMPUAccel_Z(i_start_stim:i_end_stim)
 
 
 
+end
 
 handles.Segment = Segment;
 
