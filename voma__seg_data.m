@@ -437,6 +437,12 @@ if strcmp(handles.params.segment_filename(1),'-')
 else
 end
 
+if isfield(handles,'string_addon')
+    
+else
+    handles.string_addon = '';
+end
+
 save([handles.params.segment_filename handles.string_addon '.mat'],'Data')
 
 
