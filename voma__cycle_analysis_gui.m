@@ -2299,16 +2299,11 @@ elseif (handles.singleEyeSwitch.Value == 1)
     RootData(handles.curr_file).cyc2plot = [];
 end
 RootData(handles.curr_file).VOMA_data.stim_ind = handles.CurrData.VOMA_data.stim_ind;
-
 cd(handles.pathname);
-
-eval(['save ' handles.filename ' RootData'])
-
+save(handles.filename,'RootData')
 set(handles.update_file_disp,'BackgroundColor','green');
 set(handles.update_file_disp,'String','Saved!')
 set(handles.update_file_disp,'FontSize',15)
-
-
 guidata(hObject,handles)
 
 
