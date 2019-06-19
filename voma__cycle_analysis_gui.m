@@ -25,7 +25,7 @@ function varargout = voma__cycle_analysis_gui(varargin)
 
 % Edit the above text to modify the response to help voma__cycle_analysis_gui
 
-% Last Modified by GUIDE v2.5 22-May-2018 20:14:06
+% Last Modified by GUIDE v2.5 08-Mar-2019 17:35:58
 
 
 % Begin initialization code - DO NOT EDIT
@@ -102,6 +102,11 @@ handles.colors.r_y = [125,46,230]/255;
 handles.colors.r_z = [255,0,255]/255;
 handles.colors.r_l = [0 1 0];
 handles.colors.r_r = [64,224,208]/255;
+
+handles.colors.hV_l = [54 73 78]/255;
+handles.colors.hV_r = [115 119 129]/255
+handles.colors.hV_z = [0 0 0];
+
 
 % The 'voma__stim_analysis' GUI offers the option to upsample the processed
 % Eye and Stimulus data traces, and save them in parallel to the processed
@@ -586,7 +591,7 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         %
         %         end
         
-    case {1,4,5,6,7,8}
+    case {1,4,5,6,7,8,9}
         
         % Check if the variable is empty. If it is, set the 'stimulus length' to
         % the starting and ending point of the stimulus trace.
@@ -1028,9 +1033,12 @@ if handles.params.righteye_flag == 1
 end
 
 switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5,6,7,8}
-        
-        plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'k','LineWidth',1)
+    case {1,4,5,6,7,8,9}
+
+        plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{1}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_l,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{2}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_r,'LineWidth',1)
+        plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{3}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_z,'LineWidth',1)
+
         
         %         plot(handles.main_plot,handles.Final_Data.Eye_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),handles.Final_Data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),'k','LineWidth',1)
         
@@ -1209,8 +1217,8 @@ if button_state == high
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
-        
-        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)'];
+                stim = [stim ; {handles.Final_Data.Stim_Trace{1}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{2}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{3}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)}];
+
     end
     
     % Compute the cycle average
@@ -1356,6 +1364,7 @@ Results.Parameters = handles.CurrData.VOMA_data.Parameters;
 %
 % Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
 % Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
+% Results.stim.LHRH
 Results.Fs = handles.Final_Data.Fs;
 Results.QPparams = handles.CurrData.QPparams;
 Results.cyclist = get(handles.stim_table,'Data');
@@ -1545,8 +1554,9 @@ if handles.params.plot_saved_cycles_flag == 1
     
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code	
         case {1,4,5,6}	
-            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)	
-            	
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{1}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_l,'LineWidth',1)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{2}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_r,'LineWidth',1)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{3}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_z,'LineWidth',1)
             	
         case {2,3}	
             	
@@ -1797,7 +1807,10 @@ if handles.params.plot_cycleavg_flag == 1
     
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         case {1,4,5,6,7}
-            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'k','LineWidth',1)
+            
+            plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{1}(stim_ind(1,1):stim_ind(1,1) + handles.len),'Color',handles.colors.hV_l,'LineWidth',1)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{2}(stim_ind(1,1):stim_ind(1,1) + handles.len),'Color',handles.colors.hV_r,'LineWidth',1)
+        plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{3}(stim_ind(1,1):stim_ind(1,1) + handles.len),'Color',handles.colors.hV_z,'LineWidth',1)
             
             
         case {2,3}
@@ -1877,7 +1890,7 @@ if handles.params.plot_final_trace == 1
     rx_cyc = [];
     ry_cyc = [];
     
-    stim = [ ];
+    stim = [];
     t_cyc = [];
     
     % Extract data
@@ -1894,12 +1907,11 @@ if handles.params.plot_final_trace == 1
         rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
-        stim = [stim ; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)];
+        stim = [stim ; [handles.Final_Data.Stim_Trace{1}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{2}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{3}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)]];
         
         
         t_cyc = [t_cyc  handles.Final_Data.Eye_t(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
     end
-    
     % Plot the cycle average
     if handles.params.lefteye_flag == 1
         plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,lz_cyc,'r','LineWidth',1)
@@ -1930,9 +1942,10 @@ if handles.params.plot_final_trace == 1
         end
     end
     
-    plot(handles.main_plot,[1:length(stim)]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim,'color' ,'k','LineWidth',1)
-    
-    
+        plot(handles.main_plot,[1:length(stim(:,1))]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim(:,1),'Color',handles.colors.hV_l,'LineWidth',1)
+                plot(handles.main_plot,[1:length(stim(:,2))]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim(:,2),'Color',handles.colors.hV_r,'LineWidth',1)
+        plot(handles.main_plot,[1:length(stim(:,3))]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim(:,3),'Color',handles.colors.hV_z,'LineWidth',1)
+
     drawnow
     
 end

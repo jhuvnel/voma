@@ -26,7 +26,7 @@ function varargout = voma__qpr(varargin)
 % Edit the above text to modify the response to help voma__qpr
 
 
-% Last Modified by GUIDE v2.5 22-May-2018 14:17:09
+% Last Modified by GUIDE v2.5 08-Apr-2019 17:29:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -198,6 +198,10 @@ handles.colors.r_z = [255,0,255]/255;
 handles.colors.r_l = [0 1 0];
 handles.colors.r_r = [64,224,208]/255;
 
+handles.colors.hV_l = [54 73 78]/255;
+handles.colors.hV_r = [115 119 129]/255
+handles.colors.hV_z = [0 0 0];
+
 handles.params.pos_filt_method = 1;
 handles.params.pos_filt_trace = 1;
 
@@ -263,7 +267,7 @@ end
 
 
 % --- Executes on selection change in stimuli_files.
-function stimuli_files_Callback(hObject, eventdata, handles)
+function handles = stimuli_files_Callback(hObject, eventdata, handles)
 % hObject    handle to stimuli_files (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -290,7 +294,7 @@ if handles.reload_flag == 0
         
     end
     
-    handles.curr_file = get(hObject,'Value');
+    handles.curr_file = get(handles.stimuli_files,'Value');
     % Since we loaded a new file, the 'smooth_flag' should be false
     handles.params.smooth_flag = 0;
     
@@ -856,7 +860,7 @@ end
 end
 
 % --- Executes on button press in analyze_new_voma_file.
-function analyze_new_voma_file_Callback(hObject, eventdata, handles)
+function handles = analyze_new_voma_file_Callback(hObject, eventdata, handles)
 % hObject    handle to analyze_new_voma_file (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2486,8 +2490,12 @@ switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
         
         
     otherwise
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace,'k','LineWidth',0.5)
-        
+                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace,'Color','k','LineWidth',0.5)
+
+%1.LARP 2.RALP 3.Z
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{1},'Color',handles.colors.hV_l,'LineWidth',0.5)
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{2},'Color',handles.colors.hV_r,'LineWidth',0.5)
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{3},'Color',handles.colors.hV_z,'LineWidth',0.5)
 end
 
 
@@ -2893,7 +2901,12 @@ switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
         
         
     otherwise
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace,'k','LineWidth',0.5)
+                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace,'Color',handles.colors.hV_l,'LineWidth',0.5)
+
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{1},'Color',handles.colors.hV_l,'LineWidth',0.5)
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{2},'Color',handles.colors.hV_r,'LineWidth',0.5)
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{3},'Color',handles.colors.hV_z,'LineWidth',0.5)
+
         
 end
 guidata(hObject,handles)
@@ -3075,7 +3088,13 @@ switch handles.CurrData.VOMA_data.Parameters.Stim_Info.Stim_Type{1}
     case 'Current Fitting'
         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_Trace(:,1),200*ones(1,length(handles.CurrData.VOMA_data.Stim_Trace(:,1))),'Marker','*','color','k','LineWidth',0.5)
     otherwise
-        plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace,'k','LineWidth',0.5)
+                 plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace,'Color',handles.colors.hV_l,'LineWidth',0.5)
+
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{1},'Color',handles.colors.hV_l,'LineWidth',0.5)
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{2},'Color',handles.colors.hV_r,'LineWidth',0.5)
+%         plot(handles.vor_plot,handles.CurrData.VOMA_data.Stim_t,handles.params.stim_plot_mult*handles.CurrData.VOMA_data.Stim_Trace{3},'Color',handles.colors.hV_z,'LineWidth',0.5)
+
+
 end
 guidata(hObject,handles)
 end
@@ -3179,7 +3198,7 @@ end
 end
 
 % --- Executes on button press in save_qp_params.
-function save_qp_params_Callback(hObject, eventdata, handles)
+function handles = save_qp_params_Callback(hObject, eventdata, handles)
 % hObject    handle to save_qp_params (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -4167,7 +4186,7 @@ end
 
 
 % --- Executes on button press in recalc_angvel.
-function recalc_angvel_Callback(hObject, eventdata, handles)
+function handles = recalc_angvel_Callback(hObject, eventdata, handles)
 % hObject    handle to recalc_angvel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -7421,4 +7440,29 @@ end
 % Hint: get(hObject,'Value') returns toggle state of disable_threshold_qpr_ckbx
 
 guidata(hObject,handles)
+end
+
+
+% --- Executes on button press in filterAll.
+function filterAll_Callback(hObject, eventdata, handles)
+% hObject    handle to filterAll (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+for i = 1:length(handles.stimuli_files.String)
+    for trace = 1:3
+        handles.params.pos_filt_trace = trace;
+[handles] = apply_angpos_filt_Callback(hObject, eventdata, handles);
+    end
+handles = recalc_angvel_Callback(hObject, eventdata, handles)
+[handles] = start_deseccade_Callback(hObject, eventdata, handles)
+handles = save_qp_params_Callback(hObject, eventdata, handles)
+if i<length(handles.stimuli_files.String)
+handles.stimuli_files.Value = i+1;
+end
+handles.params.save_flag = 0;
+handles.reload_flag = 0
+guidata(hObject,handles)
+handles = stimuli_files_Callback(hObject, eventdata, handles);
+
+end
 end

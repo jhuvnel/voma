@@ -192,7 +192,7 @@ if exist('Data_In','var') && ~isempty(Data_In)
             
         case 4
             
-        case 5 % LD VOG Goggles - MVI Trial
+        case {5,9} % LD VOG Goggles - MVI Trial
             Fs = Data_In.Fs;
             
             if (isrow(Data_In.Data_LE_Pos_X))
@@ -241,6 +241,7 @@ if exist('Data_In','var') && ~isempty(Data_In)
             
             % NOTE: These are FICK ANGLES NOT ROTATION VECTORS, SO SAVE AS
             % HVT (Horiz, Vert, Torsion)
+            
             rawData_L = [ Data_In.Data_LE_Pos_Z  Data_In.Data_LE_Pos_Y  Data_In.Data_LE_Pos_X ];
             rawData_R = [ Data_In.Data_RE_Pos_Z  Data_In.Data_RE_Pos_Y  Data_In.Data_RE_Pos_X ];
             
@@ -435,7 +436,6 @@ else % i.e., the user did NOT provide any angular position data into the routine
             
             cd(filepath)
             
-            
             Fs = 100;
             
             
@@ -448,7 +448,7 @@ else % i.e., the user did NOT provide any angular position data into the routine
             HRightIndex = 43;
             VRightIndex = 44;
             TRightIndex = 45;
-            
+
             
             % Load Data
             data = dlmread(filename,' ',1,0);
@@ -530,6 +530,46 @@ else % i.e., the user did NOT provide any angular position data into the routine
                 %                 Data.RE_Vel_RALP = LRZR(:,2);
                 Data.MPU = mpuAligned;
             end
+            
+            case 9 % Labyrinth Devices VOG
+            
+            
+            cd(filepath)
+            
+
+                HLeftIndex = 47;
+                VLeftIndex = 48;
+                TLeftIndex = 49;
+                HRightIndex = 50;
+                VRightIndex = 51;
+                TRightIndex = 52;
+
+            Fs = 120;
+            
+            
+            
+            % Load Data
+            data = dlmread(filename,' ',1,0);
+            
+            
+            % Load raw eye position data in Fick coordinates [degrees]
+            Horizontal_LE_Position = data(:,HLeftIndex);
+            Vertical_LE_Position = data(:,VLeftIndex);
+            Torsion_LE_Position = data(:,TLeftIndex);
+            Horizontal_RE_Position = data(:,HRightIndex);
+            Vertical_RE_Position = data(:,VRightIndex);
+            Torsion_RE_Position = data(:,TRightIndex);
+            
+            Horizontal_LE_Position(isnan(Horizontal_LE_Position)) = 0;
+        Vertical_LE_Position(isnan(Vertical_LE_Position)) = 0;
+        Torsion_LE_Position(isnan(Torsion_LE_Position)) = 0;
+        Horizontal_RE_Position(isnan(Horizontal_RE_Position)) = 0;
+        Vertical_RE_Position(isnan(Vertical_RE_Position)) = 0;
+        Torsion_RE_Position(isnan(Torsion_RE_Position)) = 0;
+            
+            rawData_L = [Torsion_LE_Position Vertical_LE_Position Horizontal_LE_Position];
+            rawData_R = [Torsion_RE_Position Vertical_RE_Position Horizontal_RE_Position];
+            
     end
     
     
@@ -628,7 +668,7 @@ for j=1:2
             
         case 4 % McGill Coil System
             
-        case {5} % Lab. Dev. VOG Goggles
+        case {5,9} % Lab. Dev. VOG Goggles
             
             switch j
                 
@@ -834,7 +874,7 @@ switch DAQ_code
                 Data.RawData_R = rawData_R;
         end
     case {4}
-    case {5}
+    case {5,9}
         
         Data.LE_Pos_X = rawData_L(:,1);
         Data.LE_Pos_Y = rawData_L(:,2);

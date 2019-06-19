@@ -22,7 +22,7 @@ function varargout = voma(varargin)
 
 % Edit the above text to modify the response to help voma
 % Testing
-% Last Modified by GUIDE v2.5 10-Oct-2018 11:46:15
+% Last Modified by GUIDE v2.5 03-Jun-2019 12:04:44
 
 % Begin initialization code - DO NOT EDIT
 % Brian M test
@@ -2052,4 +2052,21 @@ end
 set(handles.save_status,'BackgroundColor','green')
 drawnow
 
+end
+
+
+% --- Executes on button press in MVOMAProcess.
+function MVOMAProcess_Callback(hObject, eventdata, handles)
+% hObject    handle to MVOMAProcess (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Monkey_Voma_Processing
+end
+
+% --- Executes on button press in subplotFigs.
+function subplotFigs_Callback(hObject, eventdata, handles)
+% hObject    handle to subplotFigs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+generateSubplotFigures
 end

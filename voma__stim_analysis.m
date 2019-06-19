@@ -121,7 +121,7 @@ else
     
 end
 
-if isrow(handles.Stimulus)
+if isrow(handles.Stimulus{1})
     handles.Stimulus = handles.Stimulus';
 end
 
@@ -159,15 +159,31 @@ function plot_stim_trace(hObject, eventdata, handles)
 
 axes(handles.stim_plot);
 cla
-
+hV_L = 1;
+hV_R = 1;
+hV_Z = 1;
+switch handles.CurrData.VOMA_data.Parameters.Stim_Info.ModCanal{1}
+    case 'LARP'
+        handles.mainStim = handles.Stimulus{1};
+        hV_L = 3;
+    case 'RALP'
+        handles.mainStim = handles.Stimulus{2};
+        hV_R = 3;
+    case 'LHRH'
+        handles.mainStim = handles.Stimulus{3};
+        hV_Z = 3;
+end
 CurrData = handles.CurrData;
 switch CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5,7,8}
-        plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
-        hold on
-        plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')
+    case {1,4,5,7,8,9}
         
-        set(handles.cycle_table,'Data',[handles.Time(handles.stim_ind(:,1)) handles.Stimulus(handles.stim_ind(:,1))]);
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color',[54 73 78]/255,'LineWidth',hV_L)
+        hold on
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{2},'Color',[115 119 129]/255,'LineWidth',hV_R)
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{3},'Color',[0 0 0],'LineWidth',hV_Z)
+        plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.mainStim(handles.stim_ind(:,1)),'rx')
+        
+        set(handles.cycle_table,'Data',[handles.Time(handles.stim_ind(:,1)) handles.mainStim(handles.stim_ind(:,1))]);
         
         
     case {2,3} % These case involve using the CED to record precise eletrical
@@ -190,7 +206,9 @@ switch CurrData.VOMA_data.Parameters.DAQ_code
                 set(handles.cycle_table,'Data',[handles.Time(handles.stim_ind(:,1)) handles.Stimulus(handles.stim_ind(:,1))]);
                 
         end
+        
 end
+guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = voma__stim_analysis_OutputFcn(hObject, eventdata, handles) 
@@ -220,7 +238,11 @@ handles.UpSamp.Fs = Fs_up;
 
 handles.UpSamp.Stim_t = [handles.Time(1):1/Fs_up:handles.Time(end)]';
 
-handles.UpSamp.Stim_Trace = interp1(handles.Time,handles.Stimulus,handles.UpSamp.Stim_t);
+l = interp1(handles.Time,handles.Stimulus{1},handles.UpSamp.Stim_t)
+r = interp1(handles.Time,handles.Stimulus{2},handles.UpSamp.Stim_t)
+z = interp1(handles.Time,handles.Stimulus{3},handles.UpSamp.Stim_t)
+
+handles.UpSamp.Stim_Trace = {l r z} ;
 
 
 
@@ -284,7 +306,20 @@ function find_cycles_Callback(hObject, eventdata, handles)
 if isrow(handles.Time)
     handles.Time = handles.Time';
 end
-
+hV_L = 1;
+hV_R = 1;
+hV_Z = 1;
+switch handles.CurrData.VOMA_data.Parameters.Stim_Info.ModCanal{1}
+    case 'LARP'
+        handles.mainStim = handles.Stimulus{1};
+        hV_L = 2;
+    case 'RALP'
+        handles.mainStim = handles.Stimulus{2};
+        hV_R = 2;
+    case 'LHRH'
+        handles.mainStim = handles.Stimulus{3};
+        hV_Z = 2;
+end
 switch handles.params.detect_method
     
     case 1
@@ -294,7 +329,7 @@ switch handles.params.detect_method
             
             inds = [1:length(handles.Time)];
         
-            pos_ind = [false ; diff(handles.Stimulus > handles.params.align_thresh)];
+            pos_ind = [false ; diff(handles.mainStim > handles.params.align_thresh)];
         
             stim_pos_thresh_ind = inds(pos_ind > 0 )';
 %             stim_neg_thresh_ind = inds(neg_ind > 0 )';
@@ -305,7 +340,7 @@ switch handles.params.detect_method
             
             inds = [1:length(handles.Time)];
         
-            pos_ind = [false ; diff(handles.Stimulus < handles.params.align_thresh)];
+            pos_ind = [false ; diff(handles.mainStim < handles.params.align_thresh)];
         
             stim_pos_thresh_ind = inds(pos_ind > 0 )';
             
@@ -324,20 +359,21 @@ switch handles.params.detect_method
             %         handles.neg_stim_ind = stim_neg_thresh_ind;
             
             %         set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus([stim_pos_thresh_ind stim_neg_thresh_ind])]);
-            set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind ]) handles.Stimulus([stim_pos_thresh_ind ])]);
+            set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind ]) handles.mainStim([stim_pos_thresh_ind ])]);
             
             axes(handles.stim_plot);
             cla
             %         handles.stim_ind = [handles.pos_stim_ind handles.neg_stim_ind];
             handles.stim_ind = [handles.pos_stim_ind ];
-        
-        plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color',[54 73 78]/255,'LineWidth',hV_L)
         hold on
-        plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.Stimulus(stim_pos_thresh_ind),'rx')
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{2},'Color',[115 119 129]/255,'LineWidth',hV_R)
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{3},'Color',[0 0 0],'LineWidth',hV_Z)
+        plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.mainStim(stim_pos_thresh_ind),'rx')
         %         plot(handles.stim_plot,handles.Time(stim_neg_thresh_ind),handles.Stimulus(stim_neg_thresh_ind),'bx')
         guidata(hObject,handles)
     case 2
-        inds = [1:length(handles.Stimulus)];
+        inds = [1:length(handles.mainStim)];
         
         % This case is applicable for ELECTRICAL stimulation trigger
         % timestamps
@@ -348,7 +384,7 @@ switch handles.params.detect_method
         % 'inter-stimulus-interval' is LONGER than the user defined
         % thhreshold. We will grab the indices of all pulses where this
         % occurs, starting with the the FIRST stimulus index.
-        stim_inds_new = [1 inds([false diff(handles.Stimulus(1,:))>handles.params.btwn_stim_dur])];
+        stim_inds_new = [1 inds([false diff(handles.mainStim(1,:))>handles.params.btwn_stim_dur])];
         
         if length(stim_inds_new)>1
             handles.stim_ind = [stim_inds_new' [stim_inds_new(2:end)' ;  stim_inds_new(end)]];
@@ -362,7 +398,7 @@ switch handles.params.detect_method
         guidata(hObject,handles)
         
     case 3
-        [stim_ind_temp] = voma__find_stim_ind(handles.Stimulus,handles.CurrData.VOMA_data.Fs,handles.Time,'n');
+        [stim_ind_temp] = voma__find_stim_ind(handles.mainStim,handles.CurrData.VOMA_data.Fs,handles.Time,'n');
         
         set(handles.cycle_table,'Data',[handles.Time(stim_ind_temp)]);
         
@@ -371,14 +407,20 @@ switch handles.params.detect_method
         plot_stim_inds(hObject, eventdata, handles)
         guidata(hObject,handles)
     case 4
-                        temp_smth = sgolayfilt(handles.Stimulus,3,105);
+        if str2num(handles.align_thresh.String)<0
+            stimToUse = -handles.mainStim;
+        else
+            stimToUse = handles.mainStim
+        end
+                        temp_smth = sgolayfilt(stimToUse,3,105);
                 temp_smth = sgolayfilt(temp_smth,3,105);
                 mask = zeros(1,length(temp_smth));
         mask(temp_smth>20) = ones(length(mask(temp_smth>20)),1);
         a = [false ; diff(abs(mask'))>0];
         inds = find(a>0);
+        
 
-        [pks,locs] = findpeaks(handles.Stimulus,'MinPeakHeight',100,'MinPeakDistance',2000);
+        [pks,locs] = findpeaks(stimToUse,'MinPeakHeight',100,'MinPeakDistance',2000);
         if length(locs)>10
             finalInds = [];
             for i = 1:length(locs)
@@ -406,14 +448,30 @@ function plot_stim_inds(hObject, eventdata, handles)
 
  axes(handles.stim_plot);
  cla
- 
- plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
- hold on
- plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')
- try
- plot(handles.stim_plot,handles.Time(handles.stim_ind(:,2)),handles.Stimulus(handles.stim_ind(:,2)),'bx')
- catch
- end
+ hV_L = 1;
+ hV_R = 1;
+ hV_Z = 1;
+ switch handles.CurrData.VOMA_data.Parameters.Stim_Info.ModCanal{1}
+    case 'LARP'
+        handles.mainStim = handles.Stimulus{1};
+        hV_L = 3;
+    case 'RALP'
+        handles.mainStim = handles.Stimulus{2};
+        hV_R = 3;
+    case 'LHRH'
+        handles.mainStim = handles.Stimulus{3};
+        hV_Z = 3;
+end
+ plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color',[54 73 78]/255,'LineWidth',hV_L)
+        hold on
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{2},'Color',[115 119 129]/255,'LineWidth',hV_R)
+        plot(handles.stim_plot,handles.Time,handles.Stimulus{3},'Color',[0 0 0],'LineWidth',hV_Z)
+        plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.mainStim(handles.stim_ind(:,1)),'rx')
+        
+%  try
+%         plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.mainStim(handles.stim_ind(:,1)),'bx')
+%  catch
+%  end
 
 
 % --- Executes on button press in delete_ind.
@@ -696,9 +754,13 @@ time_cutout_s = [x1 ; x2];
 [a1,i_start_eye] = min(abs(handles.Time - time_cutout_s(1,1)));
 [a2,i_end_eye] = min(abs(handles.Time - time_cutout_s(2,1)));
 
-Stim_off = mean(handles.Stimulus(i_start_eye:i_start_eye));
+Stim_offL = mean(handles.Stimulus{1}(i_start_eye:i_start_eye));
+Stim_offR = mean(handles.Stimulus{2}(i_start_eye:i_start_eye));
+Stim_offZ = mean(handles.Stimulus{3}(i_start_eye:i_start_eye));
 
-handles.Stimulus = handles.Stimulus - Stim_off;
+handles.Stimulus{1} = handles.Stimulus{1} - Stim_offL;
+handles.Stimulus{2} = handles.Stimulus{2} - Stim_offR;
+handles.Stimulus{3} = handles.Stimulus{3} - Stim_offZ;
 
 % Plot the Stimulus Trace
 plot_stim_trace(hObject, eventdata, handles)
