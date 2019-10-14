@@ -606,7 +606,8 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         else
             % I am finding the minimum length of all
             % cycles and use that for the length of each cycle I extract
-            handles.len = min(diff(stim_ind(:,1)));
+            lengths = diff(stim_ind(:,1));
+            handles.len = min(lengths(lengths>0.99*median(lengths)));
             if isempty(handles.len)
                 handles.len = stim_ind(1,2) - stim_ind(1,1);
             end
@@ -623,7 +624,7 @@ handles.Final_Data.stim_ind = stim_ind;
 
 handles.CurrData.VOMA_data.stim_ind = stim_ind;
 handles.RootData(handles.curr_file).VOMA_data.stim_ind = stim_ind;
-
+guidata(hObject, handles);
 set(handles.user_cyc_len,'String',num2str((handles.len/handles.Final_Data.Fs)*1000));
 
 if isempty(handles.stim_list)
@@ -1033,7 +1034,7 @@ if handles.params.righteye_flag == 1
 end
 
 switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-    case {1,4,5,6,7,8,9}
+    case {1,4,5,6,8,9}
 
         plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{1}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_l,'LineWidth',1)
         plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{2}(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color',handles.colors.hV_r,'LineWidth',1)
@@ -1042,6 +1043,8 @@ switch handles.CurrData.VOMA_data.Parameters.DAQ_code
         
         %         plot(handles.main_plot,handles.Final_Data.Eye_t(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),handles.Final_Data.Stim_Trace(stim_ind(cycle,1):stim_ind(cycle,1) + handles.len_stim),'k','LineWidth',1)
         
+    case {7} % Moog
+        plot(handles.main_plot,handles.Final_Data.Stim_t(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1):handles.Final_Data.stim_ind(handles.params.plot_cycle_val,1) + handles.len),'Color','k','LineWidth',1)
     case {2,3}
         
         
@@ -1217,7 +1220,12 @@ if button_state == high
         rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
         ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
-                stim = [stim ; {handles.Final_Data.Stim_Trace{1}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{2}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{3}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)}];
+        % MEG CHANGED 7/30/2019
+        if length(handles.Final_Data.Stim_Trace) ~= 3
+            stim = [stim; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1)+handles.len_stim)];
+        else
+            stim = [stim ; {handles.Final_Data.Stim_Trace{1}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{2}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{3}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)}];
+        end
 
     end
     
@@ -1806,12 +1814,15 @@ if handles.params.plot_cycleavg_flag == 1
     end
     
     switch handles.CurrData.VOMA_data.Parameters.DAQ_code
-        case {1,4,5,6,7}
+        case {1,4,5,6}
             
             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{1}(stim_ind(1,1):stim_ind(1,1) + handles.len),'Color',handles.colors.hV_l,'LineWidth',1)
         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{2}(stim_ind(1,1):stim_ind(1,1) + handles.len),'Color',handles.colors.hV_r,'LineWidth',1)
         plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace{3}(stim_ind(1,1):stim_ind(1,1) + handles.len),'Color',handles.colors.hV_z,'LineWidth',1)
-            
+        % MEG ADDED 7/30/2019...changing 09/24/2019 ... NEED TO MAKE TWO
+        % DIFFERENT DAQ CODES FOR STIM VS. MECHANICAL
+        case {7}
+             plot(handles.main_plot,[1:len+1]/handles.Final_Data.Fs,handles.params.stim_plot_mult*handles.Final_Data.Stim_Trace(stim_ind(1,1):stim_ind(1,1) + handles.len),'Color','k','LineWidth',1)
             
         case {2,3}
             
@@ -1907,7 +1918,12 @@ if handles.params.plot_final_trace == 1
         rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];
         
-        stim = [stim ; [handles.Final_Data.Stim_Trace{1}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{2}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{3}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)]];
+        % Meg Changed 7/30/2019
+        if length(handles.Final_Data.Stim_Trace) ~= 3
+            stim = [stim ; [handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)]];
+        else
+            stim = [stim ; [handles.Final_Data.Stim_Trace{1}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{2}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{3}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)]];
+        end
         
         
         t_cyc = [t_cyc  handles.Final_Data.Eye_t(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)];

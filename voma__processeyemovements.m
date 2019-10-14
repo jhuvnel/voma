@@ -351,7 +351,7 @@ else % i.e., the user did NOT provide any angular position data into the routine
             % I NEED TO ADD MY OLD CODE HERE
         case 3 %Lasker Coil system using CED to process
             
-            chan_ElecStimTrig = 24; % NOTE: I realize these channel numbers should be setup in a configuration file...
+            chan_ElecStimTrig = 25; % NOTE: I realize these channel numbers should be setup in a configuration file...
             
             cd(filepath)
             
@@ -656,13 +656,13 @@ for j=1:2
             % The code below calculates the angular velocity using Haslwanter, 1995 eq.
             % 29 using the 2nd order central difference approximation of dr/dt
             % X,Y,Z
-            drb = diff(rot_corr);
-            rb = rot_corr(1:(end-1),:) + drb./2;
+            drb = [diff(rot_corr);0 0 0];
+            rb = rot_corr(1:(end),:) + drb./2;
             denomb = (1 + dot(rb,rb,2) - dot(drb,drb,2));
             angvel_dps_b = (2*(drb + cross(rb,drb,2)) ./ denomb(:,[1 1 1]))*(180/pi)*Fs;
             % LARP,RALP,Z
-            drc = diff(rot_lr);
-            rc = rot_lr(1:(end-1),:) + drc./2;
+            drc = [diff(rot_lr);0 0 0];
+            rc = rot_lr(1:(end),:) + drc./2;
             denomc = (1 + dot(rc,rc,2) - dot(drc,drc,2));
             angvel_dps_c = (2*(drc + cross(rc,drc,2)) ./ denomc(:,[1 1 1]))*(180/pi)*Fs;
             

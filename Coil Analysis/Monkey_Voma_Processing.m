@@ -22,7 +22,7 @@ function varargout = Monkey_Voma_Processing(varargin)
 
 % Edit the above text to modify the response to help Monkey_Voma_Processing
 
-% Last Modified by GUIDE v2.5 28-May-2019 10:51:35
+% Last Modified by GUIDE v2.5 11-Oct-2019 15:00:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,14 +77,20 @@ handles.linkaxisFlag = 0;
 handles.corrFlag = 0;
 handles.prevCyc = [];
 handles.skipFile = 0;
-
+handles.yestoallFlag = 0;
 handles.LEye.Enable = 'off';
 handles.REye.Enable = 'off';
+
+% handles.p = pan;
+% handles.p.ButtonDownFilter = @mycallback;
+% handles.p.Enable = 'on';
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes Monkey_Voma_Processing wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
+
+
 
 
 % --- Outputs from this function are returned to the command line.
@@ -99,7 +105,7 @@ varargout{1} = handles.output;
 
 
 % --- Executes on selection change in cycle_list.
-function cycle_list_Callback(hObject, eventdata, handles)
+function handles = cycle_list_Callback(hObject, eventdata, handles)
 % hObject    handle to cycle_list (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -120,23 +126,17 @@ guidata(hObject, handles);
 handles = calc_cyc_avg(handles);
     plot_cyc_avg(handles);
 handles.prevCyc = [handles.cycle_list.Value];
+c = 1:20;
+newC = c(~ismember(c,handles.cycle_list.Value));
+handles.avgMag.String = num2str(mean(handles.segment(handles.segNum).maxMagL(newC)));
+handles.avgMis.String = num2str(mean(handles.segment(handles.segNum).MisalignL(newC)));
+handles.magStd.String = num2str(std(handles.segment(handles.segNum).maxMagL(newC)));
+handles.misStd.String = num2str(std(handles.segment(handles.segNum).MisalignL(newC)));
+
     guidata(hObject, handles);
 
 % Hints: contents = cellstr(get(hObject,'String')) returns cycle_list contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from cycle_list
-
-
-% --- Executes during object creation, after setting all properties.
-function cycle_list_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to cycle_list (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in new_VOMA_file.
@@ -167,7 +167,7 @@ handles.startVal = handles.startVal +1;
 if handles.startVal > 1
     handles.start.Visible = 'on';
 end
-
+handles.yestoallFlag = 0;
 guidata(hObject, handles);
 
 
@@ -178,12 +178,12 @@ function process_file_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if handles.skipFile
     handles.segNum = handles.segNum+1;
-guidata(hObject, handles);
+    guidata(hObject, handles);
 else
-if handles.redoFlag==0
-cycNum = 1;
-Results = struct();
-Results.ll_cyc = [];
+    if handles.redoFlag==0
+        cycNum = 1;
+        Results = struct();
+        Results.ll_cyc = [];
         Results.lr_cyc = [];
         Results.lz_cyc = [];
         Results.lx_cyc = [];
@@ -194,107 +194,127 @@ Results.ll_cyc = [];
         Results.rx_cyc = [];
         Results.ry_cyc = [];
         Results.stim = [];
-    
-name = strrep(handles.RootData(handles.segNum).name,'.mat','_CycleAvg');
-if (handles.filtFlag==1) | (handles.PosfiltFlag==1)
-    handles = calc_cyc_avg(handles);
-        Results.ll_cyc = handles.Results.ll_cyc;
-        Results.lr_cyc = handles.Results.lr_cyc;
-        Results.lz_cyc = handles.Results.lz_cyc;
-        Results.lx_cyc = handles.Results.lx_cyc;
-        Results.ly_cyc = handles.Results.ly_cyc;
-        Results.rl_cyc = handles.Results.rl_cyc;
-        Results.rr_cyc = handles.Results.rr_cyc;
-        Results.rz_cyc = handles.Results.rz_cyc;
-        Results.rx_cyc = handles.Results.rx_cyc;
-        Results.ry_cyc = handles.Results.ry_cyc;
-        Results.stim = handles.Results.stim;
         
-    Results.ll_cycavg = handles.Results.ll_cycavg;
-Results.ll_cycstd = handles.Results.ll_cycstd;
-Results.lr_cycavg = handles.Results.lr_cycavg;
-Results.lr_cycstd = handles.Results.lr_cycstd;
-Results.lz_cycavg = handles.Results.lz_cycavg;
-Results.lz_cycstd = handles.Results.lz_cycstd;
-Results.lx_cycavg = handles.Results.lx_cycavg;
-Results.lx_cycstd = handles.Results.lx_cycstd;
-Results.ly_cycavg = handles.Results.ly_cycavg;
-Results.ly_cycstd = handles.Results.ly_cycstd;
-Results.rl_cycavg = handles.Results.rl_cycavg;
-Results.rl_cycstd = handles.Results.rl_cycstd;
-Results.rr_cycavg = handles.Results.rr_cycavg;
-Results.rr_cycstd = handles.Results.rr_cycstd;
-Results.rz_cycavg = handles.Results.rz_cycavg;
-Results.rz_cycstd = handles.Results.rz_cycstd;
-Results.rx_cycavg = handles.Results.rx_cycavg;
-Results.rx_cycstd = handles.Results.rx_cycstd;
-Results.ry_cycavg = handles.Results.ry_cycavg;
-Results.ry_cycstd = handles.Results.ry_cycstd;
-Results.QPparams = ['filtfilt Order ',handles.filterorder.String];
-
-
-else
-for processing = 1:length(handles.segment(handles.segNum).txt)
-    if any(ismember(handles.cycle_list.Value,processing))
+        name = strrep(handles.RootData(handles.segNum).name,'.mat','_CycleAvg');
+        if (handles.filtFlag==1) | (handles.PosfiltFlag==1)
+            handles = cycle_list_Callback(handles.cycle_list, [], handles);
+            Results.ll_cyc = handles.Results.ll_cyc;
+            Results.lr_cyc = handles.Results.lr_cyc;
+            Results.lz_cyc = handles.Results.lz_cyc;
+            Results.lx_cyc = handles.Results.lx_cyc;
+            Results.ly_cyc = handles.Results.ly_cyc;
+            Results.rl_cyc = handles.Results.rl_cyc;
+            Results.rr_cyc = handles.Results.rr_cyc;
+            Results.rz_cyc = handles.Results.rz_cyc;
+            Results.rx_cyc = handles.Results.rx_cyc;
+            Results.ry_cyc = handles.Results.ry_cyc;
+            Results.stim = handles.Results.stim;
+            
+            Results.ll_cycavg = handles.Results.ll_cycavg;
+            Results.ll_cycstd = handles.Results.ll_cycstd;
+            Results.lr_cycavg = handles.Results.lr_cycavg;
+            Results.lr_cycstd = handles.Results.lr_cycstd;
+            Results.lz_cycavg = handles.Results.lz_cycavg;
+            Results.lz_cycstd = handles.Results.lz_cycstd;
+            Results.lx_cycavg = handles.Results.lx_cycavg;
+            Results.lx_cycstd = handles.Results.lx_cycstd;
+            Results.ly_cycavg = handles.Results.ly_cycavg;
+            Results.ly_cycstd = handles.Results.ly_cycstd;
+            Results.rl_cycavg = handles.Results.rl_cycavg;
+            Results.rl_cycstd = handles.Results.rl_cycstd;
+            Results.rr_cycavg = handles.Results.rr_cycavg;
+            Results.rr_cycstd = handles.Results.rr_cycstd;
+            Results.rz_cycavg = handles.Results.rz_cycavg;
+            Results.rz_cycstd = handles.Results.rz_cycstd;
+            Results.rx_cycavg = handles.Results.rx_cycavg;
+            Results.rx_cycstd = handles.Results.rx_cycstd;
+            Results.ry_cycavg = handles.Results.ry_cycavg;
+            Results.ry_cycstd = handles.Results.ry_cycstd;
+            Results.QPparams = ['filtfilt Order ',handles.filterorder.String];
+            
+            
+        else
+            for processing = 1:length(handles.segment(handles.segNum).txt)
+                if any(ismember(handles.cycle_list.Value,processing))
+                    
+                else
+                    l = min(diff(handles.segment(handles.segNum).stim_inds));
+                    bound = [handles.segment(handles.segNum).stim_inds(processing):handles.segment(handles.segNum).stim_inds(processing)+l];
+                    Results.ll_cyc = [Results.ll_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP(bound)'];
+                    Results.lr_cyc = [Results.lr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP(bound)'];
+                    Results.lz_cyc = [Results.lz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z(bound)'];
+                    Results.lx_cyc = [Results.lx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X(bound)'];
+                    Results.ly_cyc = [Results.ly_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y(bound)'];
+                    Results.rl_cyc = [Results.rl_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP(bound)'];
+                    Results.rr_cyc = [Results.rr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP(bound)'];
+                    Results.rz_cyc = [Results.rz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z(bound)'];
+                    Results.rx_cyc = [Results.rx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X(bound)'];
+                    Results.ry_cyc = [Results.ry_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y(bound)'];
+                    Results.stim = [Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
+                    
+                end
+                
+            end
+            Results.ll_cycavg = mean(Results.ll_cyc);
+            Results.ll_cycstd = std(Results.ll_cyc);
+            Results.lr_cycavg = mean(Results.lr_cyc);
+            Results.lr_cycstd = std(Results.lr_cyc);
+            Results.lz_cycavg = mean(Results.lz_cyc);
+            Results.lz_cycstd = std(Results.lz_cyc);
+            Results.lx_cycavg = mean(Results.lx_cyc);
+            Results.lx_cycstd = std(Results.lx_cyc);
+            Results.ly_cycavg = mean(Results.ly_cyc);
+            Results.ly_cycstd = std(Results.ly_cyc);
+            Results.rl_cycavg = mean(Results.rl_cyc);
+            Results.rl_cycstd = std(Results.rl_cyc);
+            Results.rr_cycavg = mean(Results.rr_cyc);
+            Results.rr_cycstd = std(Results.rr_cyc);
+            Results.rz_cycavg = mean(Results.rz_cyc);
+            Results.rz_cycstd = std(Results.rz_cyc);
+            Results.rx_cycavg = mean(Results.rx_cyc);
+            Results.rx_cycstd = std(Results.rx_cyc);
+            Results.ry_cycavg = mean(Results.ry_cyc);
+            Results.ry_cycstd = std(Results.ry_cyc);
+            Results.QPparams = [];
+        end
+        Results.name = handles.RootData(handles.segNum).name;
+        Results.raw_filename =  handles.RootData(handles.segNum).RawFileName;
+        Results.Parameters = handles.RootData(handles.segNum).VOMA_data.Parameters;
+        Results.Fs =  handles.RootData(handles.segNum).VOMA_data.Fs;
         
-    else
-        l = min(diff(handles.segment(handles.segNum).stim_inds));
-        bound = [handles.segment(handles.segNum).stim_inds(processing):handles.segment(handles.segNum).stim_inds(processing)+l];
-        Results.ll_cyc = [Results.ll_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP(bound)'];
-        Results.lr_cyc = [Results.lr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP(bound)'];
-        Results.lz_cyc = [Results.lz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z(bound)'];
-        Results.lx_cyc = [Results.lx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X(bound)'];
-        Results.ly_cyc = [Results.ly_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y(bound)'];
-        Results.rl_cyc = [Results.rl_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP(bound)'];
-        Results.rr_cyc = [Results.rr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP(bound)'];
-        Results.rz_cyc = [Results.rz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z(bound)'];
-        Results.rx_cyc = [Results.rx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X(bound)'];
-        Results.ry_cyc = [Results.ry_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y(bound)'];
-        Results.stim = [Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
-    
+        Results.cyclist = find(~ismember(1:20,handles.cycle_list.Value))';
+        Results.FacialNerve = handles.FacialNerve;
+        if isfield(handles.RootData(handles.segNum).VOMA_data.Parameters.Stim_Info,'Seg_Directory')
+            load([handles.RootData(handles.segNum).VOMA_data.Parameters.Stim_Info.Seg_Directory handles.RootData(handles.segNum).VOMA_data.Parameters.Stim_Info.Stim_Type])
+            Results.segmentData = Data;
+        end
+        
+        usedInd = find(~ismember([1:20],handles.cycle_list.Value));
+        if handles.LEye.Value
+        Results.allpullIndsL = handles.segment(handles.segNum).pullIndsL;
+        Results.usedpullIndsL = handles.segment(handles.segNum).pullIndsL(usedInd);
+        Results.allMisalign3DL = handles.segment(handles.segNum).Misalign3DL;
+        Results.usedMisalign3DL = handles.segment(handles.segNum).Misalign3DL(usedInd,:);
+        Results.allMisalignL = handles.segment(handles.segNum).MisalignL;
+        Results.usedMisalignL = handles.segment(handles.segNum).MisalignL(usedInd);
+        Results.allmaxMagL = handles.segment(handles.segNum).maxMagL;
+        Results.usedmaxMagL = handles.segment(handles.segNum).maxMagL(usedInd);
+        end
+        if handles.REye.Value
+        end
+        Results.stim_inds = handles.segment(handles.segNum).stim_inds;
+        Results.cycNum = usedInd;
+        cd(handles.output_path.String)
+        save([name, '.mat'],'Results')
+        
+        handles.segNum = handles.segNum+1;
+        guidata(hObject, handles);
     end
-    
-end
-Results.ll_cycavg = mean(Results.ll_cyc);
-Results.ll_cycstd = std(Results.ll_cyc);
-Results.lr_cycavg = mean(Results.lr_cyc);
-Results.lr_cycstd = std(Results.lr_cyc);
-Results.lz_cycavg = mean(Results.lz_cyc);
-Results.lz_cycstd = std(Results.lz_cyc);
-Results.lx_cycavg = mean(Results.lx_cyc);
-Results.lx_cycstd = std(Results.lx_cyc);
-Results.ly_cycavg = mean(Results.ly_cyc);
-Results.ly_cycstd = std(Results.ly_cyc);
-Results.rl_cycavg = mean(Results.rl_cyc);
-Results.rl_cycstd = std(Results.rl_cyc);
-Results.rr_cycavg = mean(Results.rr_cyc);
-Results.rr_cycstd = std(Results.rr_cyc);
-Results.rz_cycavg = mean(Results.rz_cyc);
-Results.rz_cycstd = std(Results.rz_cyc);
-Results.rx_cycavg = mean(Results.rx_cyc);
-Results.rx_cycstd = std(Results.rx_cyc);
-Results.ry_cycavg = mean(Results.ry_cyc);
-Results.ry_cycstd = std(Results.ry_cyc);
-Results.QPparams = [];
-end
-Results.name = handles.RootData(handles.segNum).name;
-Results.raw_filename =  handles.RootData(handles.segNum).RawFileName;
-Results.Parameters = handles.RootData(handles.segNum).VOMA_data.Parameters;
-Results.Fs =  handles.RootData(handles.segNum).VOMA_data.Fs;
-
-Results.cyclist = find(~ismember(1:20,handles.cycle_list.Value))';
-Results.FacialNerve = handles.FacialNerve;
-cd(handles.output_path.String)
-save([name, '.mat'],'Results')
-
-handles.segNum = handles.segNum+1;
-guidata(hObject, handles);
-end
 end
 % cla(handles.axes1);
 cla(handles.cycavg)
 if handles.segNum<length(handles.RootData)+1
-handles = nextFile(handles);
+    handles = nextFile(handles);
 end
 
     guidata(hObject, handles);
@@ -306,6 +326,7 @@ function start_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.start.Visible = 'off';
+  
 cd(handles.cycDir)
 handles.segNum = 1;
 cla(handles.axes1)
@@ -340,9 +361,7 @@ function facial_nerve_Callback(hObject, eventdata, handles)
 handles.FacialNerve = 1;
 handles.facial_nerve.BackgroundColor = 'Red';
 guidata(hObject, handles);
-
-
-                      
+                  
 
 function filterorder_Callback(hObject, eventdata, handles)
 % hObject    handle to filterorder (see GCBO)
@@ -351,7 +370,11 @@ function filterorder_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of filterorder as text
 %        str2double(get(hObject,'String')) returns contents of filterorder as a double
-handles.tofilt = str2num(handles.filterorder.String);
+handles = filterVel(handles);
+    guidata(hObject, handles);
+    
+    function handles = filterVel(handles)
+       handles.tofilt = str2num(handles.filterorder.String);
 if handles.tofilt<1
     handles.tofilt = 1;
     handles.filterorder.String = '1';
@@ -367,23 +390,8 @@ handles.filtFlag = 1;
    handles.filtRERALP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).RE_RALP);
     handles.filtREX = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X);
   handles.filtREY = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y);
-   handles = plotVel(handles)
-    guidata(hObject, handles);
-    handles = calc_cyc_avg(handles);
-    plot_cyc_avg(handles);
-    guidata(hObject, handles);
-
-% --- Executes during object creation, after setting all properties.
-function filterorder_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to filterorder (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+   handles = plotVel(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 
 
 % --- Executes on button press in redo.
@@ -408,22 +416,25 @@ handles.redoFlag =0;
 handles.PosfiltFlag = 0;
 
 handles.files_remaining.String = num2str(handles.segNum);
-listing = dir(handles.cycDir);
+handles.listing = dir(handles.cycDir);
+handles.listing([handles.listing.isdir]) = [];
+t = datetime({handles.listing.date}','InputFormat','dd-MM-yyyy HH:mm:ss');
+            [b,idx] = sortrows(t);
+            handles.listing = handles.listing(idx);
 makeFile = 1;
 handles.files_remaining.String = num2str(handles.segNum);
     name = strrep(handles.RootData(handles.segNum).name,'.mat','_CycleAvg');
     go = 1;
     while go
         handles.output_filename.String = name;
-    if any(find(contains({listing.name},{name})))
-        handles.Results = load(name);
+    if any(find(contains({handles.listing.name},{name}))) && ~handles.yestoallFlag
+        handles.Results = load([name,'.mat']);
         handles.Results = handles.Results.Results;
         plot_cyc_avg(handles)
-        handles = plotVel(handles)
         handles.cycavg.YLim = [-100 100];
         handles.cycavg.XLim = [0 0.04];
         handles.Results = [];
-        answer = questdlg([{name};{'This file already exsits, would you like to overwrite it?'}],'Overwrite files','Yes','No','No');
+        answer = nbuttondlg([{name};{'This file already exsits, would you like to overwrite it?'}],{'Yes','No','Yes To All','No To All'},'DefaultButton',2,'PromptTextHeight',50);
         switch answer
             case 'Yes'
                 makeFile = 1;
@@ -431,10 +442,51 @@ handles.files_remaining.String = num2str(handles.segNum);
             case 'No'
                 makeFile = 1;
                 handles.segNum = handles.segNum +1;
+                handles.files_remaining.String = num2str(handles.segNum);
                 if handles.segNum<length(handles.RootData)+1
                 name = strrep(handles.RootData(handles.segNum).name,'.mat','_CycleAvg');
                 else
                     go = 0;
+                end
+            case 'Yes To All'
+                handles.yestoallFlag = 1;
+                makeFile = 1;
+                go = 0;
+            case 'No To All'
+                if handles.segNum +1<length(handles.RootData)+1
+                    if any(strfind(handles.RootData(1).name,'LHRH'))
+                        a=strfind({handles.listing.name},'LHRH');
+                        handles.segNum = length([a{:}])+1;
+                        %find(~cellfun(@isempty,a'))
+                    elseif any(strfind(handles.RootData(1).name,'LARP'))
+                        a=strfind({handles.listing.name},'LARP');
+                        for filNum = handles.segNum:length([a])
+                            if ~isempty(a{filNum})
+                                tempN = handles.listing(filNum).name;
+                                tempN = strrep(tempN,'_CycleAvg','');
+                                if strcmp(handles.RootData(filNum).name,tempN)
+                                else
+                                    handles.segNum = filNum;
+                                    name = strrep(handles.RootData(filNum).name,'.mat','_CycleAvg');
+                                    break;
+                                end
+                                
+                            end
+                            if filNum == length([a])
+                                handles.segNum = filNum+1;
+                                name = strrep(handles.RootData(filNum+1).name,'.mat','_CycleAvg');
+                            end
+                        end
+                    elseif any(strfind(handles.RootData(1).name,'RALP'))
+                        a=strfind({handles.listing.name},'RALP');
+                        handles.segNum = length([a{:}])+1;
+                    end
+                makeFile = 1;
+                handles.files_remaining.String = num2str(handles.segNum);
+                go = 0;
+                else
+                    
+                    
                 end
         end
     else
@@ -442,6 +494,7 @@ handles.files_remaining.String = num2str(handles.segNum);
                 
     end
     end
+    
    if makeFile
     handles.segment(handles.segNum).LE_LARP=handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP;
     handles.segment(handles.segNum).LE_RALP=handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP;
@@ -480,7 +533,9 @@ handles.files_remaining.String = num2str(handles.segNum);
 
     else
         handles.skipFile = 0;
-    handles = check_stim(handles)    
+    handles = check_stim(handles);
+    handles = filterPos(handles);
+    handles = filterVel(handles);
     hold(handles.angPos,'on')
     if handles.LEye.Value
      plot(handles.angPos,handles.segment(handles.segNum).t,handles.segment(handles.segNum).LEp_X,'Color',handles.color.l_x);
@@ -495,6 +550,8 @@ handles.files_remaining.String = num2str(handles.segNum);
     plot(handles.angPos,handles.segment(handles.segNum).stimT,handles.segment(handles.segNum).stim,'k');
     plot(handles.angPos,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds),handles.segment(handles.segNum).stim(handles.segment(handles.segNum).stim_inds),'m*');
     plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+100),1,2),[-100 100],'k');
+    plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+30),1,2),[-100 100],'r--');
+    plot(handles.angPos,handles.segment(handles.segNum).stimT([1 end]),[40 40],'Color',[.94 .94 .94],'LineStyle','--');
     handles.angPos.YLim = [-100 100];
     hold(handles.angPos,'off')
     if isfield(handles,'segment')
@@ -502,7 +559,7 @@ handles.files_remaining.String = num2str(handles.segNum);
     rmfield(handles.segment(handles.segNum),'txt');
         end
     end
-    handles = plotVel(handles)
+    handles = plotVel(handles);
     
     if ~isempty(handles.cycle_list.String) && ~strcmp(handles.cycle_list.String{1},'')
     handles.cycle_list.String = [''];
@@ -516,13 +573,12 @@ handles.cycle_list.String= [handles.cycle_list.String;{'None'}];
     handles.cycle_list.Value = 21;
     
     handles.redoFlag = 0;
-    handles = plotVel(handles)
-handles = calc_cyc_avg(handles);
-    plot_cyc_avg(handles)
+    handles = plotVel(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
     end
    end
    
-function handles = calc_cyc_avg(handles)
+    function handles = calc_cyc_avg(handles)
         handles.Results.ll_cyc = [];
         handles.Results.lr_cyc = [];
         handles.Results.lz_cyc = [];
@@ -534,102 +590,102 @@ function handles = calc_cyc_avg(handles)
         handles.Results.rx_cyc = [];
         handles.Results.ry_cyc = [];
         handles.Results.stim = [];
-    
-for processing = 1:length(handles.segment(handles.segNum).txt)
-    if (handles.filtFlag == 0) && (handles.PosfiltFlag == 0) 
-    if any(ismember(handles.cycle_list.Value,processing))
         
-    else
-        l = min(diff(handles.segment(handles.segNum).stim_inds));
-        bound = [handles.segment(handles.segNum).stim_inds(processing):handles.segment(handles.segNum).stim_inds(processing)+l-50];
-        if bound(end)>length(handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP)
-            bound=bound(1):1:length(handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP);
-        end
-        if isrow(handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP(bound))
-        else
-            handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP';
-            handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP';
-            handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z';
-        handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X';
-        handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y';
-        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP';
-            handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP';
-            handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z';
-        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X';
-        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y';
-        end
-        handles.Results.ll_cyc = [handles.Results.ll_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP(bound)];
-        handles.Results.lr_cyc = [handles.Results.lr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP(bound)];
-        handles.Results.lz_cyc = [handles.Results.lz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z(bound)];
-        handles.Results.lx_cyc = [handles.Results.lx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X(bound)];
-        handles.Results.ly_cyc = [handles.Results.ly_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y(bound)];
-        handles.Results.rl_cyc = [handles.Results.rl_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP(bound)];
-        handles.Results.rr_cyc = [handles.Results.rr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP(bound)];
-        handles.Results.rz_cyc = [handles.Results.rz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z(bound)];
-        handles.Results.rx_cyc = [handles.Results.rx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X(bound)];
-        handles.Results.ry_cyc = [handles.Results.ry_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y(bound)];
-        handles.Results.stim = [handles.Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
-    
-    end
-    else
-        if any(ismember(handles.cycle_list.Value,processing))
-        
-    else
-        l = min(diff(handles.segment(handles.segNum).stim_inds));
-        bound = [handles.segment(handles.segNum).stim_inds(processing):handles.segment(handles.segNum).stim_inds(processing)+l-50];
-        if handles.filtFlag
-            if handles.nystagCorr.Value
-                handles = correction(handles);
-                toUseLELARP = handles.corLELARP;
-                toUseLERALP = handles.corLERALP;
-                toUseLEZ = handles.corLEZ;
+        for processing = 1:length(handles.segment(handles.segNum).txt)
+            if (handles.filtFlag == 0) && (handles.PosfiltFlag == 0)
+                if any(ismember(handles.cycle_list.Value,processing))
+                    
+                else
+                    l = min(diff(handles.segment(handles.segNum).stim_inds));
+                    bound = [handles.segment(handles.segNum).stim_inds(processing):handles.segment(handles.segNum).stim_inds(processing)+l-50];
+                    if bound(end)>length(handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP)
+                        bound=bound(1):1:length(handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP);
+                    end
+                    if isrow(handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP(bound))
+                    else
+                        handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP';
+                        handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP';
+                        handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z';
+                        handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X';
+                        handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y = handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y';
+                        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP';
+                        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP';
+                        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z';
+                        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X';
+                        handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y = handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y';
+                    end
+                    handles.Results.ll_cyc = [handles.Results.ll_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP(bound)];
+                    handles.Results.lr_cyc = [handles.Results.lr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP(bound)];
+                    handles.Results.lz_cyc = [handles.Results.lz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z(bound)];
+                    handles.Results.lx_cyc = [handles.Results.lx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X(bound)];
+                    handles.Results.ly_cyc = [handles.Results.ly_cyc; handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y(bound)];
+                    handles.Results.rl_cyc = [handles.Results.rl_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP(bound)];
+                    handles.Results.rr_cyc = [handles.Results.rr_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP(bound)];
+                    handles.Results.rz_cyc = [handles.Results.rz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z(bound)];
+                    handles.Results.rx_cyc = [handles.Results.rx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X(bound)];
+                    handles.Results.ry_cyc = [handles.Results.ry_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y(bound)];
+                    handles.Results.stim = [handles.Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
+                    
+                end
             else
-                toUseLELARP = handles.filtLELARP;
-                toUseLERALP = handles.filtLERALP;
-                toUseLEZ = handles.filtLEZ;
+                if any(ismember(handles.cycle_list.Value,processing))
+                    
+                else
+                    l = min(diff(handles.segment(handles.segNum).stim_inds));
+                    bound = [handles.segment(handles.segNum).stim_inds(processing):handles.segment(handles.segNum).stim_inds(processing)+l-50];
+                    if handles.filtFlag
+                        if handles.nystagCorr.Value
+                            handles = correction(handles);
+                            toUseLELARP = handles.corLELARP;
+                            toUseLERALP = handles.corLERALP;
+                            toUseLEZ = handles.corLEZ;
+                        else
+                            toUseLELARP = handles.filtLELARP;
+                            toUseLERALP = handles.filtLERALP;
+                            toUseLEZ = handles.filtLEZ;
+                        end
+                    else
+                        toUseLELARP = handles.segment(handles.segNum).LE_LARP;
+                        toUseLERALP = handles.segment(handles.segNum).LE_RALP;
+                        toUseLEZ = handles.segment(handles.segNum).LE_Z;
+                        
+                    end
+                    handles.Results.ll_cyc = [handles.Results.ll_cyc; toUseLELARP(bound)'];
+                    handles.Results.lr_cyc = [handles.Results.lr_cyc; toUseLERALP(bound)'];
+                    handles.Results.lz_cyc = [handles.Results.lz_cyc; toUseLEZ(bound)'];
+                    handles.Results.lx_cyc = [handles.Results.lx_cyc; handles.filtLEX(bound)'];
+                    handles.Results.ly_cyc = [handles.Results.ly_cyc; handles.filtLEY(bound)'];
+                    handles.Results.rl_cyc = [handles.Results.rl_cyc; handles.filtRELARP(bound)'];
+                    handles.Results.rr_cyc = [handles.Results.rr_cyc; handles.filtRERALP(bound)'];
+                    handles.Results.rz_cyc = [handles.Results.rz_cyc; handles.filtREZ(bound)'];
+                    handles.Results.rx_cyc = [handles.Results.rx_cyc; handles.filtREX(bound)'];
+                    handles.Results.ry_cyc = [handles.Results.ry_cyc; handles.filtREY(bound)'];
+                    handles.Results.stim = [handles.Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
+                end
             end
-        else
-            toUseLELARP = handles.segment(handles.segNum).LE_LARP;
-            toUseLERALP = handles.segment(handles.segNum).LE_RALP;
-            toUseLEZ = handles.segment(handles.segNum).LE_Z;
             
         end
-        handles.Results.ll_cyc = [handles.Results.ll_cyc; toUseLELARP(bound)'];
-        handles.Results.lr_cyc = [handles.Results.lr_cyc; toUseLERALP(bound)'];
-        handles.Results.lz_cyc = [handles.Results.lz_cyc; toUseLEZ(bound)'];
-        handles.Results.lx_cyc = [handles.Results.lx_cyc; handles.filtLEX(bound)'];
-        handles.Results.ly_cyc = [handles.Results.ly_cyc; handles.filtLEY(bound)'];
-        handles.Results.rl_cyc = [handles.Results.rl_cyc; handles.filtRELARP(bound)'];
-        handles.Results.rr_cyc = [handles.Results.rr_cyc; handles.filtRERALP(bound)'];
-        handles.Results.rz_cyc = [handles.Results.rz_cyc; handles.filtREZ(bound)'];
-        handles.Results.rx_cyc = [handles.Results.rx_cyc; handles.filtREX(bound)'];
-        handles.Results.ry_cyc = [handles.Results.ry_cyc; handles.filtREY(bound)'];
-        handles.Results.stim = [handles.Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
-        end
-    end
-    
-end
-handles.Results.ll_cycavg = mean(handles.Results.ll_cyc);
-handles.Results.ll_cycstd = std(handles.Results.ll_cyc);
-handles.Results.lr_cycavg = mean(handles.Results.lr_cyc);
-handles.Results.lr_cycstd = std(handles.Results.lr_cyc);
-handles.Results.lz_cycavg = mean(handles.Results.lz_cyc);
-handles.Results.lz_cycstd = std(handles.Results.lz_cyc);
-handles.Results.lx_cycavg = mean(handles.Results.lx_cyc);
-handles.Results.lx_cycstd = std(handles.Results.lx_cyc);
-handles.Results.ly_cycavg = mean(handles.Results.ly_cyc);
-handles.Results.ly_cycstd = std(handles.Results.ly_cyc);
-handles.Results.rl_cycavg = mean(handles.Results.rl_cyc);
-handles.Results.rl_cycstd = std(handles.Results.rl_cyc);
-handles.Results.rr_cycavg = mean(handles.Results.rr_cyc);
-handles.Results.rr_cycstd = std(handles.Results.rr_cyc);
-handles.Results.rz_cycavg = mean(handles.Results.rz_cyc);
-handles.Results.rz_cycstd = std(handles.Results.rz_cyc);
-handles.Results.rx_cycavg = mean(handles.Results.rx_cyc);
-handles.Results.rx_cycstd = std(handles.Results.rx_cyc);
-handles.Results.ry_cycavg = mean(handles.Results.ry_cyc);
-handles.Results.ry_cycstd = std(handles.Results.ry_cyc);
-handles.Results.Fs =  handles.RootData(handles.segNum).VOMA_data.Fs;
+        handles.Results.ll_cycavg = mean(handles.Results.ll_cyc);
+        handles.Results.ll_cycstd = std(handles.Results.ll_cyc);
+        handles.Results.lr_cycavg = mean(handles.Results.lr_cyc);
+        handles.Results.lr_cycstd = std(handles.Results.lr_cyc);
+        handles.Results.lz_cycavg = mean(handles.Results.lz_cyc);
+        handles.Results.lz_cycstd = std(handles.Results.lz_cyc);
+        handles.Results.lx_cycavg = mean(handles.Results.lx_cyc);
+        handles.Results.lx_cycstd = std(handles.Results.lx_cyc);
+        handles.Results.ly_cycavg = mean(handles.Results.ly_cyc);
+        handles.Results.ly_cycstd = std(handles.Results.ly_cyc);
+        handles.Results.rl_cycavg = mean(handles.Results.rl_cyc);
+        handles.Results.rl_cycstd = std(handles.Results.rl_cyc);
+        handles.Results.rr_cycavg = mean(handles.Results.rr_cyc);
+        handles.Results.rr_cycstd = std(handles.Results.rr_cyc);
+        handles.Results.rz_cycavg = mean(handles.Results.rz_cyc);
+        handles.Results.rz_cycstd = std(handles.Results.rz_cyc);
+        handles.Results.rx_cycavg = mean(handles.Results.rx_cyc);
+        handles.Results.rx_cycstd = std(handles.Results.rx_cyc);
+        handles.Results.ry_cycavg = mean(handles.Results.ry_cyc);
+        handles.Results.ry_cycstd = std(handles.Results.ry_cyc);
+        handles.Results.Fs =  handles.RootData(handles.segNum).VOMA_data.Fs;
 
 function plot_cyc_avg(handles)
 axes(handles.cycavg)
@@ -671,7 +727,7 @@ p.ll = shadedErrorBar([1:length(handles.Results.ll_cycavg)]/handles.Results.Fs,h
 end
 if handles.REye.Value
         p.rl = shadedErrorBar([1:length(handles.Results.rl_cycavg)]/handles.Results.Fs,handles.Results.rl_cycavg,...
-                    handles.Results.rl_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.color.r_l})
+                    handles.Results.rl_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.color.r_l});
                 set(p.rl.edge,'LineWidth',1.5,'color',handles.color.r_l)
                 set(p.rl.patch,'facecolor',handles.color.r_l)
                 set(p.rl.mainLine,'LineWidth',2.5,'color',handles.color.r_l)
@@ -679,7 +735,7 @@ if handles.REye.Value
                 set(p.rl.mainLine,'LineStyle',lstyle)
                 
                 p.rr = shadedErrorBar([1:length(handles.Results.rr_cycavg)]/handles.Results.Fs,handles.Results.rr_cycavg,...
-                    handles.Results.rr_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.color.r_r})
+                    handles.Results.rr_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.color.r_r});
                 set(p.rr.edge,'LineWidth',1.5,'color',handles.color.r_r)
                 set(p.rr.patch,'facecolor',handles.color.r_r)
                 set(p.rr.mainLine,'LineWidth',2.5,'color',handles.color.r_r)
@@ -687,7 +743,7 @@ if handles.REye.Value
                 set(p.rr.mainLine,'LineStyle',lstyle)
                 
                 p.rz = shadedErrorBar([1:length(handles.Results.rz_cycavg)]/handles.Results.Fs,handles.Results.rz_cycavg,...
-                    handles.Results.rz_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.color.r_z})
+                    handles.Results.rz_cycstd,'lineprops',{'r-','MarkerFaceColor',handles.color.r_z});
                 set(p.rz.edge,'LineWidth',1.5,'color',handles.color.r_z)
                 set(p.rz.patch,'facecolor',handles.color.r_z)
                 set(p.rz.mainLine,'LineWidth',2.5,'color',handles.color.r_z)
@@ -712,7 +768,9 @@ if handles.LEye.Value && handles.REye.Value
         lower = min(vals);
 end
 handles.cycavg.YLim = [lower-40 upper+40];
+handles.cycavg.XLim = [0 .12];
         plot([0.1 0.1],[lower-40 upper+40],'Color','k','LineWidt',2.5)
+        plot([0.03 0.03],[lower-40 upper+40],'Color','r','LineStyle','--','LineWidt',2.5)
                 hold(handles.cycavg,'off')
                 
 
@@ -720,7 +778,7 @@ function handles = check_stim(handles)
 if length(handles.segment(handles.segNum).stim_inds)>20
     list = handles.segment(handles.segNum).stim_inds;
     if isrow(handles.segment(handles.segNum).stim)
-        handles.segment(handles.segNum).stim = handles.segment(handles.segNum).stim'
+        handles.segment(handles.segNum).stim = handles.segment(handles.segNum).stim';
     end
     dec = find([diff(handles.segment(handles.segNum).stim)<0;0]);
     pulseW = dec-list;
@@ -766,12 +824,6 @@ if length(handles.segment(handles.segNum).stim_inds)>20
     
 end
 
-
-
-               
-
-
-
 function posFiltOrder_Callback(hObject, eventdata, handles)
 % hObject    handle to posFiltOrder (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -782,27 +834,12 @@ function posFiltOrder_Callback(hObject, eventdata, handles)
 if isempty(handles.posFiltLeng.String)
 else
 if str2num(handles.posFiltOrder.String)>0 && str2num(handles.posFiltLeng.String)>0
-    handles = filterPos(handles)
+    handles = filterPos(handles);
 end
-handles = plotVel(handles)
-handles = calc_cyc_avg(handles)
-plot_cyc_avg(handles)
+handles = plotVel(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 end
 guidata(hObject, handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function posFiltOrder_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posFiltOrder (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function posFiltLeng_Callback(hObject, eventdata, handles)
@@ -815,48 +852,18 @@ function posFiltLeng_Callback(hObject, eventdata, handles)
 if isempty(handles.posFiltOrder.String)
 else
 if str2num(handles.posFiltOrder.String)>0 && str2num(handles.posFiltLeng.String)>0
-    handles = filterPos(handles)
+    handles = filterPos(handles);
 end
-handles = plotVel(handles)
-handles = calc_cyc_avg(handles)
-plot_cyc_avg(handles)
+handles = plotVel(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 end
 guidata(hObject, handles);
 
-% --- Executes during object creation, after setting all properties.
-function posFiltLeng_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posFiltLeng (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in lefteye.
-function lefteye_Callback(hObject, eventdata, handles)
-% hObject    handle to lefteye (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of lefteye
-
-
-% --- Executes on button press in righteye.
-function righteye_Callback(hObject, eventdata, handles)
-% hObject    handle to righteye (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of righteye
 
 function handles = filterPos(handles)
 if mod(str2num(handles.posFiltLeng.String),2)
 else
-        handles.posFiltLeng.String = num2str(round((str2num(handles.posFiltLeng.String)-1)/2)*2+1)
+        handles.posFiltLeng.String = num2str(round((str2num(handles.posFiltLeng.String)-1)/2)*2+1);
 end
 handles.PosfiltFlag = 1;
 handles.segment(handles.segNum).LEp_X = sgolayfilt(handles.RootData(handles.segNum).VOMA_data.Data_LE_Pos_X,str2num(handles.posFiltOrder.String),str2num(handles.posFiltLeng.String));
@@ -891,6 +898,8 @@ end
 plot(handles.angPos,handles.segment(handles.segNum).stimT,handles.segment(handles.segNum).stim,'k');
     plot(handles.angPos,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds),handles.segment(handles.segNum).stim(handles.segment(handles.segNum).stim_inds),'m*');
     plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+100),1,2),[-100 100],'k');
+    plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+30),1,2),[-100 100],'r--');
+    plot(handles.angPos,handles.segment(handles.segNum).stimT([1 end]),[40 40],'Color',[.94 .94 .94],'LineStyle','--');
     handles.angPos.YLim = [-100 100];
     hold(handles.angPos,'off')
     DAQ_code = handles.RootData(handles.segNum).VOMA_data.Parameters.DAQ_code;
@@ -906,6 +915,7 @@ Data_In.Data_RE_Pos_Z = handles.segment(handles.segNum).REp_Z;
 Data_In.Fs = handles.RootData(handles.segNum).VOMA_data.Fs;
 data_rot = 1;
 OutputFormat = [];
+DAQ_code = 7;
 [New_Ang_Vel] = voma__processeyemovements([],[],[],[],0,data_rot,DAQ_code,OutputFormat,Data_In);
 
 handles.segment(handles.segNum).LE_LARP = New_Ang_Vel.LE_Vel_LARP;
@@ -933,7 +943,8 @@ handles.filtREX = handles.segment(handles.segNum).RE_X;
 handles.filtREY = handles.segment(handles.segNum).RE_Y;
 
 
-handles = plotVel(handles)
+handles = plotVel(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 
 % --- Executes on button press in reset.
 function reset_Callback(hObject, eventdata, handles)
@@ -971,12 +982,13 @@ handles.segment(handles.segNum).LE_LARP=handles.RootData(handles.segNum).VOMA_da
     plot(handles.angPos,handles.segment(handles.segNum).stimT,handles.segment(handles.segNum).stim,'k');
     plot(handles.angPos,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds),handles.segment(handles.segNum).stim(handles.segment(handles.segNum).stim_inds),'m*');
     plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+100),1,2),[-100 100],'k');
+    plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+30),1,2),[-100 100],'r--');
+    plot(handles.angPos,handles.segment(handles.segNum).stimT([1 end]),[40 40],'Color',[.94 .94 .94],'LineStyle','--');
     handles.angPos.YLim = [-100 100];
     hold(handles.angPos,'off')
 guidata(hObject, handles);
-handles = plotVel(handles)
-handles = calc_cyc_avg(handles)
-plot_cyc_avg(handles)
+handles = plotVel(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 guidata(hObject, handles);
 
 
@@ -985,7 +997,7 @@ function rawV_Callback(hObject, eventdata, handles)
 % hObject    handle to rawV (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = plotVel(handles)
+handles = plotVel(handles);
 guidata(hObject, handles);
 
 function handles = plotVel(handles)
@@ -993,8 +1005,8 @@ function handles = plotVel(handles)
 
 if isfield(handles.segment(handles.segNum),'txt') && ~isempty(handles.segment(handles.segNum).txt)
     if isfield(handles.segment(handles.segNum).txt,'Color')
-    currColor = {handles.segment(handles.segNum).txt(:).Color};
-    currColorFlag = 1;
+        currColor = {handles.segment(handles.segNum).txt(:).Color};
+        currColorFlag = 1;
     else
         currColorFlag = 0;
     end
@@ -1005,29 +1017,29 @@ cla(handles.axes1)
 reset(handles.axes1);
 axes(handles.axes1)
 hold(handles.axes1,'on')
-    switch handles.rawV.Value
+switch handles.rawV.Value
     case 1
-if handles.LEye.Value
-    patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP,'edgecolor',handles.color.l_l,'LineWidth',0.05,'edgealpha',0.5);
-    patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP,'edgecolor',handles.color.l_r,'LineWidth',0.05,'edgealpha',0.5);
-    patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z,'edgecolor',handles.color.l_z,'LineWidth',0.05,'edgealpha',0.5);
-end
-if handles.REye.Value
-    patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP,'edgecolor',handles.color.r_l,'LineWidth',0.05,'edgealpha',0.5);
-    patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP,'edgecolor',handles.color.r_r,'LineWidth',0.05,'edgealpha',0.5);
-    patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z,'edgecolor',handles.color.r_z,'LineWidth',0.05,'edgealpha',0.5);
-end
-handles.rawV.BackgroundColor = 'g';
+        if handles.LEye.Value
+            patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP,'edgecolor',handles.color.l_l,'LineWidth',0.05,'edgealpha',0.5);
+            patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP,'edgecolor',handles.color.l_r,'LineWidth',0.05,'edgealpha',0.5);
+            patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z,'edgecolor',handles.color.l_z,'LineWidth',0.05,'edgealpha',0.5);
+        end
+        if handles.REye.Value
+            patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP,'edgecolor',handles.color.r_l,'LineWidth',0.05,'edgealpha',0.5);
+            patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP,'edgecolor',handles.color.r_r,'LineWidth',0.05,'edgealpha',0.5);
+            patchline(handles.segment(handles.segNum).t',handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z,'edgecolor',handles.color.r_z,'LineWidth',0.05,'edgealpha',0.5);
+        end
+        handles.rawV.BackgroundColor = 'g';
     case 0
         handles.rawV.BackgroundColor = [0.94 0.94 0.94];
-    end
-    
+end
+
 if handles.filtFlag
     if handles.nystagCorr.Value
-            handles = correction(handles);
-            toUseLELARP = handles.corLELARP;
-            toUseLERALP = handles.corLERALP;
-            toUseLEZ = handles.corLEZ;
+        handles = correction(handles);
+        toUseLELARP = handles.corLELARP;
+        toUseLERALP = handles.corLERALP;
+        toUseLEZ = handles.corLEZ;
     else
         toUseLELARP = handles.filtLELARP;
         toUseLERALP = handles.filtLERALP;
@@ -1037,40 +1049,62 @@ if handles.filtFlag
         toUseREZ = handles.filtREZ;
     end
 else
-           toUseLELARP = handles.segment(handles.segNum).LE_LARP;
-           toUseLERALP = handles.segment(handles.segNum).LE_RALP;
-            toUseLEZ = handles.segment(handles.segNum).LE_Z;
-            toUseRELARP = handles.segment(handles.segNum).RE_LARP;
-           toUseRERALP = handles.segment(handles.segNum).RE_RALP;
-            toUseREZ = handles.segment(handles.segNum).RE_Z;
+    toUseLELARP = handles.segment(handles.segNum).LE_LARP;
+    toUseLERALP = handles.segment(handles.segNum).LE_RALP;
+    toUseLEZ = handles.segment(handles.segNum).LE_Z;
+    toUseRELARP = handles.segment(handles.segNum).RE_LARP;
+    toUseRERALP = handles.segment(handles.segNum).RE_RALP;
+    toUseREZ = handles.segment(handles.segNum).RE_Z;
     
 end
+
+
 if handles.LEye.Value
-        plot(handles.axes1,handles.segment(handles.segNum).t,toUseLELARP,'Color',handles.color.l_l);
+    plot(handles.axes1,handles.segment(handles.segNum).t,toUseLELARP,'Color',handles.color.l_l);
     plot(handles.axes1,handles.segment(handles.segNum).t,toUseLERALP,'Color',handles.color.l_r);
     plot(handles.axes1,handles.segment(handles.segNum).t,toUseLEZ,'r','Color',handles.color.l_z);
 end
-    if handles.REye.Value
-        plot(handles.axes1,handles.segment(handles.segNum).t,toUseRELARP,'Color',handles.color.r_l);
+if handles.REye.Value
+    plot(handles.axes1,handles.segment(handles.segNum).t,toUseRELARP,'Color',handles.color.r_l);
     plot(handles.axes1,handles.segment(handles.segNum).t,toUseRERALP,'Color',handles.color.r_r);
     plot(handles.axes1,handles.segment(handles.segNum).t,toUseREZ,'r','Color',handles.color.r_z);
 end
 plot(handles.axes1,handles.segment(handles.segNum).stimT,handles.segment(handles.segNum).stim,'k');
-    plot(handles.axes1,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds),handles.segment(handles.segNum).stim(handles.segment(handles.segNum).stim_inds),'m*');
-    plot(handles.axes1,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+100),1,2),[-350 350],'k');
+plot(handles.axes1,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds),handles.segment(handles.segNum).stim(handles.segment(handles.segNum).stim_inds),'m*');
+plot(handles.axes1,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+100),1,2),[-350 350],'k');
+plot(handles.axes1,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+30),1,2),[-350 350],'r--');
+handles.toUseLELARP = toUseLELARP;
+handles.toUseLERALP = toUseLERALP;
+handles.toUseLEZ = toUseLEZ;
+                if contains(handles.vomaFile,'LARP')
+                    handles.pureRot = [1 0 0];
+                elseif contains(handles.vomaFile,'RALP')
+                    handles.pureRot = [0 1 0];
+                elseif contains(handles.vomaFile,'LHRH')
+                    handles.pureRot = [0 0 1];
+                end
+handles = MagThreshL(handles,[]);
+plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsL),toUseLELARP(handles.segment(handles.segNum).pullIndsL),'k*','MarkerSize',8);
+plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsL),toUseLERALP(handles.segment(handles.segNum).pullIndsL),'k*','MarkerSize',8);
+plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsL),toUseLEZ(handles.segment(handles.segNum).pullIndsL),'k*','MarkerSize',8);
+handles.avgMag.String = num2str(mean(handles.segment(handles.segNum).maxMagL));
+handles.avgMis.String = num2str(mean(handles.segment(handles.segNum).MisalignL));
+handles.magStd.String = num2str(std(handles.segment(handles.segNum).maxMagL));
+handles.misStd.String = num2str(std(handles.segment(handles.segNum).MisalignL));
 
-    if currColorFlag
-        for cycText = 1:length(handles.segment(handles.segNum).stim_inds)
-        handles.segment(handles.segNum).txt(cycText) = text(handles.axes1,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds(cycText)),40,[num2str(cycText)],'Color',currColor{cycText});
-        end
+if currColorFlag
+    for cycText = 1:length(handles.segment(handles.segNum).stim_inds)
+        handles.segment(handles.segNum).txt(cycText) = text(handles.axes1,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds(cycText))-.05,40,[num2str(cycText)],'Color',currColor{cycText},'FontSize',10,'HorizontalAlignment','right','FontWeight','bold');
+    end
 else
     for cycText = 1:length(handles.segment(handles.segNum).stim_inds)
-        handles.segment(handles.segNum).txt(cycText) = text(handles.axes1,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds(cycText)),40,[num2str(cycText)],'Color','Green');
-        end
+        handles.segment(handles.segNum).txt(cycText) = text(handles.axes1,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds(cycText))-.05,40,[num2str(cycText)],'Color','Green','FontSize',10,'HorizontalAlignment','right','FontWeight','bold');
+    end
 end
 
-    handles.axes1.YLim = [-350 350];
-    hold(handles.axes1,'off')
+handles.axes1.YLim = [-150 150];
+handles.axes1.XLim = [handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds(1))-.5 handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds(4))+.75];
+hold(handles.axes1,'off')
 
 
 % --- Executes on button press in link_x_axis_plots.
@@ -1101,8 +1135,7 @@ function handles = nystagCorr_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     handles = plotVel(handles);
-handles = calc_cyc_avg(handles);
-plot_cyc_avg(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 guidata(hObject, handles);
 
 function handles = correction(handles)
@@ -1177,12 +1210,13 @@ cla(handles.angPos)
     plot(handles.angPos,handles.segment(handles.segNum).stimT,handles.segment(handles.segNum).stim,'k');
     plot(handles.angPos,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds),handles.segment(handles.segNum).stim(handles.segment(handles.segNum).stim_inds),'m*');
     plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+100),1,2),[-100 100],'k');
+    plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+30),1,2),[-100 100],'r--');
+    plot(handles.angPos,handles.segment(handles.segNum).stimT([1 end]),[40 40],'Color',[.94 .94 .94],'LineStyle','--');
     handles.angPos.YLim = [-100 100];
     hold(handles.angPos,'off')
 guidata(hObject, handles);
     handles = plotVel(handles);
-handles = calc_cyc_avg(handles);
-plot_cyc_avg(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of LEye
 
@@ -1208,11 +1242,33 @@ cla(handles.angPos)
     plot(handles.angPos,handles.segment(handles.segNum).stimT,handles.segment(handles.segNum).stim,'k');
     plot(handles.angPos,handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds),handles.segment(handles.segNum).stim(handles.segment(handles.segNum).stim_inds),'m*');
     plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+100),1,2),[-100 100],'k');
+    plot(handles.angPos,repmat(handles.segment(handles.segNum).stimT(handles.segment(handles.segNum).stim_inds+30),1,2),[-100 100],'r--');
+    plot(handles.angPos,handles.segment(handles.segNum).stimT([1 end]),[40 40],'Color',[.94 .94 .94],'LineStyle','--');
     handles.angPos.YLim = [-100 100];
     hold(handles.angPos,'off')
 guidata(hObject, handles);
     handles = plotVel(handles);
-handles = calc_cyc_avg(handles);
-plot_cyc_avg(handles);
+handles = cycle_list_Callback(handles.cycle_list, [], handles);
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of REye
+
+
+
+
+
+% --- Executes on button press in skip.
+function skip_Callback(hObject, eventdata, handles)
+% hObject    handle to skip (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.segNum = handles.segNum+1;
+handles = nextFile(handles);
+guidata(hObject, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes1_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+

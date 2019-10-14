@@ -90,7 +90,7 @@ for k=1:num
     Data_QPR(k).name = Filenames{k}{1};
     Data_QPR(k).VOMA_data.Fs = Fs{k}{1};
     % Stimulus Data
-    Data_QPR(k).VOMA_data.Stim_Trace = Stimulus{k}%All stim traces lrz;
+    Data_QPR(k).VOMA_data.Stim_Trace = Stimulus{k}{1}%All stim traces lrz;
     Data_QPR(k).VOMA_data.Stim_t = Stim_t{k}{1};
     Data_QPR(k).VOMA_data.stim_ind = stim_ind{k}{1};
     % Eye Data

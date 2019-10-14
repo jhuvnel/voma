@@ -1464,6 +1464,12 @@ switch handles.params.file_format
                     headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
                     
                     headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                    if ~isempty(Data.Stim_Trig)
+                        Stimulus{n} = {Data.Stim_Trig};
+                            Stim_t{n} = {Data.Time_Stim(:,1)};
+                            
+                            stim_ind{n} ={[]};
+                    else
                     switch raw{n,9}
                         
                         case {'Electrical Only','*ElectricOnly*','ElectricalOnly*'}
@@ -1483,6 +1489,7 @@ switch handles.params.file_format
                                     
                             end
                             stim_ind{n} = {[]};
+                    end
                     end
                     
                 case 2
@@ -1640,12 +1647,27 @@ switch handles.params.file_format
                 case 6 %Ross 710 moog coil
                     Parameters(n).DAQ = 'MoogCoil';
                     Parameters(n).DAQ_code = 7;
-                    Stimulus{n} = Data.HeadMPUVel_Z;
+                    Stimulus{n} = {Data.HeadMPUVel_Z};
+                    %% 20190917 MEG CHANGING FOR COILS, BRIAN WILL NEED TO EDIT
+                    headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
+                    
+                    headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                    switch raw{n,10}
+                        case {'LARP-Axis','LA','LARP','RP'}
+                            Stimulus{n} = {headmpu_lrz(:,1)};
+                        case {'RALP-Axis','LP','RALP','RA'}
+                            Stimulus{n} = {headmpu_lrz(:,2)};
+                            
+                        case {'LHRH-Axis','LH','LHRH','RH'}
+                            Stimulus{n} = {headmpu_lrz(:,3)};
+                            
+                    end
+                    stim_ind{n} = {[]};
                     stim_ind{n} = {[]};
                 case 7 %Pupil Labs
                     Parameters(n).DAQ = 'PupilLabs';
                     if all(Data.LE_Position_X==0)
-                    Parameters(n).DAQ_code = 8;
+                        Parameters(n).DAQ_code = 8;
                     else
                         Parameters(n).DAQ_code = 9;
                     end
@@ -1663,17 +1685,17 @@ switch handles.params.file_format
                     headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
                     
                     headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
-                            switch raw{n,10}
-                                case {'LARP-Axis','LA','LARP','RP'}
-                                    Stimulus{n} = {headmpu_lrz(:,1)};
-                                case {'RALP-Axis','LP','RALP','RA'}
-                                    Stimulus{n} = {headmpu_lrz(:,2)};
-                                    
-                                case {'LHRH-Axis','LH','LHRH','RH'}
-                                    Stimulus{n} = {headmpu_lrz(:,3)};
-                                    
-                            end
-                            stim_ind{n} = {[]};
+                    switch raw{n,10}
+                        case {'LARP-Axis','LA','LARP','RP'}
+                            Stimulus{n} = {headmpu_lrz(:,1)};
+                        case {'RALP-Axis','LP','RALP','RA'}
+                            Stimulus{n} = {headmpu_lrz(:,2)};
+                            
+                        case {'LHRH-Axis','LH','LHRH','RH'}
+                            Stimulus{n} = {headmpu_lrz(:,3)};
+                            
+                    end
+                    stim_ind{n} = {[]};
             end
             
             
