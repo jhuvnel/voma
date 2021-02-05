@@ -104,7 +104,7 @@ handles.colors.r_l = [0 1 0];
 handles.colors.r_r = [64,224,208]/255;
 
 handles.colors.hV_l = [54 73 78]/255;
-handles.colors.hV_r = [115 119 129]/255
+handles.colors.hV_r = [115 119 129]/255;
 handles.colors.hV_z = [0 0 0];
 
 
@@ -640,9 +640,25 @@ else
 end
 
 % Ask the user to choose a directory to save files in
+if length(varargin) == 5
 handles.params.pathtosave = uigetdir;
 cd(handles.params.pathtosave)
 set(handles.pathtosave,'String',handles.params.pathtosave);
+else
+    if ~isempty(handles.pathtosave)
+    answer = questdlg({'Do you want to use this path?';varargin{6}},'Path Confirm','Yes','No','Yes');
+    switch answer
+        case 'Yes'
+            handles.params.pathtosave = varargin{6};
+cd(handles.params.pathtosave)
+set(handles.pathtosave,'String',handles.params.pathtosave);
+        case 'No'
+            handles.params.pathtosave = uigetdir;
+cd(handles.params.pathtosave)
+set(handles.pathtosave,'String',handles.params.pathtosave);
+    end
+    end
+end
 
 
 % Display the filename
@@ -1957,11 +1973,14 @@ if handles.params.plot_final_trace == 1
         plot(handles.main_plot,[1:length(ll_cyc)]/handles.Final_Data.Fs,ry_cyc,'color' ,handles.colors.r_y,'LineWidth',1)
         end
     end
-    
+    if size(stim,2)>1
         plot(handles.main_plot,[1:length(stim(:,1))]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim(:,1),'Color',handles.colors.hV_l,'LineWidth',1)
                 plot(handles.main_plot,[1:length(stim(:,2))]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim(:,2),'Color',handles.colors.hV_r,'LineWidth',1)
         plot(handles.main_plot,[1:length(stim(:,3))]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim(:,3),'Color',handles.colors.hV_z,'LineWidth',1)
+    else
+                plot(handles.main_plot,[1:length(stim(:,1))]/handles.Final_Data.Fs,handles.params.stim_plot_mult*stim(:,1),'Color',handles.colors.hV_z,'LineWidth',1)
 
+    end
     drawnow
     
 end
@@ -2348,38 +2367,38 @@ function go_back_to_gui_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 cd(handles.params.pathtosave);
 if (handles.individualSave == 2) && (handles.singleEyeSwitch.Value == 1)
-  fieldsL = fieldnames(handles.individual.LeftData);
-  fieldsR = fieldnames(handles.individual.RightData);
-  same = find(strcmp(fieldsL,fieldsR));
+    fieldsL = fieldnames(handles.individual.LeftData);
+    fieldsR = fieldnames(handles.individual.RightData);
+    same = find(strcmp(fieldsL,fieldsR));
     a = rmfield(handles.individual.LeftData,{fieldsL{same}});
     b = handles.individual.RightData;
     names=[fieldnames(a);fieldnames(b)];
     Results = cell2struct([struct2cell(a);struct2cell(b)],names,1);
-Results.name = handles.CurrData.name;
-
-if isfield(handles.CurrData,'RawFileName')
-    Results.raw_filename = handles.CurrData.RawFileName;
-end
-
-Results.Parameters = handles.CurrData.VOMA_data.Parameters;
-%
-% Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
-% Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
-Results.Fs = handles.Final_Data.Fs;
-Results.QPparams = handles.CurrData.QPparams;
-
-
-
-if ~isempty(strfind(handles.CurrData.name,'.mat'))
-    save([handles.CurrData.name(1:end-4) '_CycleAvg.mat'],'Results')
-else
-    save([handles.CurrData.name '_CycleAvg.mat'],'Results')
-end
-
-guidata(hObject, handles);
-close(handles.h)
-close(handles.figure1)
-voma__qpr(handles.RootData)
+    Results.name = handles.CurrData.name;
+    
+    if isfield(handles.CurrData,'RawFileName')
+        Results.raw_filename = handles.CurrData.RawFileName;
+    end
+    
+    Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+    %
+    % Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
+    % Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
+    Results.Fs = handles.Final_Data.Fs;
+    Results.QPparams = handles.CurrData.QPparams;
+    
+    
+    
+    if ~isempty(strfind(handles.CurrData.name,'.mat'))
+        save([handles.CurrData.name(1:end-4) '_CycleAvg.mat'],'Results')
+    else
+        save([handles.CurrData.name '_CycleAvg.mat'],'Results')
+    end
+    
+    guidata(hObject, handles);
+    close(handles.h)
+    close(handles.figure1)
+    voma__qpr(handles.RootData)
 elseif (handles.individualSave == 1) && (handles.singleEyeSwitch.Value == 1)
     choice = questdlg('Data from only one eye has been saved.', ...
         'Cycle Analysis GUI Error', ...
@@ -2390,10 +2409,10 @@ elseif (handles.individualSave == 1) && (handles.singleEyeSwitch.Value == 1)
         case 'Continue to QPR GUI'
             close(handles.h)
             close(handles.figure1)
-voma__qpr(handles.RootData)
+            voma__qpr(handles.RootData)
     end
 elseif (handles.individualSave == 0) && (handles.singleEyeSwitch.Value == 1)
-        choice = questdlg('No data has been saved.', ...
+    choice = questdlg('No data has been saved.', ...
         'Cycle Analysis GUI Error', ...
         'OK, continue analysis.','Continue to QPR GUI','OK, continue analysis');
     % Handle response
@@ -2402,11 +2421,11 @@ elseif (handles.individualSave == 0) && (handles.singleEyeSwitch.Value == 1)
         case 'Continue to QPR GUI'
             close(handles.h)
             close(handles.figure1)
-voma__qpr(handles.RootData)
+            voma__qpr(handles.RootData)
     end
 else
     close(handles.figure1)
-voma__qpr(handles.RootData)
+    voma__qpr(handles.RootData,handles.params.pathtosave)
 end
 
 
@@ -2495,7 +2514,7 @@ function open_stimanalysis_Callback(hObject, eventdata, handles)
 % hObject    handle to open_stimanalysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-voma__stim_analysis(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename);
+voma__stim_analysis(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename,handles.params.pathtosave);
 
 
 

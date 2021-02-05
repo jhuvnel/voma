@@ -5,7 +5,7 @@
 
 %% Input Parameters wanted here
 directory = 'R:\Monkey Single Unit Recording\Experiment Software and Necessities\Scripts and Configs\';
-filename = '20190724_GiGi_ElectrodeCurrentScan';%'MoMoStim_AllPermutations_LearnStim'; %need to concat suffix
+filename = '20200423_GiGi_ElectrodeCurrentScan';%'MoMoStim_AllPermutations_LearnStim'; %need to concat suffix
 
 % For GiGi
 % LP = 1, 2, 3
@@ -17,9 +17,9 @@ clear parameters
 
 %% VOR Creation
 
-stimList = [1 2 3];
-refList = [11];
-currentList = [150];
+stimList = [1 2 3 4 5 6 7 8 9];
+refList = [10 11];
+currentList = [20 50 100 150 200];
 % baseline = 200;
 phaseDur = [25 50 100 200 300 400 800];
 phaseGap = [0 25 50 100 200 400 600];

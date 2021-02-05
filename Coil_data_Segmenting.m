@@ -261,12 +261,15 @@ if (segments==0) || isempty(handles.segment_number.String)
     handles.listing = [];
     % Get list of all coil files and sort chronologically, use number
     % of coil files as iterations for for loop
-    bigFcn = @(s) (s.bytes > 10000);
-    tempList = dirPlus(handles.PathNameofFiles,'Struct',true,'FileFilter','\.smr$','Depth',0,'ValidateFileFcn', bigFcn);
-    t = datetime({tempList.date}','InputFormat','dd-MM-yyyy HH:mm:ss');
-    [b,idx] = sortrows(t);
-    handles.listing = tempList(idx);
-    
+    handles.listing = dir(handles.raw_name.String);
+    handles.listing(~contains({handles.listing.name},{'LP','LH','LA'})) = [];
+    handles.listing([handles.listing.bytes]==0) = [];
+    [cs,index] = sort_nat({handles.listing.name});
+    handles.listing = handles.listing(index);
+    handles.listing(contains({handles.listing.name},'.s2rx')) = [];
+    [~,lInds] = sortrows({handles.listing.date}');
+    handles.listing = handles.listing(lInds);
+
     indsForSeg = 1:length(handles.listing);
     handles.totalSegment = length(indsForSeg);
     
@@ -279,7 +282,7 @@ if (segments==0) || isempty(handles.segment_number.String)
     patch(handles.axes1,[0 handles.totalSegment handles.totalSegment 0],[0 0 1 1],'w')
     
     s=1;
-        handles.prevStimCanal = '';
+    handles.prevStimCanal = '';
     handles.dAsgnFlag = 1;
     handles.dAsgn = 0;
     handles.mfilename = mfilename;
@@ -289,133 +292,231 @@ end
 if isempty(handles.listing)
     
 else
-
-
+    
+    
     for fs = s:length(handles.listing)
         segments = str2num(handles.segment_number.String);
         
         if contains(handles.listing(fs).name,{'LP', 'LA', 'LH', 'RP', 'RA', 'RH','stim'}) && (handles.listing(fs).bytes>0)
-
-            handles.Segment(fs).directory = [handles.listing(fs).folder,handles.ispc.slash];
-            handles.filename = handles.listing(fs).name;
-            handles.Segment(fs).raw_filename = handles.filename;
-            underS = find(handles.filename=='_');
-            dash = find(handles.filename=='-');
-            handles.delin =[];
-            handles.delin = sort([underS dash],'ascend');
-            dot = find(handles.filename=='.');
-            stimPos = strfind(handles.filename,'stim');
-            refPos = strfind(handles.filename,'ref');
-            ipgPos = strfind(handles.filename,'IPG');
-            ratePos = strfind(handles.filename,'rate');
-
-            handles.Segment(fs).subj = handles.filename(handles.delin(3)+1:handles.delin(4)-1);
-            if isempty(handles.Segment(fs).subj)
-                handles.Segment(fs).subj = handles.canalInfo.animal;
-            end
-            
-            
- 
-            handles.Segment(fs).stim = str2num(handles.filename(stimPos+4:handles.delin(6)-1));
-            handles.Segment(fs).refNum = str2num(handles.filename(refPos+3:handles.delin(7)-1));
-            
-            stimnum = {num2str(handles.Segment(fs).stim)};            
-            switch stimnum{1}
-                case handles.canalInfo.stimNum{1}
-                    handles.stim_axis.String = handles.canalInfo.stimCanal(1);
-                case handles.canalInfo.stimNum{2}
-                    handles.stim_axis.String = handles.canalInfo.stimCanal(2);
-                case handles.canalInfo.stimNum{3}
-                    handles.stim_axis.String = handles.canalInfo.stimCanal(3);
-            end
-            
-            handles.Segment(fs).stim_axis = handles.stim_axis.String{1};
-            handles.Segment(fs).rate = str2num(handles.filename(ratePos+4:handles.delin(12)-1));
-            if isempty(handles.Segment(fs).rate)
-                prompt = {'Enter the stimulation rate (pps):'};
-                t1 = 'Input';
-                dims = [1 35];
-                definput = {'200'};
-                answer = inputdlg(prompt,t1,dims,definput);
-            else
-                answer = {num2str(handles.Segment(fs).rate)};
-            end
-            handles.stim_frequency.String = {[answer{1},'pps']};
-            
-            if any(strfind(handles.filename,'phaseDur'))
-                p1dPos = strfind(handles.filename,'phaseDur');
-                handles.Segment(fs).p1d = str2num(handles.filename(p1dPos+9:ipgPos-1));
-                handles.Segment(fs).ipg = str2num(handles.filename(ipgPos+3:handles.delin(13)-1));
-                handles.Segment(fs).p2d = handles.Segment(fs).p1d;
-                amp = strfind(handles.filename,'amp');
-                nextD = find(handles.delin>amp,1);
-                handles.Segment(fs).p1amp = str2num(handles.filename(amp(1)+3:handles.delin(nextD)-1));
-                handles.Segment(fs).p2amp = handles.Segment(fs).p1amp;
-            elseif any(strfind(handles.filename,'phase1Dur'))
-                p1dPos = strfind(handles.filename,'phase1Dur');
-                handles.Segment(fs).p1d = str2num(handles.filename(p1dPos+9:handles.delin(9)-1));
-                p2dPos = strfind(handles.filename,'phase2Dur');
-                handles.Segment(fs).p2d = str2num(handles.filename(p2dPos+9:handles.delin(11)-1));
-                handles.Segment(fs).ipg = str2num(handles.filename(ipgPos+3:handles.delin(13)-1));
-                p1aPos = strfind(handles.filename,'phase1amp');
-                handles.Segment(fs).p1amp = str2num(handles.filename(p1aPos+9:handles.delin(8)-1));
-                p2aPos = strfind(handles.filename,'phase2amp');
-                handles.Segment(fs).p2amp = str2num(handles.filename(p2aPos+9:handles.delin(10)-1));
-            end
-            
-            if any(strfind(handles.filename,'defaultStart'))
-                dS = 1;
-                ftemp = handles.listing(fs+1).name;
-                if any(strfind(ftemp,'phaseDur'))
-                    p1dPosT = strfind(ftemp,'phaseDur');
-                    ipgPosT = strfind(ftemp,'IPG');
-                    p1dT = str2num(ftemp(p1dPosT+9:ipgPosT-1));
-                    p2dT = p1dT;
-                elseif any(strfind(ftemp,'phase1Dur'))
-                    underST = find(ftemp=='_');
-                    dashT = find(ftemp=='-');
-                    handles.delinT = sort([underST dashT],'ascend');
-                    p2dPosT = strfind(ftemp,'phase2Dur');
-                    p2dT = ftemp(p2dPosT+9:handles.delinT(11)-1);
-                end
-                start = strfind(handles.filename,'defaultStart');
-                handles.exp_def.String = {['-dSp2d',p2dT,handles.filename(start:handles.delin(14)-1)]};
-                handles.Segment(fs).exp_defS = ['-dSp2d',p2dT,handles.filename(start:handles.delin(14)-1)];
-                if handles.dAsgnFlag
-                    handles.dAsgn = handles.dAsgn +1;
-                    handles.dAsgnFlag = 0;
-                end
-            else
-                dS = 0;
-                handles.exp_def.String = {['']};
-                handles.Segment(fs).exp_defS = [''];
-                handles.dAsgnFlag = 1;
-            end
-            
-            if isempty(segments==0) || (segments==0)
-                temp = handles.filename;
-                temp(handles.delin(1)) = [];
-                handles.subj_id.String = {handles.Segment(fs).subj};
-                handles.visit_number.String = {'NA'};
-                handles.date.String = temp(1:handles.delin(2)-2);
-                
-            end
-            handles.Segment(fs).date = handles.date.String;
-            
-            if contains(handles.listing(fs).name,{'AnodicFirst'})
-                handles.AvC.String = {'-AnodicFirst'};
-                handles.Segment(fs).AvC = 1;
-            elseif contains(handles.listing(fs).name,{'CathodicFirst'})
-                handles.AvC.String = {'-CathodicFirst'};
-                handles.Segment(fs).AvC = 0;
-            elseif ~isempty(handles.AvC.String)
-                handles.AvC.String = {''};
-            end
-            
             switch handles.params.system_code
                 case 1 % Lasker Spike2 Coil Files
+                    handles.Segment(fs).directory = [handles.listing(fs).folder,handles.ispc.slash];
+                    handles.filename = handles.listing(fs).name;
+                    handles.Segment(fs).raw_filename = handles.filename;
+                    underS = find(handles.filename=='_');
+                    dash = find(handles.filename=='-');
+                    handles.delin =[];
+                    handles.delin = sort([underS dash],'ascend');
+                    dot = find(handles.filename=='.');
+                    stimPos = strfind(handles.filename,'stim');
+                    refPos = strfind(handles.filename,'ref');
+                    ipgPos = strfind(handles.filename,'IPG');
+                    ratePos = strfind(handles.filename,'rate');
+                    ampPos = strfind(handles.filename,'amp');
+                    
+                    %handles.Segment(fs).subj = handles.filename(handles.delin(3)+1:handles.delin(4)-1);
+                    %if isempty(handles.Segment(fs).subj)
+                        handles.Segment(fs).subj = handles.canalInfo.animal;
+                    %end
+                    
+                    if length(handles.delin)<6
+                        handles.Segment(fs).stim = str2num(handles.filename(stimPos+4:refPos-1));
+                    handles.Segment(fs).refNum = str2num(handles.filename(refPos+3:ampPos-1));
+                    
+                    else
+                        handles.Segment(fs).stim = str2num(handles.filename(stimPos+4:handles.delin(6)-1));
+                    handles.Segment(fs).refNum = str2num(handles.filename(refPos+3:handles.delin(7)-1));
+                    
+                    end
+                    
+                    
+                    stimnum = {num2str(handles.Segment(fs).stim)};
+                    switch stimnum{1}
+                        case handles.canalInfo.stimNum{1}
+                            handles.stim_axis.String = handles.canalInfo.stimCanal(1);
+                        case handles.canalInfo.stimNum{2}
+                            handles.stim_axis.String = handles.canalInfo.stimCanal(2);
+                        case handles.canalInfo.stimNum{3}
+                            handles.stim_axis.String = handles.canalInfo.stimCanal(3);
+                    end
+                    
+                    handles.Segment(fs).stim_axis = handles.stim_axis.String{1};
+                    if length(handles.delin)<6
+                       phPos = strfind(handles.filename,'phaseDur');
+                       handles.Segment(fs).rate = str2num(handles.filename(ratePos+4:phPos-1));
+                    else
+                       handles.Segment(fs).rate = str2num(handles.filename(ratePos+4:handles.delin(12)-1));
+                    end
+                    
+                    if isempty(handles.Segment(fs).rate)
+                        prompt = {'Enter the stimulation rate (pps):'};
+                        t1 = 'Input';
+                        dims = [1 35];
+                        definput = {'200'};
+                        answer = inputdlg(prompt,t1,dims,definput);
+                    else
+                        answer = {num2str(handles.Segment(fs).rate)};
+                    end
+                    handles.stim_frequency.String = {[answer{1},'pps']};
+                    
+                    if any(strfind(handles.filename,'phaseDur'))
+                        p1dPos = strfind(handles.filename,'phaseDur');
+                        handles.Segment(fs).p1d = str2num(handles.filename(p1dPos+8:ipgPos-1));
+                        if 13>length(handles.delin)
+                            handles.Segment(fs).ipg = str2num(handles.filename(ipgPos+3:handles.delin(end)-1));
+                        else
+                        handles.Segment(fs).ipg = str2num(handles.filename(ipgPos+3:handles.delin(13)-1));
+                        end
+                        handles.Segment(fs).p2d = handles.Segment(fs).p1d;
+                        amp = strfind(handles.filename,'amp');
+                        nextD = find(handles.delin>amp,1);
+                        if handles.delin(nextD)-amp(1)>6
+                            handles.Segment(fs).p1amp = str2num(handles.filename(amp(1)+3:ratePos-1));
+                        else
+                        handles.Segment(fs).p1amp = str2num(handles.filename(amp(1)+3:handles.delin(nextD)-1));
+                        end
+                        handles.Segment(fs).p2amp = handles.Segment(fs).p1amp;
+                    elseif any(strfind(handles.filename,'phase1Dur'))
+                        p1dPos = strfind(handles.filename,'phase1Dur');
+                        handles.Segment(fs).p1d = str2num(handles.filename(p1dPos+9:handles.delin(9)-1));
+                        p2dPos = strfind(handles.filename,'phase2Dur');
+                        handles.Segment(fs).p2d = str2num(handles.filename(p2dPos+9:handles.delin(11)-1));
+                        handles.Segment(fs).ipg = str2num(handles.filename(ipgPos+3:handles.delin(13)-1));
+                        p1aPos = strfind(handles.filename,'phase1amp');
+                        handles.Segment(fs).p1amp = str2num(handles.filename(p1aPos+9:handles.delin(8)-1));
+                        p2aPos = strfind(handles.filename,'phase2amp');
+                        handles.Segment(fs).p2amp = str2num(handles.filename(p2aPos+9:handles.delin(10)-1));
+                    end
+                    
+                    if any(strfind(handles.filename,'defaultStart'))
+                        dS = 1;
+                        ftemp = handles.listing(fs+1).name;
+                        if any(strfind(ftemp,'phaseDur'))
+                            p1dPosT = strfind(ftemp,'phaseDur');
+                            ipgPosT = strfind(ftemp,'IPG');
+                            p1dT = str2num(ftemp(p1dPosT+9:ipgPosT-1));
+                            p2dT = p1dT;
+                        elseif any(strfind(ftemp,'phase1Dur'))
+                            underST = find(ftemp=='_');
+                            dashT = find(ftemp=='-');
+                            handles.delinT = sort([underST dashT],'ascend');
+                            p2dPosT = strfind(ftemp,'phase2Dur');
+                            p2dT = ftemp(p2dPosT+9:handles.delinT(11)-1);
+                        end
+                        start = strfind(handles.filename,'defaultStart');
+                        handles.exp_def.String = {['-dSp2d',p2dT,handles.filename(start:handles.delin(14)-1)]};
+                        handles.Segment(fs).exp_defS = ['-dSp2d',p2dT,handles.filename(start:handles.delin(14)-1)];
+                        if handles.dAsgnFlag
+                            handles.dAsgn = handles.dAsgn +1;
+                            handles.dAsgnFlag = 0;
+                        end
+                    else
+                        dS = 0;
+                        handles.exp_def.String = {['']};
+                        handles.Segment(fs).exp_defS = [''];
+                        handles.dAsgnFlag = 1;
+                    end
+                    
+                    if isempty(segments==0) || (segments==0)
+                        temp = handles.filename;
+                        temp(handles.delin(1)) = [];
+                        handles.subj_id.String = {handles.Segment(fs).subj};
+                        handles.visit_number.String = {'NA'};
+                        handles.date.String = temp(1:handles.delin(2)-2);
+                        
+                    end
+                    handles.Segment(fs).date = handles.date.String;
+                    
+                    if contains(handles.listing(fs).name,{'AnodicFirst'})
+                        handles.AvC.String = {'-AnodicFirst'};
+                        handles.Segment(fs).AvC = 1;
+                    elseif contains(handles.listing(fs).name,{'CathodicFirst'})
+                        handles.AvC.String = {'-CathodicFirst'};
+                        handles.Segment(fs).AvC = 0;
+                    elseif ~isempty(handles.AvC.String)
+                        handles.AvC.String = {''};
+                    end
+                    
                     handles = LaskerSpike2Seg(hObject, eventdata,handles,fs);
+                %%%%
                 case 2
+                    handles.Segment(fs).directory = [handles.listing(fs).folder,handles.ispc.slash];
+                    handles.filename = handles.listing(fs).name;
+                    handles.Segment(fs).raw_filename = handles.filename;
+                    underS = find(handles.filename=='_');
+                    dash = find(handles.filename=='-');
+                    handles.delin =[];
+                    handles.delin = sort([underS dash],'ascend');
+                    dot = find(handles.filename=='.');
+                    stimPos = strfind(handles.filename,'stim');
+                    refPos = strfind(handles.filename,'ref');
+                    ampPos = strfind(handles.filename,'amp');
+                    
+                    handles.Segment(fs).subj = handles.filename(handles.delin(2)+1:handles.delin(3)-1);
+                    if isempty(handles.Segment(fs).subj)
+                        handles.Segment(fs).subj = handles.canalInfo.animal;
+                    end
+                    
+                    
+                    
+                    handles.Segment(fs).stim = str2num(handles.filename(stimPos+4:refPos-1));
+                    handles.Segment(fs).refNum = str2num(handles.filename(refPos+3:ampPos-1));
+                    
+                    stimnum = {num2str(handles.Segment(fs).stim)};
+                    switch stimnum{1}
+                        case handles.canalInfo.stimNum{1}
+                            handles.stim_axis.String = handles.canalInfo.stimCanal(1);
+                        case handles.canalInfo.stimNum{2}
+                            handles.stim_axis.String = handles.canalInfo.stimCanal(2);
+                        case handles.canalInfo.stimNum{3}
+                            handles.stim_axis.String = handles.canalInfo.stimCanal(3);
+                    end
+                    
+                    handles.Segment(fs).stim_axis = handles.stim_axis.String{1};
+                    handles.Segment(fs).rate = 200;
+                    if isempty(handles.Segment(fs).rate)
+                        prompt = {'Enter the stimulation rate (pps):'};
+                        t1 = 'Input';
+                        dims = [1 35];
+                        definput = {'200'};
+                        answer = inputdlg(prompt,t1,dims,definput);
+                    else
+                        answer = {num2str(handles.Segment(fs).rate)};
+                    end
+                    handles.stim_frequency.String = {[answer{1},'pps']};
+                    
+                        
+                        handles.Segment(fs).p1d = 200;
+                        handles.Segment(fs).p2d = 200;
+                        handles.Segment(fs).ipg = 0;
+                        handles.Segment(fs).p1amp = str2num(handles.filename(ampPos+3:handles.delin(4)-1));
+                        handles.Segment(fs).p2amp = str2num(handles.filename(ampPos+3:handles.delin(4)-1));
+                    
+                    
+                        dS = 0;
+                        handles.exp_def.String = {['']};
+                        handles.Segment(fs).exp_defS = [''];
+                        handles.dAsgnFlag = 1;
+
+                    
+                    if isempty(segments==0) || (segments==0)
+                        handles.subj_id.String = {handles.Segment(fs).subj};
+                        handles.visit_number.String = {'NA'};
+                        handles.date.String = handles.filename(1:handles.delin(1)-1);
+                        
+                    end
+                    handles.Segment(fs).date = handles.date.String;
+                    
+                    if contains(handles.listing(fs).name,{'AnodicFirst'})
+                        handles.AvC.String = {'-AnodicFirst'};
+                        handles.Segment(fs).AvC = 1;
+                    elseif contains(handles.listing(fs).name,{'CathodicFirst'})
+                        handles.AvC.String = {'-CathodicFirst'};
+                        handles.Segment(fs).AvC = 0;
+                    elseif ~isempty(handles.AvC.String)
+                        handles.AvC.String = {''};
+                    end
+                    handles = Moog710Coil2Seg(hObject, eventdata,handles,fs);
             end
             
             
@@ -830,7 +931,7 @@ function handles = eye_mov_system_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns eye_mov_system contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from eye_mov_system
-index_selected = get(hObject,'Value');
+index_selected = get(handles.eye_mov_system,'Value');
 
 handles.params.system_code = index_selected;
 
@@ -903,8 +1004,28 @@ switch handles.params.system_code
         % have no offsets with a test coil.
         handles.coilzeros = [0 0 0 0 0 0 0 0 0 0 0 0];
     case 2
+        [handles.GAINSR, handles.GAINSL]=getGains(handles.raw_FieldGainPath,handles.raw_FieldGainFile);
+        handles = get_Offsets_Callback(hObject, eventdata, handles);
 end
 guidata(hObject,handles)
+
+% --- Executes on button press in load_gain.
+function handles = get_Offsets_Callback(hObject, eventdata, handles)
+% hObject    handle to load_gain (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+switch handles.params.system_code
+    case 1
+
+    case 2
+         [handles.offsetFile1,handles.offsetPath1,offsetFilterIndex1] = uigetfile('*.*','Please choose the FIRST offset file this experiment');
+         [handles.offsetFile2,handles.offsetPath2,offsetFilterIndex2] = uigetfile('*.*','Please choose the SECOND offset file this experiment');
+         handles.offsets.String = {[handles.offsetPath1,'\',handles.offsetFile1];[handles.offsetPath2,'\',handles.offsetFile2]};
+         [handles.ZEROS_R, handles.ZEROS_L]=calcOffsets(handles.offsetPath1,handles.offsetFile1,handles.offsetFile2,1);
+end
+guidata(hObject,handles)
+
 
 
 % --- Executes on selection change in animalENum.
@@ -929,7 +1050,12 @@ switch hObject.Value
         handles.set3_stimNum.Value = [4 5 6];
          handles.set4_stimNum.Value = [11];
           handles.set5_stimNum.Value = [10];
-    case 3 %Nancy
+    case 3 %Nancy Left Ear
+        handles.set1_stimNum.Value = [4 5 6 14];
+        handles.set2_stimNum.Value = [1 2 3];
+        handles.set3_stimNum.Value = [7 8 9 15];
+         handles.set4_stimNum.Value = [11 12 13];
+          handles.set5_stimNum.Value = [10];
     case 4 %Yoda Right Ear
         handles.set1_stimNum.Value = [1 2 3];
         handles.set2_stimNum.Value = [4 5 6 14];

@@ -22,7 +22,7 @@ function varargout = Monkey_Voma_Processing(varargin)
 
 % Edit the above text to modify the response to help Monkey_Voma_Processing
 
-% Last Modified by GUIDE v2.5 11-Oct-2019 15:00:05
+% Last Modified by GUIDE v2.5 03-Sep-2020 07:45:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,10 +81,13 @@ handles.yestoallFlag = 0;
 handles.LEye.Enable = 'off';
 handles.REye.Enable = 'off';
 
+handles.LearImplant.BackgroundColor = [1 0 0];
+handles.RearImplant.BackgroundColor = [1 0 0];
 % handles.p = pan;
 % handles.p.ButtonDownFilter = @mycallback;
 % handles.p.Enable = 'on';
 % Update handles structure
+
 guidata(hObject, handles);
 
 % UIWAIT makes Monkey_Voma_Processing wait for user response (see UIRESUME)
@@ -126,13 +129,20 @@ guidata(hObject, handles);
 handles = calc_cyc_avg(handles);
     plot_cyc_avg(handles);
 handles.prevCyc = [handles.cycle_list.Value];
-c = 1:20;
+c = 1:length(handles.segment(handles.segNum).stim_inds);
 newC = c(~ismember(c,handles.cycle_list.Value));
+if handles.LEye.Value
 handles.avgMag.String = num2str(mean(handles.segment(handles.segNum).maxMagL(newC)));
 handles.avgMis.String = num2str(mean(handles.segment(handles.segNum).MisalignL(newC)));
 handles.magStd.String = num2str(std(handles.segment(handles.segNum).maxMagL(newC)));
 handles.misStd.String = num2str(std(handles.segment(handles.segNum).MisalignL(newC)));
-
+end
+if handles.REye.Value
+handles.avgMagR.String = num2str(mean(handles.segment(handles.segNum).maxMagR(newC)));
+handles.avgMisR.String = num2str(mean(handles.segment(handles.segNum).MisalignR(newC)));
+handles.magStdR.String = num2str(std(handles.segment(handles.segNum).maxMagR(newC)));
+handles.misStdR.String = num2str(std(handles.segment(handles.segNum).MisalignR(newC)));
+end
     guidata(hObject, handles);
 
 % Hints: contents = cellstr(get(hObject,'String')) returns cycle_list contents as cell array
@@ -147,10 +157,21 @@ function new_VOMA_file_Callback(hObject, eventdata, handles)
 [handles.vomaFile,handles.vomaPath] = uigetfile('*.voma','Select the voma you wish to process');
 handles.current_filename.String = handles.vomaFile;
 temp = load([handles.vomaPath, handles.vomaFile],'-mat');
+cd(handles.vomaPath)
 RootData = temp.Data_QPR;
 handles.RootData = RootData;
 handles.total_files.String = num2str(length(handles.RootData));
 handles.startVal = handles.startVal +1;
+listOfFiles = [];
+for i = 1:length(handles.RootData)
+    dashes = strfind(handles.RootData(i).name,'-');
+    stimInfo = handles.RootData(i).name(dashes(6)+1:end);
+    stimInfo = strrep(stimInfo,'.mat','');
+    listOfFiles = [listOfFiles; {[stimInfo]}];
+end
+handles.ecombsList.Value = 1;
+handles.ecombsList.String = listOfFiles;
+handles.ecombsList.UserData = listOfFiles;
 if handles.startVal == 2
     handles.start.Visible = 1;
 end
@@ -231,7 +252,7 @@ else
             Results.ry_cycavg = handles.Results.ry_cycavg;
             Results.ry_cycstd = handles.Results.ry_cycstd;
             Results.QPparams = ['filtfilt Order ',handles.filterorder.String];
-            
+            Results.QPposParam = [str2num(handles.posFiltOrder.String),str2num(handles.posFiltLeng.String)];
             
         else
             for processing = 1:length(handles.segment(handles.segNum).txt)
@@ -276,20 +297,22 @@ else
             Results.ry_cycavg = mean(Results.ry_cyc);
             Results.ry_cycstd = std(Results.ry_cyc);
             Results.QPparams = [];
+            Results.QPposParam = [];
         end
         Results.name = handles.RootData(handles.segNum).name;
         Results.raw_filename =  handles.RootData(handles.segNum).RawFileName;
         Results.Parameters = handles.RootData(handles.segNum).VOMA_data.Parameters;
         Results.Fs =  handles.RootData(handles.segNum).VOMA_data.Fs;
         
-        Results.cyclist = find(~ismember(1:20,handles.cycle_list.Value))';
+        Results.cyclist = find(~ismember(1:length(handles.segment(handles.segNum).stim_inds),handles.cycle_list.Value))';
         Results.FacialNerve = handles.FacialNerve;
         if isfield(handles.RootData(handles.segNum).VOMA_data.Parameters.Stim_Info,'Seg_Directory')
             load([handles.RootData(handles.segNum).VOMA_data.Parameters.Stim_Info.Seg_Directory handles.RootData(handles.segNum).VOMA_data.Parameters.Stim_Info.Stim_Type])
             Results.segmentData = Data;
         end
+        Results.SecondM = handles.Results.SecondM;
         
-        usedInd = find(~ismember([1:20],handles.cycle_list.Value));
+        usedInd = find(~ismember([1:length(handles.segment(handles.segNum).stim_inds)],handles.cycle_list.Value));
         if handles.LEye.Value
         Results.allpullIndsL = handles.segment(handles.segNum).pullIndsL;
         Results.usedpullIndsL = handles.segment(handles.segNum).pullIndsL(usedInd);
@@ -299,15 +322,45 @@ else
         Results.usedMisalignL = handles.segment(handles.segNum).MisalignL(usedInd);
         Results.allmaxMagL = handles.segment(handles.segNum).maxMagL;
         Results.usedmaxMagL = handles.segment(handles.segNum).maxMagL(usedInd);
+        if handles.nystagCorr.Value
+        Results.SecondM.allpullIndsL = handles.Results.SecondM.pullIndsL;
+        Results.SecondM.usedpullIndsL = handles.Results.SecondM.pullIndsL(usedInd);
+        Results.SecondM.allMisalign3DL = handles.Results.SecondM.Misalign3DL;
+        Results.SecondM.usedMisalign3DL = handles.Results.SecondM.Misalign3DL(usedInd,:);
+        Results.SecondM.allMisalignL = handles.Results.SecondM.MisalignL;
+        Results.SecondM.usedMisalignL = handles.Results.SecondM.MisalignL(usedInd);
+        Results.SecondM.allmaxMagL = handles.Results.SecondM.maxMagL;
+        Results.SecondM.usedmaxMagL = handles.Results.SecondM.maxMagL(usedInd);
+        end
         end
         if handles.REye.Value
+        Results.allpullIndsR = handles.segment(handles.segNum).pullIndsR;
+        Results.usedpullIndsR = handles.segment(handles.segNum).pullIndsR(usedInd);
+        Results.allMisalign3DR = handles.segment(handles.segNum).Misalign3DR;
+        Results.usedMisalign3DR = handles.segment(handles.segNum).Misalign3DR(usedInd,:);
+        Results.allMisalignR = handles.segment(handles.segNum).MisalignR;
+        Results.usedMisalignR = handles.segment(handles.segNum).MisalignR(usedInd);
+        Results.allmaxMagR = handles.segment(handles.segNum).maxMagR;
+        Results.usedmaxMagR = handles.segment(handles.segNum).maxMagR(usedInd);
+        if handles.nystagCorr.Value
+        Results.SecondM.allpullIndsR = handles.Results.SecondM.pullIndsR;
+        Results.SecondM.usedpullIndsR = handles.Results.SecondM.pullIndsR(usedInd);
+        Results.SecondM.allMisalign3DR = handles.Results.SecondM.Misalign3DR;
+        Results.SecondM.usedMisalign3DR = handles.Results.SecondM.Misalign3DR(usedInd,:);
+        Results.SecondM.allMisalignR = handles.Results.SecondM.MisalignR;
+        Results.SecondM.usedMisalignR = handles.Results.SecondM.MisalignR(usedInd);
+        Results.SecondM.allmaxMagR = handles.Results.SecondM.maxMagR;
+        Results.SecondM.usedmaxMagR = handles.Results.SecondM.maxMagR(usedInd);
+        end
         end
         Results.stim_inds = handles.segment(handles.segNum).stim_inds;
         Results.cycNum = usedInd;
+        
         cd(handles.output_path.String)
         save([name, '.mat'],'Results')
         
         handles.segNum = handles.segNum+1;
+        handles.t = [];
         guidata(hObject, handles);
     end
 end
@@ -325,6 +378,7 @@ function start_Callback(hObject, eventdata, handles)
 % hObject    handle to start (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if handles.LearImplant.BackgroundColor == [0.94 0.94 0.94]
 handles.start.Visible = 'off';
   
 cd(handles.cycDir)
@@ -342,7 +396,7 @@ handles.LEye.Enable = 'on';
 handles.REye.Enable = 'on';
 handles.skip = 0;
     guidata(hObject, handles);
-
+end
 
     % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
@@ -358,8 +412,13 @@ function facial_nerve_Callback(hObject, eventdata, handles)
 % hObject    handle to facial_nerve (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.FacialNerve = 1;
+if handles.FacialNerve
+    handles.FacialNerve = 0;
+handles.facial_nerve.BackgroundColor = [0.94 0.94 0.94];
+else
+    handles.FacialNerve = 1;
 handles.facial_nerve.BackgroundColor = 'Red';
+end
 guidata(hObject, handles);
                   
 
@@ -373,24 +432,24 @@ function filterorder_Callback(hObject, eventdata, handles)
 handles = filterVel(handles);
     guidata(hObject, handles);
     
-    function handles = filterVel(handles)
+function handles = filterVel(handles)
        handles.tofilt = str2num(handles.filterorder.String);
 if handles.tofilt<1
     handles.tofilt = 1;
     handles.filterorder.String = '1';
 end
 handles.filtFlag = 1;
- handles.filtLELARP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).LE_LARP);
-  handles.filtLEZ=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).LE_Z);
-   handles.filtLERALP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).LE_RALP);
- handles.filtLEX = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X);
-  handles.filtLEY = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y);  
- handles.filtRELARP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).RE_LARP);
-  handles.filtREZ=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).RE_Z);
-   handles.filtRERALP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).RE_RALP);
-    handles.filtREX = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X);
-  handles.filtREY = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y);
-   handles = plotVel(handles);
+handles.filtLELARP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).LE_LARP);
+handles.filtLEZ=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).LE_Z);
+handles.filtLERALP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).LE_RALP);
+handles.filtLEX = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X);
+handles.filtLEY = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y);
+handles.filtRELARP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).RE_LARP);
+handles.filtREZ=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).RE_Z);
+handles.filtRERALP=filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.segment(handles.segNum).RE_RALP);
+handles.filtREX = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X);
+handles.filtREY = filtfilt(ones(1,handles.tofilt)/handles.tofilt,1,handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y);
+handles = plotVel(handles);
 handles = cycle_list_Callback(handles.cycle_list, [], handles);
 
 
@@ -407,6 +466,7 @@ process_file_Callback(hObject, eventdata, handles)
 end
 
 function handles = nextFile(handles)
+    %handles.figure1.Visible = 'off';
 cla(handles.cycavg)
 handles.facial_nerve.BackgroundColor = [.94 .94 .94];
 handles.rawV.Value = 0;
@@ -418,26 +478,74 @@ handles.PosfiltFlag = 0;
 handles.files_remaining.String = num2str(handles.segNum);
 handles.listing = dir(handles.cycDir);
 handles.listing([handles.listing.isdir]) = [];
-t = datetime({handles.listing.date}','InputFormat','dd-MM-yyyy HH:mm:ss');
-            [b,idx] = sortrows(t);
-            handles.listing = handles.listing(idx);
+if any(ismember({handles.listing.name},'Plots.mat'))
+    handles.listing(ismember({handles.listing.name},'Plots.mat')) = [];
+end
+if any(ismember({handles.listing.name},'CycleParams.mat'))
+    handles.listing(ismember({handles.listing.name},'CycleParams.mat')) = [];
+end
+[cs,index] = sort_nat({handles.listing.name});
+handles.listing = handles.listing(index);
+[cs,index] = sort_nat({handles.RootData.name});
+handles.RootData = handles.RootData(index);
+filesInd = find(contains({handles.listing.name},handles.ecombsList.String));
+for q = 1:length(handles.ecombsList.String)
+    if any(contains({handles.listing.name},handles.ecombsList.String(q)))
+        handles.ecombsList.String(q) = {['<html><font color="red">',handles.ecombsList.String{q},'</font></html>']};
+    end
+end
+find2Use = strrep(handles.RootData(handles.segNum).name,'.mat','');
+find2UseST = strfind(find2Use,'stim');
+find2Use = find2Use(find2UseST:end);
+handles.ecombsList.Value = find(ismember(handles.ecombsList.UserData,{find2Use}));
 makeFile = 1;
 handles.files_remaining.String = num2str(handles.segNum);
     name = strrep(handles.RootData(handles.segNum).name,'.mat','_CycleAvg');
     go = 1;
     while go
+        find2Use = strrep(handles.RootData(handles.segNum).name,'.mat','');
+find2UseST = strfind(find2Use,'stim');
+find2Use = find2Use(find2UseST:end);
+handles.ecombsList.Value = find(ismember(handles.ecombsList.UserData,{find2Use}));
         handles.output_filename.String = name;
     if any(find(contains({handles.listing.name},{name}))) && ~handles.yestoallFlag
         handles.Results = load([name,'.mat']);
         handles.Results = handles.Results.Results;
         plot_cyc_avg(handles)
         handles.cycavg.YLim = [-100 100];
-        handles.cycavg.XLim = [0 0.04];
+        handles.cycavg.XLim = [0 0.11];
         handles.Results = [];
         answer = nbuttondlg([{name};{'This file already exsits, would you like to overwrite it?'}],{'Yes','No','Yes To All','No To All'},'DefaultButton',2,'PromptTextHeight',50);
         switch answer
             case 'Yes'
                 makeFile = 1;
+                handles.t = load([name,'.mat']);
+                handles.t = handles.t.Results;
+                if ~isempty(handles.t.QPparams)
+                    handles.filterorder.String = strrep(handles.t.QPparams,'filtfilt Order ','');
+                end
+                if isfield(handles.t,'QPposParam')
+                    handles.posFiltOrder.String = num2str(handles.t.QPposParam(1));
+                    handles.posFiltLeng.String = num2str(handles.t.QPposParam(2));
+                end
+                if ~isempty(handles.cycle_list.String) && ~strcmp(handles.cycle_list.String{1},'')
+                    handles.cycle_list.String = [''];
+                end
+                for cycText = 1:length(handles.t.stim_inds)
+                    handles.cycle_list.String = [handles.cycle_list.String;{['Cycle ',num2str(cycText)]}];
+                end
+                handles.cycle_list.String= [handles.cycle_list.String;{'None'}];
+                handles.cycles_toSave.String = ['20 Cycles to Save'];
+                if length(handles.t.cyclist) == 20
+                 handles.cycle_list.Value = 21;
+                else
+                handles.cycle_list.Value = find(~ismember(1:length(handles.t.stim_inds),handles.t.cyclist));
+                end
+                if handles.t.FacialNerve
+                    handles.FacialNerve = 1;
+                    handles.facial_nerve.BackgroundColor = 'Red';
+                end
+                handles.t = [];
                 go = 0;
             case 'No'
                 makeFile = 1;
@@ -496,12 +604,50 @@ handles.files_remaining.String = num2str(handles.segNum);
     end
     
    if makeFile
+       if any(find(contains({handles.listing.name},{name}))) && handles.yestoallFlag
+           handles.t = load([name,'.mat']);
+                handles.t = handles.t.Results;
+                if ~isempty(handles.t.QPparams)
+                    handles.filterorder.String = strrep(handles.t.QPparams,'filtfilt Order ','');
+                end
+                if isfield(handles.t,'QPposParam')
+                    handles.posFiltOrder.String = num2str(handles.t.QPposParam(1));
+                    handles.posFiltLeng.String = num2str(handles.t.QPposParam(2));
+                end
+                if ~isempty(handles.cycle_list.String) && ~strcmp(handles.cycle_list.String{1},'')
+                    handles.cycle_list.String = [''];
+                end
+                for cycText = 1:length(handles.t.stim_inds)
+                    handles.cycle_list.String = [handles.cycle_list.String;{['Cycle ',num2str(cycText)]}];
+                end
+                handles.cycle_list.String= [handles.cycle_list.String;{'None'}];
+                handles.cycles_toSave.String = ['20 Cycles to Save'];
+                if length(handles.t.cyclist) == 20
+                 handles.cycle_list.Value = 21;
+                else
+                handles.cycle_list.Value = find(~ismember(1:length(handles.t.stim_inds),handles.t.cyclist));
+                end
+                if handles.t.FacialNerve
+                    handles.FacialNerve = 1;
+                    handles.facial_nerve.BackgroundColor = 'Red';
+                end
+                %handles.t = [];
+                newList = 0;
+       elseif any(find(contains({handles.listing.name},{name})))
+           newList = 0;
+       else
+           newList = 1;
+       end
     handles.segment(handles.segNum).LE_LARP=handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_LARP;
     handles.segment(handles.segNum).LE_RALP=handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_RALP;
     handles.segment(handles.segNum).LE_Z=handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Z;
+    handles.segment(handles.segNum).LE_X=handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_X;
+    handles.segment(handles.segNum).LE_Y=handles.RootData(handles.segNum).VOMA_data.Data_LE_Vel_Y;
     handles.segment(handles.segNum).RE_LARP=handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_LARP;
     handles.segment(handles.segNum).RE_RALP=handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_RALP;
     handles.segment(handles.segNum).RE_Z=handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z;
+    handles.segment(handles.segNum).RE_X=handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X;
+    handles.segment(handles.segNum).RE_Y=handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y;
     
     handles.segment(handles.segNum).LEp_X=handles.RootData(handles.segNum).VOMA_data.Data_LE_Pos_X;
     handles.segment(handles.segNum).LEp_Y=handles.RootData(handles.segNum).VOMA_data.Data_LE_Pos_Y;
@@ -559,22 +705,25 @@ handles.files_remaining.String = num2str(handles.segNum);
     rmfield(handles.segment(handles.segNum),'txt');
         end
     end
+    if newList
+        if ~isempty(handles.cycle_list.String) && ~strcmp(handles.cycle_list.String{1},'')
+               handles.cycle_list.String = [''];
+           end
+           for cycText = 1:length(handles.segment(handles.segNum).stim_inds)
+               handles.cycle_list.String = [handles.cycle_list.String;{['Cycle ',num2str(cycText)]}];
+           end
+           handles.cycle_list.String= [handles.cycle_list.String;{'None'}];
+           handles.cycles_toSave.String = [num2str(length(handles.segment(handles.segNum).stim_inds)),' Cycles to Save'];
+           handles.output_filename.String = name;
+           handles.cycle_list.Value = length(handles.segment(handles.segNum).stim_inds)+1;
+    end
     handles = plotVel(handles);
     
-    if ~isempty(handles.cycle_list.String) && ~strcmp(handles.cycle_list.String{1},'')
-    handles.cycle_list.String = [''];
-    end
-    for cycText = 1:length(handles.segment(handles.segNum).stim_inds)
-        handles.cycle_list.String = [handles.cycle_list.String;{['Cycle ',num2str(cycText)]}];
-    end
-handles.cycle_list.String= [handles.cycle_list.String;{'None'}];
-    handles.cycles_toSave.String = ['20 Cycles to Save'];
-    handles.output_filename.String = name;
-    handles.cycle_list.Value = 21;
     
     handles.redoFlag = 0;
     handles = plotVel(handles);
 handles = cycle_list_Callback(handles.cycle_list, [], handles);
+
     end
    end
    
@@ -589,6 +738,18 @@ handles = cycle_list_Callback(handles.cycle_list, [], handles);
         handles.Results.rz_cyc = [];
         handles.Results.rx_cyc = [];
         handles.Results.ry_cyc = [];
+        
+        handles.Results.SecondM.ll_cyc = [];
+        handles.Results.SecondM.lr_cyc = [];
+        handles.Results.SecondM.lz_cyc = [];
+        handles.Results.SecondM.lx_cyc = [];
+        handles.Results.SecondM.ly_cyc = [];
+        handles.Results.SecondM.rl_cyc = [];
+        handles.Results.SecondM.rr_cyc = [];
+        handles.Results.SecondM.rz_cyc = [];
+        handles.Results.SecondM.rx_cyc = [];
+        handles.Results.SecondM.ry_cyc = [];
+        
         handles.Results.stim = [];
         
         for processing = 1:length(handles.segment(handles.segNum).txt)
@@ -624,7 +785,6 @@ handles = cycle_list_Callback(handles.cycle_list, [], handles);
                     handles.Results.rz_cyc = [handles.Results.rz_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Z(bound)];
                     handles.Results.rx_cyc = [handles.Results.rx_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_X(bound)];
                     handles.Results.ry_cyc = [handles.Results.ry_cyc; handles.RootData(handles.segNum).VOMA_data.Data_RE_Vel_Y(bound)];
-                    handles.Results.stim = [handles.Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
                     
                 end
             else
@@ -639,27 +799,59 @@ handles = cycle_list_Callback(handles.cycle_list, [], handles);
                             toUseLELARP = handles.corLELARP;
                             toUseLERALP = handles.corLERALP;
                             toUseLEZ = handles.corLEZ;
+                            toUseLEX = handles.corLEX;
+                            toUseLEY = handles.corLEY;
+                            toUseRELARP = handles.corRELARP;
+                            toUseRERALP = handles.corRERALP;
+                            toUseREZ = handles.corREZ;
+                            toUseREX = handles.corREX;
+                            toUseREY = handles.corREY;
+                            
+                            handles.Results.SecondM.ll_cyc = [handles.Results.SecondM.ll_cyc; handles.corLELARPT(bound)'];
+                    handles.Results.SecondM.lr_cyc = [handles.Results.SecondM.lr_cyc; handles.corLERALPT(bound)'];
+                    handles.Results.SecondM.lz_cyc = [handles.Results.SecondM.lz_cyc; handles.corLEZT(bound)'];
+                    handles.Results.SecondM.lx_cyc = [handles.Results.SecondM.lx_cyc; handles.corLEXT(bound)'];
+                    handles.Results.SecondM.ly_cyc = [handles.Results.SecondM.ly_cyc; handles.corLEYT(bound)'];
+                    handles.Results.SecondM.rl_cyc = [handles.Results.SecondM.rl_cyc; handles.corRELARPT(bound)'];
+                    handles.Results.SecondM.rr_cyc = [handles.Results.SecondM.rr_cyc; handles.corRERALPT(bound)'];
+                    handles.Results.SecondM.rz_cyc = [handles.Results.SecondM.rz_cyc; handles.corREZT(bound)'];
+                    handles.Results.SecondM.rx_cyc = [handles.Results.SecondM.rx_cyc; handles.corREXT(bound)'];
+                    handles.Results.SecondM.ry_cyc = [handles.Results.SecondM.ry_cyc; handles.corREYT(bound)'];
                         else
                             toUseLELARP = handles.filtLELARP;
                             toUseLERALP = handles.filtLERALP;
                             toUseLEZ = handles.filtLEZ;
+                            toUseLEX = handles.filtLEX;
+                            toUseLEY = handles.filtLEY;
+                            toUseRELARP = handles.filtRELARP;
+                            toUseRERALP = handles.filtRERALP;
+                            toUseREZ = handles.filtREZ;
+                            toUseREX = handles.filtREX;
+                            toUseREY = handles.filtREY;
                         end
                     else
                         toUseLELARP = handles.segment(handles.segNum).LE_LARP;
                         toUseLERALP = handles.segment(handles.segNum).LE_RALP;
                         toUseLEZ = handles.segment(handles.segNum).LE_Z;
+                        toUseLEX = handles.segment(handles.segNum).LE_X;
+                        toUseLEY = handles.segment(handles.segNum).LE_Y;
+                        toUseRELARP = handles.segment(handles.segNum).RE_LARP;
+                        toUseRERALP = handles.segment(handles.segNum).RE_RALP;
+                        toUseREZ = handles.segment(handles.segNum).RE_Z;
+                        toUseREX = handles.segment(handles.segNum).RE_X;
+                        toUseREY = handles.segment(handles.segNum).RE_Y;
                         
                     end
                     handles.Results.ll_cyc = [handles.Results.ll_cyc; toUseLELARP(bound)'];
                     handles.Results.lr_cyc = [handles.Results.lr_cyc; toUseLERALP(bound)'];
                     handles.Results.lz_cyc = [handles.Results.lz_cyc; toUseLEZ(bound)'];
-                    handles.Results.lx_cyc = [handles.Results.lx_cyc; handles.filtLEX(bound)'];
-                    handles.Results.ly_cyc = [handles.Results.ly_cyc; handles.filtLEY(bound)'];
-                    handles.Results.rl_cyc = [handles.Results.rl_cyc; handles.filtRELARP(bound)'];
-                    handles.Results.rr_cyc = [handles.Results.rr_cyc; handles.filtRERALP(bound)'];
-                    handles.Results.rz_cyc = [handles.Results.rz_cyc; handles.filtREZ(bound)'];
-                    handles.Results.rx_cyc = [handles.Results.rx_cyc; handles.filtREX(bound)'];
-                    handles.Results.ry_cyc = [handles.Results.ry_cyc; handles.filtREY(bound)'];
+                    handles.Results.lx_cyc = [handles.Results.lx_cyc; toUseLEX(bound)'];
+                    handles.Results.ly_cyc = [handles.Results.ly_cyc; toUseLEY(bound)'];
+                    handles.Results.rl_cyc = [handles.Results.rl_cyc; toUseRELARP(bound)'];
+                    handles.Results.rr_cyc = [handles.Results.rr_cyc; toUseRERALP(bound)'];
+                    handles.Results.rz_cyc = [handles.Results.rz_cyc; toUseREZ(bound)'];
+                    handles.Results.rx_cyc = [handles.Results.rx_cyc; toUseREX(bound)'];
+                    handles.Results.ry_cyc = [handles.Results.ry_cyc; toUseREY(bound)'];
                     handles.Results.stim = [handles.Results.stim; handles.RootData(handles.segNum).VOMA_data.Stim_Trace(bound)];
                 end
             end
@@ -685,10 +877,32 @@ handles = cycle_list_Callback(handles.cycle_list, [], handles);
         handles.Results.rx_cycstd = std(handles.Results.rx_cyc);
         handles.Results.ry_cycavg = mean(handles.Results.ry_cyc);
         handles.Results.ry_cycstd = std(handles.Results.ry_cyc);
+        
+        handles.Results.SecondM.ll_cycavg = mean(handles.Results.SecondM.ll_cyc);
+        handles.Results.SecondM.ll_cycstd = std(handles.Results.SecondM.ll_cyc);
+        handles.Results.SecondM.lr_cycavg = mean(handles.Results.SecondM.lr_cyc);
+        handles.Results.SecondM.lr_cycstd = std(handles.Results.SecondM.lr_cyc);
+        handles.Results.SecondM.lz_cycavg = mean(handles.Results.SecondM.lz_cyc);
+        handles.Results.SecondM.lz_cycstd = std(handles.Results.SecondM.lz_cyc);
+        handles.Results.SecondM.lx_cycavg = mean(handles.Results.SecondM.lx_cyc);
+        handles.Results.SecondM.lx_cycstd = std(handles.Results.SecondM.lx_cyc);
+        handles.Results.SecondM.ly_cycavg = mean(handles.Results.SecondM.ly_cyc);
+        handles.Results.SecondM.ly_cycstd = std(handles.Results.SecondM.ly_cyc);
+        handles.Results.SecondM.rl_cycavg = mean(handles.Results.SecondM.rl_cyc);
+        handles.Results.SecondM.rl_cycstd = std(handles.Results.SecondM.rl_cyc);
+        handles.Results.SecondM.rr_cycavg = mean(handles.Results.SecondM.rr_cyc);
+        handles.Results.SecondM.rr_cycstd = std(handles.Results.SecondM.rr_cyc);
+        handles.Results.SecondM.rz_cycavg = mean(handles.Results.SecondM.rz_cyc);
+        handles.Results.SecondM.rz_cycstd = std(handles.Results.SecondM.rz_cyc);
+        handles.Results.SecondM.rx_cycavg = mean(handles.Results.SecondM.rx_cyc);
+        handles.Results.SecondM.rx_cycstd = std(handles.Results.SecondM.rx_cyc);
+        handles.Results.SecondM.ry_cycavg = mean(handles.Results.SecondM.ry_cyc);
+        handles.Results.SecondM.ry_cycstd = std(handles.Results.SecondM.ry_cyc);
+        
         handles.Results.Fs =  handles.RootData(handles.segNum).VOMA_data.Fs;
 
 function plot_cyc_avg(handles)
-axes(handles.cycavg)
+set(handles.figure1,'CurrentAxes',handles.cycavg)
 lstyle = '-';
 cla(handles.cycavg)        
 hold(handles.cycavg,'on')
@@ -723,6 +937,22 @@ p.ll = shadedErrorBar([1:length(handles.Results.ll_cycavg)]/handles.Results.Fs,h
             handles.cycavg.Children(10).YData(1:40) handles.cycavg.Children(11).YData(1:40)];
         upper = max(vals);
         lower = min(vals);
+        end
+        
+        if isfield(handles.segment,'pullIndsL')
+        cycLength = length(handles.segment(handles.segNum).pullIndsL);
+        for qt = 1:cycLength
+            if ~any(qt == handles.cycle_list.Value)
+                x = (handles.segment(handles.segNum).pullIndsL(qt)-handles.segment(handles.segNum).stim_inds(qt))/handles.Results.Fs;
+                yL = handles.segment(handles.segNum).Misalign3DL(qt,1);
+                yR = handles.segment(handles.segNum).Misalign3DL(qt,2);
+                yZ = handles.segment(handles.segNum).Misalign3DL(qt,3);
+                text(x,yL,num2str(qt),'Color','green','Fontsize',14)
+                text(x,yR,num2str(qt),'Color','blue','Fontsize',14)
+                text(x,yZ,num2str(qt),'Color','red','Fontsize',14)
+                text(0.11,handles.rotSign*handles.segment(handles.segNum).maxMagL(qt),num2str(qt),'Color','black','Fontsize',14)
+            end
+        end
         end
 end
 if handles.REye.Value
@@ -873,7 +1103,7 @@ handles.segment(handles.segNum).REp_X = sgolayfilt(handles.RootData(handles.segN
 handles.segment(handles.segNum).REp_Y = sgolayfilt(handles.RootData(handles.segNum).VOMA_data.Data_RE_Pos_Y,str2num(handles.posFiltOrder.String),str2num(handles.posFiltLeng.String));
 handles.segment(handles.segNum).REp_Z = sgolayfilt(handles.RootData(handles.segNum).VOMA_data.Data_RE_Pos_Z,str2num(handles.posFiltOrder.String),str2num(handles.posFiltLeng.String));
 
-axes(handles.angPos)
+set(handles.figure1,'CurrentAxes',handles.angPos)
 cla(handles.angPos)
 hold(handles.angPos,'on')
 if handles.LEye.Value
@@ -965,7 +1195,7 @@ handles.segment(handles.segNum).LE_LARP=handles.RootData(handles.segNum).VOMA_da
     handles.segment(handles.segNum).REp_Z=handles.RootData(handles.segNum).VOMA_data.Data_RE_Pos_Z;
     handles.filtFlag = 0;
     handles.PosfiltFlag = 0;
-    
+    set(handles.figure1,'CurrentAxes',handles.angPos)
     cla(handles.angPos)    
     hold(handles.angPos,'on')
     if handles.LEye.Value
@@ -1015,7 +1245,7 @@ else
 end
 cla(handles.axes1)
 reset(handles.axes1);
-axes(handles.axes1)
+set(handles.figure1,'CurrentAxes',handles.axes1)
 hold(handles.axes1,'on')
 switch handles.rawV.Value
     case 1
@@ -1040,21 +1270,36 @@ if handles.filtFlag
         toUseLELARP = handles.corLELARP;
         toUseLERALP = handles.corLERALP;
         toUseLEZ = handles.corLEZ;
+        toUseLEX = handles.corLEX;
+        toUseLEY = handles.corLEY;
+        toUseRELARP = handles.corRELARP;
+        toUseRERALP = handles.corRERALP;
+        toUseREZ = handles.corREZ;
+        toUseREX = handles.corREX;
+        toUseREY = handles.corREY;
     else
         toUseLELARP = handles.filtLELARP;
         toUseLERALP = handles.filtLERALP;
         toUseLEZ = handles.filtLEZ;
+        toUseLEX = handles.filtLEX;
+        toUseLEY = handles.filtLEY;
         toUseRELARP = handles.filtRELARP;
         toUseRERALP = handles.filtRERALP;
         toUseREZ = handles.filtREZ;
+        toUseREX = handles.filtREX;
+        toUseREY = handles.filtREY;
     end
 else
     toUseLELARP = handles.segment(handles.segNum).LE_LARP;
     toUseLERALP = handles.segment(handles.segNum).LE_RALP;
     toUseLEZ = handles.segment(handles.segNum).LE_Z;
+    toUseLEX = handles.segment(handles.segNum).LE_X;
+    toUseLEY = handles.segment(handles.segNum).LE_Y;
     toUseRELARP = handles.segment(handles.segNum).RE_LARP;
     toUseRERALP = handles.segment(handles.segNum).RE_RALP;
     toUseREZ = handles.segment(handles.segNum).RE_Z;
+    toUseREX = handles.segment(handles.segNum).RE_X;
+    toUseREY = handles.segment(handles.segNum).RE_Y;
     
 end
 
@@ -1076,14 +1321,48 @@ plot(handles.axes1,repmat(handles.segment(handles.segNum).stimT(handles.segment(
 handles.toUseLELARP = toUseLELARP;
 handles.toUseLERALP = toUseLERALP;
 handles.toUseLEZ = toUseLEZ;
+handles.toUseLEX = toUseLEX;
+handles.toUseLEY = toUseLEY;
+handles.toUseRELARP = toUseRELARP;
+handles.toUseRERALP = toUseRERALP;
+handles.toUseREZ = toUseREZ;
+handles.toUseREX = toUseREX;
+handles.toUseREY = toUseREY;
                 if contains(handles.vomaFile,'LARP')
                     handles.pureRot = [1 0 0];
+                    handles.stimCanal = 1;
+                    if contains(handles.vomaFile,'Nancy')
+                        handles.rotSign  = 1;
+                    elseif contains(handles.vomaFile,'Yoda')
+                        handles.rotSign  = -1;
+                    elseif contains(handles.vomaFile,'GiGi')
+                        handles.rotSign  = 1;
+                    end
                 elseif contains(handles.vomaFile,'RALP')
                     handles.pureRot = [0 1 0];
+                    handles.stimCanal = 2';
+                    if contains(handles.vomaFile,'Nancy')
+                        handles.rotSign  = 1;
+                    elseif contains(handles.vomaFile,'Yoda')
+                        handles.rotSign  = -1;
+                    elseif contains(handles.vomaFile,'GiGi')
+                        handles.rotSign  = 1;
+                    end
                 elseif contains(handles.vomaFile,'LHRH')
                     handles.pureRot = [0 0 1];
+                    handles.stimCanal = 3;
+                    if contains(handles.vomaFile,'Nancy')
+                        handles.rotSign  = -1;
+                    elseif contains(handles.vomaFile,'Yoda')
+                        handles.rotSign  = 1;
+                    elseif contains(handles.vomaFile,'GiGi')
+                        handles.rotSign  = -1;
+                    end
                 end
-handles = MagThreshL(handles,[]);
+
+
+if handles.LEye.Value
+    handles = MagThreshL(handles,[]);
 plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsL),toUseLELARP(handles.segment(handles.segNum).pullIndsL),'k*','MarkerSize',8);
 plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsL),toUseLERALP(handles.segment(handles.segNum).pullIndsL),'k*','MarkerSize',8);
 plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsL),toUseLEZ(handles.segment(handles.segNum).pullIndsL),'k*','MarkerSize',8);
@@ -1091,6 +1370,18 @@ handles.avgMag.String = num2str(mean(handles.segment(handles.segNum).maxMagL));
 handles.avgMis.String = num2str(mean(handles.segment(handles.segNum).MisalignL));
 handles.magStd.String = num2str(std(handles.segment(handles.segNum).maxMagL));
 handles.misStd.String = num2str(std(handles.segment(handles.segNum).MisalignL));
+end
+if handles.REye.Value
+    handles = MagThreshR(handles,[]);
+    plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsR),toUseRELARP(handles.segment(handles.segNum).pullIndsR),'k*','MarkerSize',8);
+plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsR),toUseRERALP(handles.segment(handles.segNum).pullIndsR),'k*','MarkerSize',8);
+plot(handles.axes1,handles.segment(handles.segNum).t(handles.segment(handles.segNum).pullIndsR),toUseREZ(handles.segment(handles.segNum).pullIndsR),'k*','MarkerSize',8);
+handles.avgMagR.String = num2str(mean(handles.segment(handles.segNum).maxMagR));
+handles.avgMisR.String = num2str(mean(handles.segment(handles.segNum).MisalignR));
+handles.magStdR.String = num2str(std(handles.segment(handles.segNum).maxMagR));
+handles.misStdR.String = num2str(std(handles.segment(handles.segNum).MisalignR));
+end
+    
 
 if currColorFlag
     for cycText = 1:length(handles.segment(handles.segNum).stim_inds)
@@ -1143,14 +1434,58 @@ if handles.nystagCorr.Value
     handles.corLELARP = [];
 handles.corLERALP = [];
 handles.corLEZ = [];
+handles.corLEX = [];
+handles.corLEY = [];
+handles.corRELARP = [];
+handles.corRERALP = [];
+handles.corREZ = [];
+handles.corREX = [];
+handles.corREY = [];
+
+    handles.corLELARPT = [];
+handles.corLERALPT = [];
+handles.corLEZT = [];
+handles.corLEXT = [];
+handles.corLEYT = [];
+handles.corRELARPT = [];
+handles.corRERALPT = [];
+handles.corREZT = [];
+handles.corREXT = [];
+handles.corREYT = [];
 if handles.filtFlag
-    handles.corLELARP = handles.filtLELARP;
+            handles.corLELARP = handles.filtLELARP;
             handles.corLERALP = handles.filtLERALP;
             handles.corLEZ = handles.filtLEZ;
+            handles.corLEX = handles.filtLEX;
+            handles.corLEY = handles.filtLEY;
+            handles.corRELARP = handles.filtRELARP;
+            handles.corRERALP = handles.filtRERALP;
+            handles.corREZ = handles.filtREZ;
+            handles.corREX = handles.filtREX;
+            handles.corREY = handles.filtREY;
+            
+            handles.corLELARPT = handles.filtLELARP;
+            handles.corLERALPT = handles.filtLERALP;
+            handles.corLEZT = handles.filtLEZ;
+            handles.corLEXT = handles.filtLEX;
+            handles.corLEYT = handles.filtLEY;
+            handles.corRELARPT = handles.filtRELARP;
+            handles.corRERALPT = handles.filtRERALP;
+            handles.corREZT = handles.filtREZ;
+            handles.corREXT = handles.filtREX;
+            handles.corREYT = handles.filtREY;
+            
 else
-    handles.corLELARP = handles.segment(handles.segNum).LE_LARP;
+            handles.corLELARP = handles.segment(handles.segNum).LE_LARP;
             handles.corLERALP = handles.segment(handles.segNum).LE_RALP;
             handles.corLEZ = handles.segment(handles.segNum).LE_Z;
+            handles.corLEX = handles.segment(handles.segNum).LE_X;
+            handles.corLEY = handles.segment(handles.segNum).LE_Y;
+            handles.corRELARP = handles.segment(handles.segNum).RE_LARP;
+            handles.corRERALP = handles.segment(handles.segNum).RE_RALP;
+            handles.corREZ = handles.segment(handles.segNum).RE_Z;
+            handles.corREX = handles.segment(handles.segNum).RE_X;
+            handles.corREY = handles.segment(handles.segNum).RE_Y;
 end
     for i = 1:length(handles.segment(handles.segNum).stim_inds)
         if handles.filtFlag
@@ -1159,24 +1494,66 @@ end
             preL = handles.filtLELARP(ind-31:ind-1);
             preR = handles.filtLERALP(ind-31:ind-1);
             preZ = handles.filtLEZ(ind-31:ind-1);
+            preX = handles.filtLEX(ind-31:ind-1);
+            preY = handles.filtLEX(ind-31:ind-1);
+            preRL = handles.filtRELARP(ind-31:ind-1);
+            preRR = handles.filtRERALP(ind-31:ind-1);
+            preRZ = handles.filtREZ(ind-31:ind-1);
+            preRX = handles.filtREX(ind-31:ind-1);
+            preRY = handles.filtREX(ind-31:ind-1);
             [mag, imag] = max(sqrt((preL).^2+(preR).^2+(preZ).^2));
-            handles.corLELARP(ind:ind+100) = handles.filtLELARP(ind:ind+100)-preL(imag);
-            handles.corLERALP(ind:ind+100) = handles.filtLERALP(ind:ind+100)-preR(imag);
-            handles.corLEZ(ind:ind+100) = handles.filtLEZ(ind:ind+100)-preZ(imag);
+            handles.corLELARP(ind-1:ind+100) = handles.filtLELARP(ind-1:ind+100)-preL(imag);
+            handles.corLERALP(ind-1:ind+100) = handles.filtLERALP(ind-1:ind+100)-preR(imag);
+            handles.corLEZ(ind-1:ind+100) = handles.filtLEZ(ind-1:ind+100)-preZ(imag);
+            handles.corLEX(ind-1:ind+100) = handles.filtLEX(ind-1:ind+100)-preX(imag);
+            handles.corLEY(ind-1:ind+100) = handles.filtLEY(ind-1:ind+100)-preY(imag);
+            [mag, imag] = max(sqrt((preRL).^2+(preRR).^2+(preRZ).^2));
+            handles.corRELARP(ind-1:ind+100) = handles.filtRELARP(ind-1:ind+100)-preRL(imag);
+            handles.corRERALP(ind-1:ind+100) = handles.filtRERALP(ind-1:ind+100)-preRR(imag);
+            handles.corREZ(ind-1:ind+100) = handles.filtREZ(ind-1:ind+100)-preRZ(imag);
+            handles.corREX(ind-1:ind+100) = handles.filtREX(ind-1:ind+100)-preRX(imag);
+            handles.corREY(ind-1:ind+100) = handles.filtREY(ind-1:ind+100)-preRY(imag);
+            
+            handles.corLELARPT(ind-1:ind+100) = handles.filtLELARP(ind-1:ind+100)-mean(preL);
+            handles.corLERALPT(ind-1:ind+100) = handles.filtLERALP(ind-1:ind+100)-mean(preR);
+            handles.corLEZT(ind-1:ind+100) = handles.filtLEZ(ind-1:ind+100)-mean(preZ);
+            handles.corLEXT(ind-1:ind+100) = handles.filtLEX(ind-1:ind+100)-mean(preX);
+            handles.corLEYT(ind-1:ind+100) = handles.filtLEY(ind-1:ind+100)-mean(preY);
+            handles.corRELARPT(ind-1:ind+100) = handles.filtRELARP(ind-1:ind+100)-mean(preRL);
+            handles.corRERALPT(ind-1:ind+100) = handles.filtRERALP(ind-1:ind+100)-mean(preRR);
+            handles.corREZT(ind-1:ind+100) = handles.filtREZ(ind-1:ind+100)-mean(preRZ);
+            handles.corREXT(ind-1:ind+100) = handles.filtREX(ind-1:ind+100)-mean(preRX);
+            handles.corREYT(ind-1:ind+100) = handles.filtREY(ind-1:ind+100)-mean(preRY);
+            handles = SecondMethodResults(handles);
         else
             
             ind = handles.segment(handles.segNum).stim_inds(i);
             preL = handles.segment(handles.segNum).LE_LARP(ind-31:ind-1);
             preR = handles.segment(handles.segNum).LE_RALP(ind-31:ind-1);
             preZ = handles.segment(handles.segNum).LE_Z(ind-31:ind-1);
+            preX = handles.segment(handles.segNum).LE_X(ind-31:ind-1);
+            preY = handles.segment(handles.segNum).LE_Y(ind-31:ind-1);
+            preRL = handles.segment(handles.segNum).RE_LARP(ind-31:ind-1);
+            preRR = handles.segment(handles.segNum).RE_RALP(ind-31:ind-1);
+            preRZ = handles.segment(handles.segNum).RE_Z(ind-31:ind-1);
+            preRX = handles.segment(handles.segNum).RE_X(ind-31:ind-1);
+            preRY = handles.segment(handles.segNum).RE_Y(ind-31:ind-1);
             [mag, imag] = max(sqrt((preL).^2+(preR).^2+(preZ).^2));
             handles.corLELARP(ind:ind+100) = handles.segment(handles.segNum).LE_LARP(ind:ind+100)-preL(imag);
             handles.corLERALP(ind:ind+100) = handles.segment(handles.segNum).LE_RALP(ind:ind+100)-preR(imag);
             handles.corLEZ(ind:ind+100) = handles.segment(handles.segNum).LE_Z(ind:ind+100)-preZ(imag);
-
+            handles.corLEX(ind:ind+100) = handles.segment(handles.segNum).LE_X(ind:ind+100)-preX(imag);
+            handles.corLEY(ind:ind+100) = handles.segment(handles.segNum).LE_Y(ind:ind+100)-preY(imag);
+            [mag, imag] = max(sqrt((preRL).^2+(preRR).^2+(preRZ).^2));
+            handles.corRELARP(ind:ind+100) = handles.segment(handles.segNum).RE_LARP(ind:ind+100)-preRL(imag);
+            handles.corRERALP(ind:ind+100) = handles.segment(handles.segNum).RE_RALP(ind:ind+100)-preRR(imag);
+            handles.corREZ(ind:ind+100) = handles.segment(handles.segNum).RE_Z(ind:ind+100)-preRZ(imag);
+            handles.corREX(ind:ind+100) = handles.segment(handles.segNum).RE_X(ind:ind+100)-preRX(imag);
+            handles.corREY(ind:ind+100) = handles.segment(handles.segNum).RE_Y(ind:ind+100)-preRY(imag);
         end
  
     end
+    
 else
 end
 
@@ -1272,3 +1649,146 @@ function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+
+
+function avgMagR_Callback(hObject, eventdata, handles)
+% hObject    handle to avgMagR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of avgMagR as text
+%        str2double(get(hObject,'String')) returns contents of avgMagR as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function avgMagR_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to avgMagR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function magStdR_Callback(hObject, eventdata, handles)
+% hObject    handle to magStdR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of magStdR as text
+%        str2double(get(hObject,'String')) returns contents of magStdR as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function magStdR_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to magStdR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function avgMisR_Callback(hObject, eventdata, handles)
+% hObject    handle to avgMisR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of avgMisR as text
+%        str2double(get(hObject,'String')) returns contents of avgMisR as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function avgMisR_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to avgMisR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function misStdR_Callback(hObject, eventdata, handles)
+% hObject    handle to misStdR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of misStdR as text
+%        str2double(get(hObject,'String')) returns contents of misStdR as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function misStdR_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to misStdR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in RearImplant.
+function RearImplant_Callback(hObject, eventdata, handles)
+% hObject    handle to RearImplant (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RearImplant
+if handles.LearImplant.Value
+    handles.RearImplant.Value = 0;
+end
+    handles.LearImplant.BackgroundColor = [0.94 0.94 0.94];
+    handles.RearImplant.BackgroundColor = [0.94 0.94 0.94];
+guidata(hObject, handles);
+
+% --- Executes on button press in LearImplant.
+function LearImplant_Callback(hObject, eventdata, handles)
+% hObject    handle to LearImplant (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of LearImplant
+if handles.RearImplant.Value
+    handles.LearImplant.Value = 0;
+end
+    handles.LearImplant.BackgroundColor = [0.94 0.94 0.94];
+    handles.RearImplant.BackgroundColor = [0.94 0.94 0.94];
+guidata(hObject, handles);
+
+
+% --- Executes on selection change in ecombsList.
+function ecombsList_Callback(hObject, eventdata, handles)
+% hObject    handle to ecombsList (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns ecombsList contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ecombsList
+
+
+% --- Executes during object creation, after setting all properties.
+function ecombsList_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ecombsList (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

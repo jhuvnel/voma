@@ -131,7 +131,6 @@ if k==1
     handles.avgMagPlot(i,j).normalized(l) = figure('units','normalized','outerposition',[0 0 1 1]);
     handles.avgMisalignPlot(i,j).normalized(l) = figure('units','normalized','outerposition',[0 0 1 1]);
 end
-
 if handles.LEyeFlag.Value + handles.REyeFlag.Value == 2
     handles.fig(i,j).normalized(l).avgMagaxL(k) = subtightplot(2,length(handles.axE),k,[0.015 0.015],[0.10 0.075],[.05 .05],'Parent', handles.avgMagPlot(i,j).normalized(l));
     handles.fig(i,j).normalized(l).avgMagaxR(k) = subtightplot(2,length(handles.axE),k+length(handles.axE),[0.015 0.015],[0.10 0.075],[.05 .05],'Parent', handles.avgMagPlot(i,j).normalized(l));
@@ -397,6 +396,7 @@ if l == 1
 handles.plottedInds = [handles.plottedInds toplotInds];
 handles.allInds = [handles.allInds handles.plottedInds];
 end
+c2Use = 
 if handles.LEyeFlag.Value
     figure(handles.avgMagPlot(i,j).normalized(l))
     set( handles.avgMagPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMagaxL(k));

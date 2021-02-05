@@ -343,6 +343,7 @@ handles.process.BackgroundColor = 'y';
 handles.params = [];
 handles.avgMisalignPlot3DP2 = [];
 handles.avgMisalignPlot3Dipg = [];
+handles.savePos = 1;
 if handles.coildata.Value
     handles = plotCond(handles);
     handles.allInds = [];
@@ -361,8 +362,9 @@ if handles.coildata.Value
                         
                     end
                     if handles.curr.Value
-                        handles = plotCurrentAsX(handles,i,j,k,l);
-                        
+                        %handles = plotCurrentAsX(handles,i,j,k,l);
+                        %handles = plotCurrentAsXAllOnOne(handles,i,j,k,l);
+                        handles = plotCurrentAsXSaveComp(handles,i,j,k,l);
                     elseif handles.p1d.Value
                     elseif handles.p2d.Value && handles.ipg.Value
                         handles = plotP2dIPGasX_new(handles,i,j,k,l);
@@ -373,6 +375,43 @@ if handles.coildata.Value
     end
 elseif handles.ahit.Value
 end
+if isfile('Plots.mat')
+    load('Plots.mat')
+    for q = 1:length(handles.saved)
+        eqA = [];
+        for q2 = 1:length(Plots.saved)
+            if isequal(handles.saved(q),Plots.saved(q2))
+                eqA = [eqA 1];
+            else
+                eqA = [eqA 0];
+            end
+        end
+        if ~(any(eqA))
+            a = handles.saved(q).animal;
+            d = handles.saved(q).date;
+            fd = handles.saved(q).dir;
+            s = handles.saved(q).stim;
+            r = handles.saved(q).ref;
+            e = handles.saved(q).ePlot;
+            Plots.(a).(d).(fd).(s).(r).(e) = handles.(a).(d).(fd).(s).(r).(e);
+            Plots.saved = [Plots.saved handles.saved(q)];
+            if q == length(handles.saved)
+                save('Plots.mat','Plots')
+            end
+        end
+        
+    end
+else
+    animal = handles.configByAnimal.String{handles.configByAnimal.Value};
+    Plots = struct();
+    Plots.(animal) = handles.(animal);
+    Plots.saved = handles.saved;
+    save('Plots.mat','Plots')
+end
+close(handles.fBar)
+close(handles.avgMisalignPlot3D)
+    close(handles.avgMagPlot)
+    close(handles.avgMisalignPlot)
 handles.process.BackgroundColor = 'g';
 pause(1)
 handles.process.BackgroundColor = [.94 .94 .94];
@@ -402,7 +441,12 @@ switch handles.configByAnimal.Value
         handles.lhrhelectrodes.Value = [4 5 6];
         handles.commoncrus.Value = [11];
         handles.distant.Value = [10];
-    case 3 %Nancy
+    case 3 %Nancy Left Ear
+         handles.larpelectrodes.Value = [4 5 6 14];
+        handles.ralpelectrodes.Value = [1 2 3];
+       handles.lhrhelectrodes.Value = [7 8 9 15];
+         handles.commoncrus.Value = [11 12 13];
+          handles.distant.Value = [10];
     case 4 %Yoda Right Ear
         handles.larpelectrodes.Value = [1 2 3];
         handles.ralpelectrodes.Value = [4 5 6 14];

@@ -335,7 +335,8 @@ else % i.e., the user did NOT provide any angular position data into the routine
             % Extract stimulus signals
             Var_x081 = d(:,13)*ADCconv*AcutrolAngPosCalib;
             Var_x083 = d(:,14)*ADCconv*AcutrolAngVelCalib;
-            
+            Var_x085 = d(:,15)*ADCconv*AcutrolAngPosCalib;
+            Var_x087 = d(:,16)*ADCconv*AcutrolAngVelCalib;
             
             % Extracting the LE coil data
             rawData_L = d(:,1:6);
@@ -839,7 +840,12 @@ end
 if exist('Var_x083','var')
     Data.Var_x083 = Var_x083;
 end
-
+if exist('Var_x085','var')
+    Data.Var_x085 = Var_x085;
+end
+if exist('Var_x087','var')
+    Data.Var_x087 = Var_x087;
+end
 if exist('ElecStimTrig','var')
     Data.ElecStimTrig = ElecStimTrig;
 end

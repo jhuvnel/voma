@@ -70,7 +70,7 @@ handles.RootData = varargin{2};
 handles.curr_file = varargin{3};
 handles.pathname = varargin{4};
 handles.filename = varargin{5};
-
+handles.params.pathtosave = varargin{6};
 if isrow(handles.CurrData.VOMA_data.Stim_t)
     handles.CurrData.VOMA_data.Stim_t = handles.CurrData.VOMA_data.Stim_t';
 end
@@ -194,7 +194,9 @@ if r(2)==1
                     set(handles.cycle_table,'Data',[handles.Stimulus(1,handles.stim_ind(:,1))' handles.Stimulus(1,handles.stim_ind(:,2))']);
                     %         set(handles.cycle_table,'Data',[handles.Stimulus(1,handles.stim_ind(:,1))]');
                 otherwise
-                    
+                    if iscell(handles.Stimulus)
+                        handles.Stimulus = [handles.Stimulus{1}];
+                    end
                     plot(handles.stim_plot,handles.Time,handles.Stimulus,'k')
                     hold on
                     plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.Stimulus(handles.stim_ind(:,1)),'rx')
@@ -370,10 +372,19 @@ else
             hV_Z = 2;
     end
 end
-% Meg Changed 9/24/2019
-if handles.CurrData.VOMA_data.Parameters.DAQ_code == 7 %Moog Coils
-    handles.mainStim = filtfilt(ones(1,50)/50,1,handles.mainStim);
-end
+% if handles.params.detect_method ~= 5
+% %Meg Changed 9/24/2019
+% if handles.CurrData.VOMA_data.Parameters.DAQ_code == 7 %Moog Coils
+%     a = find(isnan([handles.mainStim]));
+%     if ~isempty(a)
+%         handles.mainStim(a) = handles.mainStim(a(end)+1);
+%     end
+%     if handles.params.align_thresh == 20
+%     else
+%     handles.mainStim = filtfilt(ones(1,50)/50,1,handles.mainStim);
+%     end
+% end
+% end
 switch handles.params.detect_method
     
     case 1
@@ -383,7 +394,7 @@ switch handles.params.detect_method
             
             inds = [1:length(handles.Time)];
         
-            pos_ind = [false ; diff(handles.mainStim > handles.params.align_thresh)];
+            pos_ind = [false; diff(handles.mainStim > handles.params.align_thresh)];
         
             stim_pos_thresh_ind = inds(pos_ind > 0 )';
 %             stim_neg_thresh_ind = inds(neg_ind > 0 )';
@@ -501,6 +512,104 @@ switch handles.params.detect_method
         
         plot_stim_inds(hObject, eventdata, handles)
         guidata(hObject,handles)
+    case 5
+        handles.align_thresh.String = '20';
+        handles.params.align_thresh = 20;
+        if handles.params.align_thresh >= 0
+            
+            inds = [1:length(handles.Time)];
+        
+            pos_ind = [false ; diff(handles.mainStim > handles.params.align_thresh)];
+        
+            stim_pos_thresh_ind = inds(pos_ind > 0 )';
+%             stim_neg_thresh_ind = inds(neg_ind > 0 )';
+            
+           
+            
+        else
+            
+            inds = [1:length(handles.Time)];
+            
+            pos_ind = [false ; diff(handles.mainStim < handles.params.align_thresh)];
+            
+            stim_pos_thresh_ind = inds(pos_ind > 0 )';
+            
+            
+        end
+                [~, tempINDLOW] = min(abs(handles.Time([stim_pos_thresh_ind ])-1.5));
+        [~, tempINDHIGH] = min(abs(handles.Time([stim_pos_thresh_ind ])-21.5));
+        stim_pos_thresh_ind(tempINDHIGH:end) = [];
+        stim_pos_thresh_ind(1:tempINDLOW-1) = [];
+        timePos = 1.5:.5:21;
+        tempCheck = [];
+        for i = 1:length(timePos)
+            [~, temp] = min(abs(handles.Time([stim_pos_thresh_ind])-timePos(i)));
+            tempCheck = [tempCheck; stim_pos_thresh_ind(temp)];
+        end
+        stim_pos_thresh_ind = tempCheck;
+        if handles.upsamp_flag
+            
+            handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.params.upsamp_Fs);
+            
+        else
+            handles.pos_stim_ind = stim_pos_thresh_ind - round(handles.params.pre_stim_dur*handles.CurrData.VOMA_data.Fs);
+            
+        end
+
+        
+        %         handles.neg_stim_ind = stim_neg_thresh_ind;
+        
+        %         set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind stim_neg_thresh_ind]) handles.Stimulus([stim_pos_thresh_ind stim_neg_thresh_ind])]);
+        set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind ]) handles.mainStim([stim_pos_thresh_ind ])]);
+        
+        axes(handles.stim_plot);
+        cla
+        %         handles.stim_ind = [handles.pos_stim_ind handles.neg_stim_ind];
+        handles.stim_ind = [handles.pos_stim_ind ];
+        if length(handles.Stimulus) == 1
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color','k','LineWidth',1);
+            hold on;
+            plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.mainStim(stim_pos_thresh_ind),'rx')
+        else
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color',[54 73 78]/255,'LineWidth',hV_L)
+            hold on
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{2},'Color',[115 119 129]/255,'LineWidth',hV_R)
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{3},'Color',[0 0 0],'LineWidth',hV_Z)
+            plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.mainStim(stim_pos_thresh_ind),'rx')
+            %         plot(handles.stim_plot,handles.Time(stim_neg_thresh_ind),handles.Stimulus(stim_neg_thresh_ind),'bx')
+        end
+        guidata(hObject,handles)
+    case 6
+        handles.align_thresh.String = '19.9';
+        handles.params.align_thresh = 19.9;
+        inds = [1:length(handles.Time)];
+        
+            pos_ind = [false; diff(handles.mainStim > handles.params.align_thresh)];
+        
+            stim_pos_thresh_ind = [1; inds(pos_ind > 0 )'];
+            if (handles.Time(end)-handles.Time(stim_pos_thresh_ind(end)))<.5
+                stim_pos_thresh_ind(end) = [];
+            end
+        
+
+            set(handles.cycle_table,'Data',[handles.Time([stim_pos_thresh_ind ]) handles.mainStim([stim_pos_thresh_ind ])]);
+        handles.pos_stim_ind = stim_pos_thresh_ind;
+        axes(handles.stim_plot);
+        cla
+        handles.stim_ind = [handles.pos_stim_ind ];
+        if length(handles.Stimulus) == 1
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color','k','LineWidth',1);
+            hold on;
+            plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.mainStim(stim_pos_thresh_ind),'rx')
+        else
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color',[54 73 78]/255,'LineWidth',hV_L)
+            hold on
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{2},'Color',[115 119 129]/255,'LineWidth',hV_R)
+            plot(handles.stim_plot,handles.Time,handles.Stimulus{3},'Color',[0 0 0],'LineWidth',hV_Z)
+            plot(handles.stim_plot,handles.Time(stim_pos_thresh_ind),handles.mainStim(stim_pos_thresh_ind),'rx')
+            %         plot(handles.stim_plot,handles.Time(stim_neg_thresh_ind),handles.Stimulus(stim_neg_thresh_ind),'bx')
+        end
+        guidata(hObject,handles)
 end
 
 function plot_stim_inds(hObject, eventdata, handles)
@@ -511,6 +620,9 @@ function plot_stim_inds(hObject, eventdata, handles)
  hV_L = 1;
  hV_R = 1;
  hV_Z = 1;
+ if length(handles.Stimulus) ~= 3
+    handles.mainStim = handles.Stimulus{1};
+else
  switch handles.CurrData.VOMA_data.Parameters.Stim_Info.ModCanal{1}
     case 'LARP'
         handles.mainStim = handles.Stimulus{1};
@@ -521,11 +633,16 @@ function plot_stim_inds(hObject, eventdata, handles)
     case 'LHRH'
         handles.mainStim = handles.Stimulus{3};
         hV_Z = 3;
-end
+ end
+ end
+if size(handles.Stimulus,1)>1
  plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color',[54 73 78]/255,'LineWidth',hV_L)
         hold on
         plot(handles.stim_plot,handles.Time,handles.Stimulus{2},'Color',[115 119 129]/255,'LineWidth',hV_R)
         plot(handles.stim_plot,handles.Time,handles.Stimulus{3},'Color',[0 0 0],'LineWidth',hV_Z)
+else
+    plot(handles.stim_plot,handles.Time,handles.Stimulus{1},'Color',[0 0 0],'LineWidth',3)
+end
         plot(handles.stim_plot,handles.Time(handles.stim_ind(:,1)),handles.mainStim(handles.stim_ind(:,1)),'rx')
         
 %  try
@@ -607,7 +724,7 @@ end
 
 
 close(handles.figure1)
-voma__cycle_analysis_gui(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename);
+voma__cycle_analysis_gui(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename,handles.params.pathtosave);
 
 
 % --- Executes during object creation, after setting all properties.

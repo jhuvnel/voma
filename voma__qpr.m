@@ -26,7 +26,7 @@ function varargout = voma__qpr(varargin)
 % Edit the above text to modify the response to help voma__qpr
 
 
-% Last Modified by GUIDE v2.5 08-Apr-2019 17:29:46
+% Last Modified by GUIDE v2.5 11-May-2020 13:09:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,8 +72,10 @@ guidata(hObject, handles);
 
 if ~isempty(varargin)
     isrecall = true;
+    handles.pathToCyc = varargin{2};
 else
     isrecall = false;
+    
 end
 % Initialize all handles
 initialize_gui(hObject, handles, isrecall);
@@ -199,7 +201,7 @@ handles.colors.r_l = [0 1 0];
 handles.colors.r_r = [64,224,208]/255;
 
 handles.colors.hV_l = [54 73 78]/255;
-handles.colors.hV_r = [115 119 129]/255
+handles.colors.hV_r = [115 119 129]/255;
 handles.colors.hV_z = [0 0 0];
 
 handles.params.pos_filt_method = 1;
@@ -3146,7 +3148,11 @@ if handles.params.smooth_flag == 1;
     % Input both the 'smooth' data traces with QPs removed, as well as the
     % entire data file. The second input is used so a user can save their list
     % of saved cycles.
-    voma__cycle_analysis_gui(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename)
+    if isfield(handles,'pathToCyc')
+      voma__cycle_analysis_gui(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename,handles.pathToCyc)
+    else
+      voma__cycle_analysis_gui(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename)
+    end
     
 elseif handles.params.smooth_flag == 0;
     
@@ -4842,17 +4848,17 @@ options.phase = [];
 uiwait(d2);
 
 
-    function sine_choose_amp_callback(popup,event)
+    function amp = sine_choose_amp_callback(popup,event)
         amp = str2double(get(popup,'string'));
         
     end
 
 
-    function sine_choose_freq_callback(popup,event)
+    function freq = sine_choose_freq_callback(popup,event)
         freq = str2double(get(popup,'string'));
     end
 
-    function sine_choose_phase_callback(popup,event)
+    function phi = sine_choose_phase_callback(popup,event)
         phi = str2double(get(popup,'string'));
     end
 
@@ -7465,4 +7471,336 @@ guidata(hObject,handles)
 handles = stimuli_files_Callback(hObject, eventdata, handles);
 
 end
+end
+
+
+% --- Executes on button press in allCycles.
+function allCycles_Callback(hObject, eventdata, handles)
+% hObject    handle to allCycles (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+%       voma__cycle_analysis_gui(handles.CurrData,handles.RootData,handles.curr_file,handles.pathname,handles.filename,handles.pathToCyc)
+handles.params.pathtosave = uigetdir;
+for q = 1:length(handles.stimuli_files.String)
+    handles.stimuli_files.Value = q;
+    guidata(handles.figure1,handles)
+handles = stimuli_files_Callback(hObject, eventdata, handles);
+handles.Lasker_stim = 2;
+
+cd(handles.params.pathtosave)
+ handles.Stimulus = handles.CurrData.VOMA_data.Stim_Trace;
+    if iscell(handles.Stimulus)
+    else
+        handles.Stimulus = {handles.Stimulus};
+    end
+    handles.Time = handles.CurrData.VOMA_data.Stim_t;
+    handles.stim_ind = handles.CurrData.VOMA_data.stim_ind;
+    
+
+if isrow(handles.Stimulus{1})
+    handles.Stimulus = handles.Stimulus';
+end
+
+if isrow(handles.Time)
+    handles.Stimulus = handles.Time';
+end
+handles.mainStim = handles.Stimulus{1};
+
+handles.params.align_thresh = 19.9;
+inds = [1:length(handles.Time)];
+
+pos_ind = [false; diff(handles.mainStim > handles.params.align_thresh)];
+
+stim_pos_thresh_ind = [1; inds(pos_ind > 0 )'];
+if (handles.Time(end)-handles.Time(stim_pos_thresh_ind(end)))<.5
+    stim_pos_thresh_ind(end) = [];
+end
+
+
+handles.pos_stim_ind = stim_pos_thresh_ind;
+stim_ind = [handles.pos_stim_ind ];
+CurrData = handles.CurrData;
+ a = size(CurrData.VOMA_data.Stim_Trace);
+                [~,dim] = max(a);
+                    % I am finding the minimum length of all
+                    % cycles and use that for the length of each cycle I extract
+                    handles.len_stim = min(diff(stim_ind(:,1)))-1;
+                
+                % Find indices from the eye data traces that correspond to the
+                % start times for each cycle of electrical stimulation.
+                
+                
+                temp_stim = CurrData.VOMA_data.Stim_t(:,1);
+                
+                
+                Eye_t_vect = CurrData.VOMA_data.Eye_t';
+                
+                if isrow(Eye_t_vect)
+                    Eye_t_vect = Eye_t_vect';
+                end
+                % Create array of Eye data time stamps
+                temp1 = repmat(Eye_t_vect,1,size(stim_ind,1),size(stim_ind,2));
+                
+                
+                stim_vals = temp_stim(stim_ind);
+                if sum(size(stim_vals) == [2 1]) == 2
+                    stim_vals = stim_vals';
+                end
+                    
+                
+                temp2 = repmat(stim_vals,1,1,length(CurrData.VOMA_data.Eye_t));
+                temp3 = permute(temp2,[3 1 2]);
+
+                
+                temp4 = temp1 - temp3;
+                
+                temp4b = temp4;
+                
+                temp4b(temp4b<0) = nan;
+                
+                if max(temp4(:,1)) < 0
+                    temp4b(:,:,1) = abs(temp4(:,:,1));
+                end
+                
+                if max(temp4(:,2)) < 0
+                    temp4b(:,:,2) = abs(temp4(:,:,2));
+                end
+                
+                
+                [temp5,temp6] = min(temp4b);
+                
+                eye_stim_ind = squeeze(temp6);
+                
+                
+                
+                if sum(size(eye_stim_ind)==[2,1]) == 2
+                    eye_stim_ind = eye_stim_ind';
+                end
+%                 
+%                 eye_stim_ind(:,2) = eye_stim_ind(:,2)-1;
+                
+                if isempty(min(diff(stim_ind(:,1))))
+                    handles.len =  eye_stim_ind(:,2) - eye_stim_ind(:,1);
+                else
+                    handles.len = min(diff(eye_stim_ind));
+                end
+                
+                if isrow(eye_stim_ind)
+                    eye_stim_ind = eye_stim_ind';
+                end
+                
+                
+% Extract the cycle indices
+stim_ind = stim_ind;
+eye_stim_ind = eye_stim_ind;
+
+% Extract the current list of stimuli the user wants to analyze
+cyc2plot = [1:size(stim_ind,1)]';
+
+% We will be taking a cycle average, so we want to make sure each 'cycle'
+% we grab is the same length. I found the minimum cycle length when I
+% loaded the file, so I grab it here.
+len = handles.len;
+
+% Initialize variables for each plane's cycles
+ll_cyc = [];
+lr_cyc = [];
+lz_cyc = [];
+lx_cyc = [];
+ly_cyc = [];
+
+
+rl_cyc = [];
+rr_cyc = [];
+rz_cyc = [];
+rx_cyc = [];
+ry_cyc = [];
+
+stim = [];
+ handles.Final_Data.Fs = handles.CurrData.VOMA_data.Fs;
+    handles.Final_Data.Stim_t = handles.CurrData.VOMA_data.Stim_t;
+    handles.Final_Data.Eye_t = handles.CurrData.VOMA_data.Eye_t;
+    handles.Final_Data.Stim_Trace = handles.CurrData.VOMA_data.Stim_Trace;
+    handles.Final_Data.stim_ind = handles.CurrData.VOMA_data.stim_ind;
+    handles.Final_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_LARP;
+    handles.Final_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_RALP;
+    handles.Final_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Z;
+    try
+        handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_X;
+        handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_LE_Vel_Y;
+    catch
+        handles.Final_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+        handles.Final_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
+    end
+    handles.Final_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_LARP;
+    handles.Final_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_RALP;
+    handles.Final_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Z;
+    try
+        handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_X;
+        handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Filtered.Data_RE_Vel_Y;
+    catch
+        handles.Final_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+        handles.Final_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
+    end
+    handles.Raw_Data.Data_LE_Vel_LARP = handles.CurrData.VOMA_data.Data_LE_Vel_LARP;
+    handles.Raw_Data.Data_LE_Vel_RALP = handles.CurrData.VOMA_data.Data_LE_Vel_RALP;
+    handles.Raw_Data.Data_LE_Vel_Z = handles.CurrData.VOMA_data.Data_LE_Vel_Z;
+    handles.Raw_Data.Data_LE_Vel_X = handles.CurrData.VOMA_data.Data_LE_Vel_X;
+    handles.Raw_Data.Data_LE_Vel_Y = handles.CurrData.VOMA_data.Data_LE_Vel_Y;
+    handles.Raw_Data.Data_RE_Vel_LARP = handles.CurrData.VOMA_data.Data_RE_Vel_LARP;
+    handles.Raw_Data.Data_RE_Vel_RALP = handles.CurrData.VOMA_data.Data_RE_Vel_RALP;
+    handles.Raw_Data.Data_RE_Vel_Z = handles.CurrData.VOMA_data.Data_RE_Vel_Z;
+    handles.Raw_Data.Data_RE_Vel_X = handles.CurrData.VOMA_data.Data_RE_Vel_X;
+    handles.Raw_Data.Data_RE_Vel_Y = handles.CurrData.VOMA_data.Data_RE_Vel_Y;
+% Extract data
+for k=[cyc2plot']
+    ll_cyc = [ll_cyc ; handles.Final_Data.Data_LE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    lr_cyc = [lr_cyc ; handles.Final_Data.Data_LE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    lz_cyc = [lz_cyc ; handles.Final_Data.Data_LE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    lx_cyc = [lx_cyc ; handles.Final_Data.Data_LE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    ly_cyc = [ly_cyc ; handles.Final_Data.Data_LE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    
+    rl_cyc = [rl_cyc ; handles.Final_Data.Data_RE_Vel_LARP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    rr_cyc = [rr_cyc ; handles.Final_Data.Data_RE_Vel_RALP(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    rz_cyc = [rz_cyc ; handles.Final_Data.Data_RE_Vel_Z(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    rx_cyc = [rx_cyc ; handles.Final_Data.Data_RE_Vel_X(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    ry_cyc = [ry_cyc ; handles.Final_Data.Data_RE_Vel_Y(eye_stim_ind(k,1):eye_stim_ind(k,1) + len)'];
+    % MEG CHANGED 7/30/2019
+    if length(handles.Final_Data.Stim_Trace) ~= 3
+        stim = [stim; handles.Final_Data.Stim_Trace(stim_ind(k,1):stim_ind(k,1)+handles.len_stim)];
+    else
+        stim = [stim ; {handles.Final_Data.Stim_Trace{1}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{2}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim) handles.Final_Data.Stim_Trace{3}(stim_ind(k,1):stim_ind(k,1) + handles.len_stim)}];
+    end
+    
+end
+
+% Compute the cycle average
+ll_cycavg = mean(ll_cyc,1);
+lr_cycavg = mean(lr_cyc,1);
+lz_cycavg = mean(lz_cyc,1);
+lx_cycavg = mean(lx_cyc,1);
+ly_cycavg = mean(ly_cyc,1);
+
+rl_cycavg = mean(rl_cyc,1);
+rr_cycavg = mean(rr_cyc,1);
+rz_cycavg = mean(rz_cyc,1);
+rx_cycavg = mean(rx_cyc,1);
+ry_cycavg = mean(ry_cyc,1);
+
+% Compute the standard deviation
+ll_cycstd = std(ll_cyc,0,1);
+lr_cycstd = std(lr_cyc,0,1);
+lz_cycstd = std(lz_cyc,0,1);
+lx_cycstd = std(lx_cyc,0,1);
+ly_cycstd = std(ly_cyc,0,1);
+
+rl_cycstd = std(rl_cyc,0,1);
+rr_cycstd = std(rr_cyc,0,1);
+rz_cycstd = std(rz_cyc,0,1);
+rx_cycstd = std(rx_cyc,0,1);
+ry_cycstd = std(ry_cyc,0,1);
+
+% Save the data in a structure called 'Results'
+handles.Results.ll_cyc = ll_cyc;
+handles.Results.ll_cycavg = ll_cycavg;
+handles.Results.ll_cycstd = ll_cycstd;
+
+handles.Results.rl_cyc = rl_cyc;
+handles.Results.rl_cycavg = rl_cycavg;
+handles.Results.rl_cycstd = rl_cycstd;
+
+
+handles.Results.lr_cyc = lr_cyc;
+handles.Results.lr_cycavg = lr_cycavg;
+handles.Results.lr_cycstd = lr_cycstd;
+
+handles.Results.rr_cyc = rr_cyc;
+handles.Results.rr_cycavg = rr_cycavg;
+handles.Results.rr_cycstd = rr_cycstd;
+
+
+handles.Results.lz_cyc = lz_cyc;
+handles.Results.lz_cycavg = lz_cycavg;
+handles.Results.lz_cycstd = lz_cycstd;
+
+handles.Results.rz_cyc = rz_cyc;
+handles.Results.rz_cycavg = rz_cycavg;
+handles.Results.rz_cycstd = rz_cycstd;
+
+handles.Results.lx_cyc = lx_cyc;
+handles.Results.lx_cycavg = lx_cycavg;
+handles.Results.lx_cycstd = lx_cycstd;
+
+handles.Results.rx_cyc = rx_cyc;
+handles.Results.rx_cycavg = rx_cycavg;
+handles.Results.rx_cycstd = rx_cycstd;
+
+handles.Results.ly_cyc = ly_cyc;
+handles.Results.ly_cycavg = ly_cycavg;
+handles.Results.ly_cycstd = ly_cycstd;
+
+handles.Results.ry_cyc = ry_cyc;
+handles.Results.ry_cycavg = ry_cycavg;
+handles.Results.ry_cycstd = ry_cycstd;
+
+handles.Results.stim = stim;
+
+handles.params.plot_cycleavg_flag = 1;
+
+
+RootData = handles.RootData;
+
+RootData(handles.curr_file).VOMA_data = handles.CurrData.VOMA_data;
+RootData(handles.curr_file).SoftwareVer = handles.CurrData.SoftwareVer;
+RootData(handles.curr_file).QPparams = handles.CurrData.QPparams;
+    RootData(handles.curr_file).cyc2plot = cyc2plot;
+    RootData(handles.curr_file).L_cyc2plot = [];
+    RootData(handles.curr_file).R_cyc2plot = [];
+
+RootData(handles.curr_file).VOMA_data.stim_ind = handles.CurrData.VOMA_data.stim_ind;
+
+cd(handles.pathname);
+
+eval(['save ' handles.filename ' RootData'])
+
+
+
+guidata(hObject,handles)
+
+
+
+fields = fieldnames(handles.Results);
+cd(handles.params.pathtosave);
+
+    
+    Results = handles.Results;
+    Results.name = [handles.CurrData.name(1:end-4) '.mat'];
+    
+    if isfield(handles.CurrData,'RawFileName')
+        Results.raw_filename = handles.CurrData.RawFileName;
+    end
+    
+    Results.Parameters = handles.CurrData.VOMA_data.Parameters;
+    %
+    % Results.Mapping = handles.CurrData.VOMA_data.Parameters.Mapping;
+    % Results.Stimulus = handles.CurrData.VOMA_data.Parameters.Stim_Info;
+    % Results.stim.LHRH
+    Results.Fs = handles.Final_Data.Fs;
+    Results.QPparams = handles.CurrData.QPparams;
+    Results.cyclist = cyc2plot;
+    
+    
+    
+    if ~isempty(strfind(handles.CurrData.name,'.mat'))
+        save([handles.CurrData.name(1:end-4) '_CycleAvg.mat'],'Results')
+    else
+        save([handles.CurrData.name handles.params.user.savefile_suffix '_CycleAvg.mat'],'Results')
+    end
+    handles.individualSave = 2;
+    guidata(hObject, handles);
+    cd(handles.params.pathtosave);
+    
+
+end
+
 end

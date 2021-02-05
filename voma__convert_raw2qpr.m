@@ -1464,6 +1464,9 @@ switch handles.params.file_format
                     headmpu_xyz = [Data.HeadMPUVel_X Data.HeadMPUVel_Y Data.HeadMPUVel_Z];
                     
                     headmpu_lrz = [rotZ3deg(-45)'*headmpu_xyz']';
+                    if ~isfield('Data','Stim_Trig')
+                        Data.Stim_Trig = Data.HeadMPUVel_Z;
+                    end
                     if ~isempty(Data.Stim_Trig)
                         Stimulus{n} = {Data.Stim_Trig};
                             Stim_t{n} = {Data.Time_Stim(:,1)};

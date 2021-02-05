@@ -81,17 +81,17 @@ if k==1
             hold(handles.fig(i,j).avgMisalign3D.R,'off');
             
         end
-            handles.ldg3D.lines = {};
-    handles.ldg3D.Defaultlines = {};
-    handles.ldg3D.AP = {};
-    handles.avgMagPlot(i,j).normalized(l) = figure('units','normalized','outerposition',[0 0 1 1]);
-    handles.avgMisalignPlot(i,j).normalized(l) = figure('units','normalized','outerposition',[0 0 1 1]);
-    sgtitle(handles.avgMagPlot(i,j).normalized(l),{['Average Eye Velocity Magnitude, Source ',num2str(handles.figE(j)),', ',handles.figdir] ; ' '},'FontSize', 22, 'FontWeight', 'Bold');
-    sgtitle(handles.avgMisalignPlot(i,j).normalized(l),{['Angle of Misalignment, Source ',num2str(handles.figE(j)),', ',handles.figdir]; ' '},'FontSize', 22, 'FontWeight', 'Bold');
-            
+        handles.ldg3D.lines = {};
+        handles.ldg3D.Defaultlines = {};
+        handles.ldg3D.AP = {};
+        handles.avgMagPlot(i,j).normalized(l) = figure('units','normalized','outerposition',[0 0 1 1]);
+        handles.avgMisalignPlot(i,j).normalized(l) = figure('units','normalized','outerposition',[0 0 1 1]);
+        sgtitle(handles.avgMagPlot(i,j).normalized(l),{['Average Eye Velocity Magnitude, ',handles.axName,num2str(handles.figE(j)),', ',handles.figdir] ; ' '},'FontSize', 22, 'FontWeight', 'Bold');
+        sgtitle(handles.avgMisalignPlot(i,j).normalized(l),{['Angle of Misalignment, ',handles.axName,num2str(handles.figE(j)),', ',handles.figdir]; ' '},'FontSize', 22, 'FontWeight', 'Bold');
+        
     end
 end
-    
+
 if handles.LEyeFlag.Value + handles.REyeFlag.Value == 2
     handles.fig(i,j).normalized(l).avgMagaxL(k) = subtightplot(2,length(handles.axE),k,[0.015 0.000000000005],[0.10 0.075],[.05 .05],'Parent', handles.avgMagPlot(i,j).normalized(l));
     handles.fig(i,j).normalized(l).avgMagaxR(k) = subtightplot(2,length(handles.axE),k+length(handles.axE),[0.015 0.000000000005],[0.10 0.075],[.05 .05],'Parent', handles.avgMagPlot(i,j).normalized(l));
@@ -137,7 +137,7 @@ elseif handles.LEyeFlag.Value
     handles.fig(i,j).normalized(l).avgMisalignaxL(k).XLim = [0 handles.allP1a(end)+50];
     handles.fig(i,j).normalized(l).avgMagaxL(k).XTick = [0:50:handles.allP1a(end)];
     handles.fig(i,j).normalized(l).avgMisalignaxL(k).XTick = [0:50:handles.allP1a(end)];
-
+    
     if k>1
         handles.fig(i,j).normalized(l).avgMisalignaxL(k).YTickLabel = [];
         handles.fig(i,j).normalized(l).avgMagaxL(k).YTickLabel = [];
@@ -201,14 +201,18 @@ elseif any([strcmp(handles.ldg3D.lines,[handles.ldgName,num2str(handles.axE(k))]
 else
     handles.ldg3D.lines = [handles.ldg3D.lines,{[handles.ldgName,num2str(handles.axE(k))]}];
 end
-notOneInds = [];
-if handles.axE(k) == 1
-    toplotInds = oneInds;
-else
+% notOneInds = [];
+% if handles.axE(k) == 1
+%     toplotInds = oneInds;
+% else
+%     toplotInds = find(([handles.params.stim]==handles.figE(j)) & ([handles.params.ref]==handles.axE(k)) & ([handles.params.dSp2d]<0));
+%     toplotdS = find(([handles.params.stim]==handles.figE(j)) & ([handles.params.ref]==handles.axE(k)) & ([handles.params.dSp2d]>0));
+% end
+if handles.stimulatingE.Value
     toplotInds = find(([handles.params.stim]==handles.figE(j)) & ([handles.params.ref]==handles.axE(k)) & ([handles.params.dSp2d]<0));
-    toplotdS = find(([handles.params.stim]==handles.figE(j)) & ([handles.params.ref]==handles.axE(k)) & ([handles.params.dSp2d]>0));
+elseif handles.referenceE.Value
+    toplotInds = find(([handles.params.stim]==handles.axE(k)) & ([handles.params.ref]==handles.figE(j)) & ([handles.params.dSp2d]<0));
 end
-
 for m = 1:length(toplotInds)
     filename = handles.listing(toplotInds(m)).name;
     
@@ -222,23 +226,27 @@ for m = 1:length(toplotInds)
                 mis3DPlotD = handles.params(handles.params(toplotInds(m)).normInd(l)).plotM3DL;
                 switch handles.params(handles.params(toplotInds(m)).normInd(l)).p1amp
                     case 20
-                                    markerToUse = 'o';
-                                case 50
-                                    markerToUse = '+';
-                                case 75
-                                    markerToUse = '*';
-                                case 100
-                                    markerToUse = '^';
-                                case 125
-                                    markerToUse = 's';
-                                case 150
-                                    markerToUse = 'd';
-                                case 200
-                                    markerToUse = '<';
-                                case 250
-                                    markerToUse = 'p';
-                                case 300
-                                    markerToUse = 'h';
+                        markerToUse = 'o';
+                    case 25
+                        markerToUse = 'v';
+                    case 50
+                        markerToUse = '+';
+                    case 75
+                        markerToUse = '*';
+                    case 100
+                        markerToUse = '^';
+                    case 125
+                        markerToUse = 's';
+                    case 150
+                        markerToUse = 'd';
+                    case 175
+                        markerToUse = '>';
+                    case 200
+                        markerToUse = '<';
+                    case 250
+                        markerToUse = 'p';
+                    case 300
+                        markerToUse = 'h';
                 end
                 handles.fig(i,j).mis3D(m,k).lPlotLD(l) = plot3([0 mis3DPlotD(1)]',[0 mis3DPlotD(2)]',[0 mis3DPlotD(3)]');
                 set(handles.fig(i,j).mis3D(m,k).lPlotLD(l),'LineWidth',3.5,'DisplayName','','Color','k')
@@ -267,23 +275,27 @@ for m = 1:length(toplotInds)
             set(handles.fig(i,j).mis3D(m,k).lPlotL,'LineWidth',2,'DisplayName','','Color',colorPlot)
             switch handles.params(toplotInds(m)).p1amp
                 case 20
-                                    markerToUse = 'o';
-                                case 50
-                                    markerToUse = '+';
-                                case 75
-                                    markerToUse = '*';
-                                case 100
-                                    markerToUse = '^';
-                                case 125
-                                    markerToUse = 's';
-                                case 150
-                                    markerToUse = 'd';
-                                case 200
-                                    markerToUse = '<';
-                                case 250
-                                    markerToUse = 'p';
-                                case 300
-                                    markerToUse = 'h';
+                    markerToUse = 'o';
+                case 25
+                    markerToUse = 'v';
+                case 50
+                    markerToUse = '+';
+                case 75
+                    markerToUse = '*';
+                case 100
+                    markerToUse = '^';
+                case 125
+                    markerToUse = 's';
+                case 150
+                    markerToUse = 'd';
+                case 175
+                    markerToUse = '>';
+                case 200
+                    markerToUse = '<';
+                case 250
+                    markerToUse = 'p';
+                case 300
+                    markerToUse = 'h';
             end
             if m==1
                 handles.fig(i,j).mis3D(m,k).lPlotFakeL = plot3([0 .01]',[0 .01]',[0 .01]');
@@ -306,7 +318,7 @@ for m = 1:length(toplotInds)
             end
         end
         hold(handles.fig(i,j).avgMisalign3D.L,'off');
-
+        
         
     end
     
@@ -320,23 +332,27 @@ for m = 1:length(toplotInds)
                 mis3DPlotD = handles.params(handles.params(toplotInds(m)).normInd(l)).plotM3DR;
                 switch handles.params(handles.params(toplotInds(m)).normInd(l)).p1amp
                     case 20
-                        DmarkerToUse = 'o';
+                        markerToUse = 'o';
+                    case 25
+                        markerToUse = 'v';
                     case 50
-                        DmarkerToUse = '+';
+                        markerToUse = '+';
                     case 75
-                        DmarkerToUse = '*';
+                        markerToUse = '*';
                     case 100
-                        DmarkerToUse = '^';
+                        markerToUse = '^';
                     case 125
-                        DmarkerToUse = 's';
+                        markerToUse = 's';
                     case 150
-                        DmarkerToUse = 'd';
+                        markerToUse = 'd';
+                    case 175
+                        markerToUse = '>';
                     case 200
-                        DmarkerToUse = '<';
+                        markerToUse = '<';
                     case 250
-                        DmarkerToUse = 'p';
+                        markerToUse = 'p';
                     case 300
-                        DmarkerToUse = 'h';
+                        markerToUse = 'h';
                 end
                 handles.fig(i,j).mis3D(m,k).lPlotRD(l) = plot3([0 mis3DPlotD(1)]',[0 mis3DPlotD(2)]',[0 mis3DPlotD(3)]');
                 set(handles.fig(i,j).mis3D(m,k).lPlotRD(l),'LineWidth',3.5,'DisplayName','','Color','k')
@@ -366,6 +382,8 @@ for m = 1:length(toplotInds)
             switch handles.params(toplotInds(m)).p1amp
                 case 20
                     markerToUse = 'o';
+                case 25
+                    markerToUse = 'v';
                 case 50
                     markerToUse = '+';
                 case 75
@@ -376,6 +394,8 @@ for m = 1:length(toplotInds)
                     markerToUse = 's';
                 case 150
                     markerToUse = 'd';
+                case 175
+                    markerToUse = '>';
                 case 200
                     markerToUse = '<';
                 case 250
@@ -408,65 +428,71 @@ for m = 1:length(toplotInds)
     
     
     if handles.LEyeFlag.Value
-    figure(handles.avgMagPlot(i,j).normalized(l))
-    set( handles.avgMagPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMagaxL(k));
-    hold(handles.fig(i,j).normalized(l).avgMagaxL(k),'on');
-    handles.fig(i,j).p(k).ptL(m) = plot(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagL,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
-    errorbar(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagL,handles.params(toplotInds(m)).stdMagL,'color',colorPlot,'LineWidth',2.5);
-    handles.fig(i,j).normalized(l).avgMagaxL(k).LineWidth = 2.5;
-    if handles.params(toplotInds(m)).FacialNerve    
-        handles.cutOff1 = plot(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagL,'rx','MarkerSize', 20,'LineWidth',3);
+        figure(handles.avgMagPlot(i,j).normalized(l))
+        set( handles.avgMagPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMagaxL(k));
+        hold(handles.fig(i,j).normalized(l).avgMagaxL(k),'on');
+        handles.fig(i,j).p(k).ptL(m) = plot(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagL,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
+        errorbar(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagL,handles.params(toplotInds(m)).stdMagL,'color',colorPlot,'LineWidth',2.5);
+        handles.fig(i,j).normalized(l).avgMagaxL(k).LineWidth = 2.5;
+        if handles.params(toplotInds(m)).FacialNerve
+            handles.cutOff1 = plot(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagL,'rx','MarkerSize', 20,'LineWidth',3);
+        end
+        hold(handles.fig(i,j).normalized(l).avgMagaxL(k),'off');
+        
+        figure(handles.avgMisalignPlot(i,j).normalized(l))
+        set( handles.avgMisalignPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMisalignaxL(k));
+        hold(handles.fig(i,j).normalized(l).avgMisalignaxL(k),'on')
+        handles.fig(i,j).q(k).ptL(m) = plot(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignL,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
+        errorbar(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignL,handles.params(toplotInds(m)).stdMisalignL,'color',colorPlot,'LineWidth',2.5);
+        handles.fig(i,j).normalized(l).avgMisalignaxL(k).LineWidth = 2.5;
+        if handles.params(toplotInds(m)).FacialNerve
+            plot(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignL,'rx','MarkerSize', 20,'LineWidth',3);
+        end
+        hold(handles.fig(i,j).normalized(l).avgMisalignaxL(k),'off');
     end
-    hold(handles.fig(i,j).normalized(l).avgMagaxL(k),'off');
     
-    figure(handles.avgMisalignPlot(i,j).normalized(l))
-    set( handles.avgMisalignPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMisalignaxL(k));
-    hold(handles.fig(i,j).normalized(l).avgMisalignaxL(k),'on')
-    handles.fig(i,j).q(k).ptL(m) = plot(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignL,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
-    errorbar(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignL,handles.params(toplotInds(m)).stdMisalignL,'color',colorPlot,'LineWidth',2.5);
-    handles.fig(i,j).normalized(l).avgMisalignaxL(k).LineWidth = 2.5;
-    if handles.params(toplotInds(m)).FacialNerve    
-        plot(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignL,'rx','MarkerSize', 20,'LineWidth',3);
+    if handles.REyeFlag.Value
+        figure(handles.avgMagPlot(i,j).normalized(l))
+        set( handles.avgMagPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMagaxR(k));
+        hold(handles.fig(i,j).normalized(l).avgMagaxR(k),'on');
+        handles.fig(i,j).p(k).ptR(m) = plot(handles.fig(i,j).normalized(l).avgMagaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagR,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
+        errorbar(handles.fig(i,j).normalized(l).avgMagaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagR,handles.params(toplotInds(m)).stdMagR,'color',colorPlot,'LineWidth',2.5);
+        handles.fig(i,j).normalized(l).avgMagaxR(k).LineWidth = 2.5;
+        
+        hold(handles.fig(i,j).normalized(l).avgMagaxR(k),'off');
+        
+        figure(handles.avgMisalignPlot(i,j).normalized(l))
+        set( handles.avgMisalignPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMisalignaxR(k));
+        hold(handles.fig(i,j).normalized(l).avgMisalignaxR(k),'on')
+        handles.fig(i,j).q(k).ptR(m) = plot(handles.fig(i,j).normalized(l).avgMisalignaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignR,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
+        errorbar(handles.fig(i,j).normalized(l).avgMisalignaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignR,handles.params(toplotInds(m)).stdMisalignR,'color',colorPlot,'LineWidth',2.5);
+        handles.fig(i,j).normalized(l).avgMisalignaxR(k).LineWidth = 2.5;
+        
+        hold(handles.fig(i,j).normalized(l).avgMisalignaxR(k),'off');
     end
-    hold(handles.fig(i,j).normalized(l).avgMisalignaxL(k),'off');
-end
-
-if handles.REyeFlag.Value
-    figure(handles.avgMagPlot(i,j).normalized(l))
-    set( handles.avgMagPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMagaxR(k));
-    hold(handles.fig(i,j).normalized(l).avgMagaxR(k),'on');
-    handles.fig(i,j).p(k).ptR(m) = plot(handles.fig(i,j).normalized(l).avgMagaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagR,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
-    errorbar(handles.fig(i,j).normalized(l).avgMagaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMagR,handles.params(toplotInds(m)).stdMagR,'color',colorPlot,'LineWidth',2.5);
-    handles.fig(i,j).normalized(l).avgMagaxR(k).LineWidth = 2.5;
-
-    hold(handles.fig(i,j).normalized(l).avgMagaxR(k),'off');
     
-    figure(handles.avgMisalignPlot(i,j).normalized(l))
-    set( handles.avgMisalignPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMisalignaxR(k));
-    hold(handles.fig(i,j).normalized(l).avgMisalignaxR(k),'on')
-    handles.fig(i,j).q(k).ptR(m) = plot(handles.fig(i,j).normalized(l).avgMisalignaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignR,'color',colorPlot,'marker','o','MarkerSize',10,'LineWidth',2);
-    errorbar(handles.fig(i,j).normalized(l).avgMisalignaxR(k),handles.params(toplotInds(m)).p1amp,handles.params(toplotInds(m)).meanMisalignR,handles.params(toplotInds(m)).stdMisalignR,'color',colorPlot,'LineWidth',2.5);
-    handles.fig(i,j).normalized(l).avgMisalignaxR(k).LineWidth = 2.5;
-
-    hold(handles.fig(i,j).normalized(l).avgMisalignaxR(k),'off');
 end
-
-end  
 
 if l == 1
-handles.plottedInds = [handles.plottedInds toplotInds];
-handles.allInds = [handles.allInds handles.plottedInds];
+    handles.plottedInds = [handles.plottedInds toplotInds];
+    handles.allInds = [handles.allInds handles.plottedInds];
 end
 
 if handles.REyeFlag.Value && handles.LEyeFlag.Value
     handles.fig(i,j).normalized(l).avgMagaxL(k).XLabel.String = '';
-    handles.fig(i,j).avgMisalignaxL.XLabel.String = '';
+    handles.fig(i,j).normalized(l).avgMisalignaxL.XLabel.String = '';
 end
+
 if handles.LEyeFlag.Value
+    if handles.stimulatingE.Value
+        term = 'Source ';
+    elseif handles.referenceE.Value
+        term = 'Reference ';
+    end
     figure(handles.avgMagPlot(i,j).normalized(l))
     set( handles.avgMagPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMagaxL(k));
     hold(handles.fig(i,j).normalized(l).avgMagaxL(k),'on');
-    handles.fig(i,j).normalized(l).avgMagaxL(k).Title.String = ['Ref ',num2str(handles.axE(k))];
+    handles.fig(i,j).normalized(l).avgMagaxL(k).Title.String = [term,num2str(handles.axE(k))];
     handles.fig(i,j).p(k).lineL = line(handles.fig(i,j).normalized(l).avgMagaxL(k),[handles.fig(i,j).p(k).ptL.XData],[handles.fig(i,j).p(k).ptL.YData],'color',colorPlot,'LineWidth',4);
     handles.fig(i,j).normalized(l).avgMagaxL(k).XLabel.String = {'Current (uA)'};
     handles.fig(i,j).normalized(l).avgMagaxL(k).XLabel.FontSize = 22;
@@ -479,11 +505,11 @@ if handles.LEyeFlag.Value
     figure(handles.avgMisalignPlot(i,j).normalized(l))
     set( handles.avgMisalignPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMisalignaxL(k));
     hold(handles.fig(i,j).normalized(l).avgMisalignaxL(k),'on')
-    handles.fig(i,j).normalized(l).avgMisalignaxL(k).Title.String = ['Ref ',num2str(handles.axE(k))];
+    handles.fig(i,j).normalized(l).avgMisalignaxL(k).Title.String = [term,num2str(handles.axE(k))];
     handles.fig(i,j).q(k).lineL = line(handles.fig(i,j).normalized(l).avgMisalignaxL(k),[handles.fig(i,j).q(k).ptL.XData],[handles.fig(i,j).q(k).ptL.YData],'color',colorPlot,'LineWidth',4);
     handles.fig(i,j).normalized(l).avgMisalignaxL(k).XLabel.String = {'Current (uA)'};
     handles.fig(i,j).normalized(l).avgMisalignaxL(k).XLabel.FontSize = 22;
-        if k == 1
+    if k == 1
         handles.fig(i,j).normalized(l).avgMisalignaxL(k).YLabel.String = {'Misalignment (degrees)'};
         handles.fig(i,j).normalized(l).avgMisalignaxL(k).YLabel.FontSize = 22;
     end
@@ -491,10 +517,16 @@ if handles.LEyeFlag.Value
 end
 
 if handles.REyeFlag.Value
+    if handles.stimulatingE.Value
+        term = 'Source ';
+    elseif handles.referenceE.Value
+        term = 'Reference ';
+    end
     figure(handles.avgMagPlot(i,j).normalized(l))
     set( handles.avgMagPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMagaxR(k));
     hold(handles.fig(i,j).normalized(l).avgMagaxR(k),'on');
-    line(handles.fig(i,j).normalized(l).avgMagaxR(k),[handles.fig(i,j).p(k).ptR.XData],[handles.fig(i,j).p(k).ptR.YData],'color',colorPlot,'LineWidth',4)
+    handles.fig(i,j).normalized(l).avgMagaxR(k).Title.String = [term,num2str(handles.axE(k))];
+    handles.fig(i,j).p(k).lineR = line(handles.fig(i,j).normalized(l).avgMagaxR(k),[handles.fig(i,j).p(k).ptR.XData],[handles.fig(i,j).p(k).ptR.YData],'color',colorPlot,'LineWidth',4);
     handles.fig(i,j).normalized(l).avgMagaxR(k).XLabel.String = {'Current (uA)'};
     handles.fig(i,j).normalized(l).avgMagaxR(k).XLabel.FontSize = 22;
     hold(handles.fig(i,j).normalized(l).avgMagaxR(k),'off');
@@ -502,15 +534,16 @@ if handles.REyeFlag.Value
     figure(handles.avgMisalignPlot(i,j).normalized(l))
     set( handles.avgMisalignPlot(i,j).normalized(l),'CurrentAxes',handles.fig(i,j).normalized(l).avgMisalignaxR(k));
     hold(handles.fig(i,j).normalized(l).avgMisalignaxR(k),'on')
-    line(handles.fig(i,j).normalized(l).avgMisalignaxR(k),[handles.fig(i,j).q(k).ptR.XData],[handles.fig(i,j).q(k).ptR.YData],'color',colorPlot,'LineWidth',4)
+    handles.fig(i,j).normalized(l).avgMisalignaxR(k).Title.String = [term,num2str(handles.axE(k))];
+    handles.fig(i,j).q(k).lineR = line(handles.fig(i,j).normalized(l).avgMisalignaxR(k),[handles.fig(i,j).q(k).ptR.XData],[handles.fig(i,j).q(k).ptR.YData],'color',colorPlot,'LineWidth',4);
     handles.fig(i,j).normalized(l).avgMisalignaxR(k).XLabel.String = {'Current (uA)'};
     handles.fig(i,j).normalized(l).avgMisalignaxR(k).XLabel.FontSize = 22;
     hold(handles.fig(i,j).normalized(l).avgMisalignaxR(k),'off');
 end
-        sameaxes([],[handles.avgMisalignPlot(i,j).normalized])
-        sameaxes([],[handles.avgMagPlot(i,j).normalized])
+sameaxes([],[handles.avgMisalignPlot(i,j).normalized])
+sameaxes([],[handles.avgMagPlot(i,j).normalized])
 
-        
+
 
 
 if (k == length(handles.axE)) && (l == handles.currmaxNorm)
@@ -519,132 +552,132 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
     if handles.LEyeFlag.Value
         if handles.norm.Value
             if any([handles.params(handles.plottedInds).FacialNerve]) && ~twitchLDG
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.lPlotFakeLD handles.fig(i,j).mis3D.pPlotFakeL handles.twitchPlotL],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.lPlotFakeLD handles.fig(i,j).mis3D.pPlotFakeL handles.twitchPlotL],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             else
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.lPlotFakeLD handles.fig(i,j).mis3D.pPlotFakeL],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.lPlotFakeLD handles.fig(i,j).mis3D.pPlotFakeL],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             end
             
         else
             if any([handles.params(handles.plottedInds).FacialNerve]) && ~twitchLDG
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.pPlotFakeL handles.twitchPlotL],[handles.ldg3D.lines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.pPlotFakeL handles.twitchPlotL],[handles.ldg3D.lines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             else
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.pPlotFakeL],[handles.ldg3D.lines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.L,[handles.fig(i,j).mis3D.lPlotFakeL handles.fig(i,j).mis3D.pPlotFakeL],[handles.ldg3D.lines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             end
             
         end
     end
-        if handles.REyeFlag.Value
+    if handles.REyeFlag.Value
         if handles.norm.Value
             if any([handles.params(handles.plottedInds).FacialNerve]) && ~twitchLDG
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.lPlotFakeRD handles.fig(i,j).mis3D.pPlotFakeR twitchPlotR],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.lPlotFakeRD handles.fig(i,j).mis3D.pPlotFakeR twitchPlotR],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             else
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.lPlotFakeRD handles.fig(i,j).mis3D.pPlotFakeR],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.lPlotFakeRD handles.fig(i,j).mis3D.pPlotFakeR],[handles.ldg3D.lines handles.ldg3D.Defaultlines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             end
             
         else
             if any(handles.params(toplotInds).FacialNerve) && ~twitchLDG
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.pPlotFakeR twitchPlotR],[handles.ldg3D.lines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.pPlotFakeR twitchPlotR],[handles.ldg3D.lines handles.ldg3D.AP {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             else
-                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.pPlotFakeR],[handles.ldg3D.lines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);                
+                ldg3D = legend(handles.fig(i,j).avgMisalign3D.R,[handles.fig(i,j).mis3D.lPlotFakeR handles.fig(i,j).mis3D.pPlotFakeR],[handles.ldg3D.lines handles.ldg3D.AP],'Orientation','Horizontal','Position',[0.1310    0.0243    0.7568    0.0199],'FontSize',13.5);
                 twitchLDG = 1;
             end
             
         end
     end
     
+    
+    ecombName=[];
+    if handles.distantstim.Value
+        if isempty(ecombName)
+            ecombName = [ecombName,'Distant'];
+        else
+            ecombName = [ecombName,'-Distant'];
+        end
+    end
+    if handles.ccstim.Value
+        if isempty(ecombName)
+            ecombName = [ecombName,'CC'];
+        else
+            ecombName = [ecombName,'-CC'];
+        end
+    end
+    if handles.bipolarstim.Value
+        if isempty(ecombName)
+            ecombName = [ecombName,'Bipolar'];
+        else
+            ecombName = [ecombName,'-Bipolar'];
+        end
+    end
+    
+    if handles.LEyeFlag.Value && handles.REyeFlag.Value
+        if handles.stimulatingE.Value
+            misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByStimE_R&Leye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+        elseif handles.referenceE.Value
+            misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByRefE_R&Leye_Ref',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+        end
         
-        ecombName=[];
-        if handles.distantstim.Value
-            if isempty(ecombName)
-                ecombName = [ecombName,'Distant'];
-            else
-                ecombName = [ecombName,'-Distant'];
+    elseif handles.LEyeFlag.Value
+        if handles.norm.Value
+            normName = [];
+            for g = 1:length([handles.params(handles.params(toplotInds(1)).normInd).p1d])
+                if g == 1
+                    temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
+                    normName = [normName num2str(temp{g})];
+                else
+                    temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
+                    normName = [normName,'&',num2str(temp{g})];
+                end
             end
-        end
-        if handles.ccstim.Value
-            if isempty(ecombName)
-                ecombName = [ecombName,'CC'];
-            else
-                ecombName = [ecombName,'-CC'];
-            end
-        end
-        if handles.bipolarstim.Value
-            if isempty(ecombName)
-                ecombName = [ecombName,'Bipolar'];
-            else
-                ecombName = [ecombName,'-Bipolar'];
-            end
-        end
-        
-        if handles.LEyeFlag.Value && handles.REyeFlag.Value
             if handles.stimulatingE.Value
-                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByStimE_R&Leye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByStimE_Leye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
             elseif handles.referenceE.Value
-                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByRefE_R&Leye_Ref',num2str(handles.axE(j)),'_',ecombName,handles.figdir];
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByRefE_Leye_Ref',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
             end
-            
-        elseif handles.LEyeFlag.Value
-            if handles.norm.Value
-                normName = [];
-                for g = 1:length([handles.params(handles.params(toplotInds(1)).normInd).p1d])
-                    if g == 1
-                        temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
-                        normName = [normName num2str(temp{g})];
-                    else
-                        temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
-                        normName = [normName,'&',num2str(temp{g})];
-                    end
-                end
-                if handles.stimulatingE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByStimE_Leye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
-                elseif handles.referenceE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByRefE_Leye_Ref',num2str(handles.axE(j)),'_',ecombName,handles.figdir];
-                end
-            else
-                if handles.stimulatingE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByStimE_Leye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
-                elseif handles.referenceE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByRefE_Leye_Ref',num2str(handles.axE(j)),'_',ecombName,handles.figdir];
-                end
-            end
-        elseif handles.REyeFlag.Value
-            if handles.norm.Value
-                normName = [];
-                for g = 1:length([handles.params(handles.params(toplotInds(1)).normInd).p1d])
-                    if g == 1
-                        temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
-                        normName = [normName num2str(temp{g})];
-                    else
-                        temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
-                        normName = [normName,'&',num2str(temp{g})];
-                    end
-                end
-                if handles.stimulatingE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByStimE_Reye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
-                elseif handles.referenceE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByRefE_Reye_Ref',num2str(handles.axE(j)),'_',ecombName,handles.figdir];
-                end
-            else
-                if handles.stimulatingE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByStimE_Reye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
-                elseif handles.referenceE.Value
-                    misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByRefE_Reye_Ref',num2str(handles.axE(j)),'_',ecombName,handles.figdir];
-                end
+        else
+            if handles.stimulatingE.Value
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByStimE_Leye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+            elseif handles.referenceE.Value
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByRefE_Leye_Ref',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
             end
         end
-        saveas(handles.avgMisalignPlot3D(i,j).normalize,[misalgn3DName,'.svg']);
-        saveas(handles.avgMisalignPlot3D(i,j).normalize,[misalgn3DName,'.jpg']);
-        saveas(handles.avgMisalignPlot3D(i,j).normalize,[misalgn3DName,'.fig']);
-        close(handles.avgMisalignPlot3D(i,j).normalize);
-        
-                            handles.ldgNames = {};
+    elseif handles.REyeFlag.Value
+        if handles.norm.Value
+            normName = [];
+            for g = 1:length([handles.params(handles.params(toplotInds(1)).normInd).p1d])
+                if g == 1
+                    temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
+                    normName = [normName num2str(temp{g})];
+                else
+                    temp = {handles.params(handles.params(toplotInds(1)).normInd).p1d};
+                    normName = [normName,'&',num2str(temp{g})];
+                end
+            end
+            if handles.stimulatingE.Value
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByStimE_Reye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+            elseif handles.referenceE.Value
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Default',normName,'P1D_Current_ByRefE_Reye_Ref',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+            end
+        else
+            if handles.stimulatingE.Value
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByStimE_Reye_Stim',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+            elseif handles.referenceE.Value
+                misalgn3DName = [handles.figDir,'\eyeMisalignment3D_Current_ByRefE_Reye_Ref',num2str(handles.figE(j)),'_',ecombName,handles.figdir];
+            end
+        end
+    end
+    saveas(handles.avgMisalignPlot3D(i,j).normalize,[misalgn3DName,'.svg']);
+    saveas(handles.avgMisalignPlot3D(i,j).normalize,[misalgn3DName,'.jpg']);
+    saveas(handles.avgMisalignPlot3D(i,j).normalize,[misalgn3DName,'.fig']);
+    close(handles.avgMisalignPlot3D(i,j).normalize);
+    
+    handles.ldgNames = {};
     handles.lines = zeros(1,length(handles.axE));
     for rN = 1:length(handles.axE)
         handles.ldgNames{rN} = ' ';
@@ -655,7 +688,7 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
         handles.lines(rN) = [handles.fig(i,j).q(rN).lineL];
         
     end
-                    if handles.LEyeFlag.Value + handles.REyeFlag.Value == 2
+    if handles.LEyeFlag.Value + handles.REyeFlag.Value == 2
         t=[handles.params(handles.plottedInds).FacialNerve];
         if any(t)
             ldg1 = legend(handles.fig(i,j).normalized(l).avgMagaxR(k),[handles.lines handles.cutOff1],[handles.ldgNames {'Cutoff Due To Facial Nerve Stimulation'}],'Orientation','horizontal');
@@ -677,10 +710,10 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
         %*[0.7940    0.0297    0.1153;-0.8296    0.0283   -0.1883;0.7940    0.0297    0.1153]
         if handles.stimulatingE.Value
             misalgnName = [handles.figDir,'\eyeMisalignment_ByStim',num2str(handles.figE(j)),'_R&Leye_',handles.figdir];
-            velName = [handles.figDir,'\eyeVelocity_ByStime',num2str(handles.figE(j)),'_R&Leye_',handles.figdir];
+            velName = [handles.figDir,'\eyeVelocity_ByStim',num2str(handles.figE(j)),'_R&Leye_',handles.figdir];
         elseif handles.referenceE.Value
-            misalgnName = [handles.figDir,'\eyeMisalignment_ByRef',num2str(handles.axE(j)),'_R&Leye_',handles.figdir];
-            velName = [handles.figDir,'\eyeVelocity_ByRef',num2str(handles.retunrNum(j)),'_R&Leye_',handles.figdir];
+            misalgnName = [handles.figDir,'\eyeMisalignment_ByRef',num2str(handles.figE(j)),'_R&Leye_',handles.figdir];
+            velName = [handles.figDir,'\eyeVelocity_ByRef',num2str(handles.figE(j)),'_R&Leye_',handles.figdir];
         end
         
     elseif handles.LEyeFlag.Value
@@ -693,12 +726,12 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
             ldg1.FontSize = 13.5;
             ldg2.FontSize = 13.5;
         else
-                ldg1 = legend(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
-                ldg2 = legend(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
-                ldg1.Position = [0.4 0.01 0.1308 0.0192];
-                ldg2.Position = [0.4 0.01 0.1308 0.0192];
-                ldg1.FontSize = 13.5;
-                ldg2.FontSize = 13.5;
+            ldg1 = legend(handles.fig(i,j).normalized(l).avgMagaxL(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
+            ldg2 = legend(handles.fig(i,j).normalized(l).avgMisalignaxL(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
+            ldg1.Position = [0.4 0.01 0.1308 0.0192];
+            ldg2.Position = [0.4 0.01 0.1308 0.0192];
+            ldg1.FontSize = 13.5;
+            ldg2.FontSize = 13.5;
         end
         
         
@@ -713,11 +746,11 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
             end
         elseif handles.referenceE.Value
             if handles.norm.Value
-                handles.avgMisalignPlot(i,j).normalized(l).Name = [handles.figDir,'\NormalizedeyeMisalignmentBy',normName,'P1D_Current_ByRef',num2str(handles.axE(j)),'_Leye_',handles.figdir];
-                handles.avgMagPlot(i,j).normalized(l).Name = [handles.figDir,'\NormalizedeyeVelocityBy',normName,'P1D_Current_ByRef',num2str(handles.axE(j)),'_Leye_',handles.figdir];
+                handles.avgMisalignPlot(i,j).normalized(l).Name = [handles.figDir,'\NormalizedeyeMisalignmentBy',normName,'P1D_Current_ByRef',num2str(handles.figE(j)),'_Leye_',handles.figdir];
+                handles.avgMagPlot(i,j).normalized(l).Name = [handles.figDir,'\NormalizedeyeVelocityBy',normName,'P1D_Current_ByRef',num2str(handles.figE(j)),'_Leye_',handles.figdir];
             else
-                handles.avgMisalignPlot(i,j).normalized(l).Name = [handles.figDir,'\eyeMisalignment_Current_ByRef',num2str(handles.axE(j)),'_Leye_',handles.figdir];
-                handles.avgMagPlot(i,j).normalized(l).Name = [handles.figDir,'\eyeVelocity_Current_ByRef',num2str(handles.axE(j)),'_Leye_',handles.figdir];
+                handles.avgMisalignPlot(i,j).normalized(l).Name = [handles.figDir,'\eyeMisalignment_Current_ByRef',num2str(handles.figE(j)),'_Leye_',handles.figdir];
+                handles.avgMagPlot(i,j).normalized(l).Name = [handles.figDir,'\eyeVelocity_Current_ByRef',num2str(handles.figE(j)),'_Leye_',handles.figdir];
             end
         end
         
@@ -732,12 +765,12 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
             ldg1.FontSize = 13.5;
             ldg2.FontSize = 13.5;
         else
-                ldg1 = legend(handles.fig(i,j).normalized(l).avgMagaxR(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
-                ldg2 = legend(handles.fig(i,j).normalized(l).avgMisalignaxR(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
-                ldg1.Position = [0.4 0.01 0.1308 0.0192];
-                ldg2.Position = [0.4 0.01 0.1308 0.0192];
-                ldg1.FontSize = 13.5;
-                ldg2.FontSize = 13.5;
+            ldg1 = legend(handles.fig(i,j).normalized(l).avgMagaxR(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
+            ldg2 = legend(handles.fig(i,j).normalized(l).avgMisalignaxR(k),handles.lines,handles.ldgNames,'Orientation','horizontal','AutoUpdate','off');
+            ldg1.Position = [0.4 0.01 0.1308 0.0192];
+            ldg2.Position = [0.4 0.01 0.1308 0.0192];
+            ldg1.FontSize = 13.5;
+            ldg2.FontSize = 13.5;
         end
         
         
@@ -752,26 +785,26 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
             end
         elseif handles.referenceE.Value
             if handles.norm.Value
-                handles.avgMisalignPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\NormalizedeyeMisalignmentBy',normName,'P1D_Current_ByRef',num2str(handles.axE(j)),'_Reye_',handles.figdir];
-                handles.avgMagPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\NormalizedeyeVelocityBy',normName,'P1D_Current_ByRef',num2str(handles.axE(j)),'_Reye_',handles.figdir];
+                handles.avgMisalignPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\NormalizedeyeMisalignmentBy',normName,'P1D_Current_ByRef',num2str(handles.figE(j)),'_Reye_',handles.figdir];
+                handles.avgMagPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\NormalizedeyeVelocityBy',normName,'P1D_Current_ByRef',num2str(handles.figE(j)),'_Reye_',handles.figdir];
             else
-                handles.avgMisalignPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\eyeMisalignment_Current_ByRef',num2str(handles.axE(j)),'_Reye_',handles.figdir];
-                handles.avgMagPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\eyeVelocity_Current_ByRef',num2str(handles.axE(j)),'_Reye_',handles.figdir];
+                handles.avgMisalignPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\eyeMisalignment_Current_ByRef',num2str(handles.figE(j)),'_Reye_',handles.figdir];
+                handles.avgMagPlot(i,j).normalized(ltimes).Name = [handles.figDir,'\eyeVelocity_Current_ByRef',num2str(handles.figE(j)),'_Reye_',handles.figdir];
             end
         end
         
     end
-        
-        
-        
-        
-        
-     
+    
+    
+    
+    
+    
+    
     start = length(handles.axE);
-                        
-
+    
+    
     if (i == sum(handles.LRZ)) && (j == length(handles.figE))
-                sameaxes([],[handles.avgMisalignPlot(:).normalized])
+        sameaxes([],[handles.avgMisalignPlot(:).normalized])
         sameaxes([],[handles.avgMagPlot(:).normalized])
         for figDir = 1:size(handles.avgMisalignPlot,1)
             for figSave = 1:size(handles.avgMisalignPlot(figDir,:),2)
@@ -788,8 +821,7 @@ if (k == length(handles.axE)) && (l == handles.currmaxNorm)
             end
         end
     end
-    end
+end
 
 
-                
-         
+

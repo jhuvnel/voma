@@ -2133,10 +2133,883 @@ switch handles.params.system_code
             handles.prevExportSize = 0;
         end
         guidata(hObject,handles)
+    case 5 % Lasker System VORDAQ
+          if handles.params.reloadflag == 0
+        handles.filepath = uigetdir('','Choose Directory For .0000 Files');
+        cd(handles.filepath)
+        handles.listing = dir(handles.filepath);
+        handles.listing(~contains({handles.listing.name},'.0000')) = [];
+        handles.listing(contains({handles.listing.name},'.lvs')) = [];
+        handles.listing(contains({handles.listing.name},'.txt')) = [];
+        fig = uifigure('Position', [885   378   300   535]);
+        fig.WindowKeyPressFcn = @confirmFiles;
+        lbx = uilistbox(fig);
+        lbx.Position = [10 10 280 430];
+        lbx.Items = {'',handles.listing.name};
+        lbx.Multiselect = 'on';
+        t = uitextarea(fig,'Value',{'Highlight the FIRST (EMPTY) line if you would like to segment all files.'; 'Otherwise, ctrl+click all files you do not want to segment.'; 'Then click enter'});
+        t.Position = [5 445 290 80];        
+        uiwait(fig)
+        if isempty(lbx.Value{1})
+        else
+            items = lbx.Items(2:end);
+        handles.listing(contains(items,lbx.Value)) = [];
+        end
+        lbx.Items = {handles.listing.name};
+
+        close(fig)
+        count = 0;
+        if isfile('zerosAndGains.mat')
+            load('zerosAndGains.mat');
+            coilzeros = CaF(1,:);
+            FieldGains = CaF(2,:);
+        else
+            fig = uifigure('Position', [432 412 750 160]);
+            fig.WindowKeyPressFcn = @confirmFiles;
+            z = uilabel(fig,'Position',[10 80 40 20],'Text','Zeros:');
+            zero1 = uieditfield(fig,'numeric','Position',[50 80 50 22]);
+            zero2 = uieditfield(fig,'numeric','Position',[105 80 50 22]);
+            zero3 = uieditfield(fig,'numeric','Position',[160 80 50 22]);
+            zero4 = uieditfield(fig,'numeric','Position',[215 80 50 22]);
+            zero5 = uieditfield(fig,'numeric','Position',[270 80 50 22]);
+            zero6 = uieditfield(fig,'numeric','Position',[325 80 50 22]);
+            zero7 = uieditfield(fig,'numeric','Position',[380 80 50 22]);
+            zero8 = uieditfield(fig,'numeric','Position',[435 80 50 22]);
+            zero9 = uieditfield(fig,'numeric','Position',[490 80 50 22]);
+            zero10 = uieditfield(fig,'numeric','Position',[545 80 50 22]);
+            zero11 = uieditfield(fig,'numeric','Position',[600 80 50 22]);
+            zero12 = uieditfield(fig,'numeric','Position',[655 80 50 22]);
+            g = uilabel(fig,'Position',[10 40 40 20],'Text','Gains:');
+            g1 = uieditfield(fig,'numeric','Position',[50 40 50 22]);
+            g2 = uieditfield(fig,'numeric','Position',[105 40 50 22]);
+            g3 = uieditfield(fig,'numeric','Position',[160 40 50 22]);
+            g4 = uieditfield(fig,'numeric','Position',[215 40 50 22]);
+            g5 = uieditfield(fig,'numeric','Position',[270 40 50 22]);
+            g6 = uieditfield(fig,'numeric','Position',[325 40 50 22]);
+            g7 = uieditfield(fig,'numeric','Position',[380 40 50 22]);
+            g8 = uieditfield(fig,'numeric','Position',[435 40 50 22]);
+            g9 = uieditfield(fig,'numeric','Position',[490 40 50 22]);
+            g10 = uieditfield(fig,'numeric','Position',[545 40 50 22]);
+            g11 = uieditfield(fig,'numeric','Position',[600 40 50 22]);
+            g12 = uieditfield(fig,'numeric','Position',[655 40 50 22]);
+            ch = uilabel(fig,'Position',[50 100 655 15],'Text','CH1 - X     CH1 - Y    CH1 - Z   CH2 - X    CH2 - Y    CH2 - Z   CH3 - X    CH3 - Y    CH3 - Z   CH4 - X    CH4 - Y    CH4 - Z');
+            uiwait(fig)
+            coilzeros = [zero1.Value zero2.Value zero3.Value zero4.Value...
+                zero5.Value zero6.Value zero7.Value zero8.Value...
+                zero9.Value zero10.Value zero11.Value zero12.Value];
+            FieldGains = [g1.Value g2.Value g3.Value g4.Value...
+                g5.Value g6.Value g7.Value g8.Value...
+                g9.Value g10.Value g11.Value g12.Value];
+            CaF = [coilzeros; FieldGains];
+            save('zerosAndGains.mat','CaF')
+            close(fig)
+        end
+        if any(FieldGains(1:6)==0)
+            handles.eye_rec.Value = 4;
+        elseif any(FieldGains(7:end)==0)
+            handles.eye_rec.Value = 3;
+        else
+            handles.eye_rec.Value = 2;
+        end
+           
+        
+        data_rot = 2;
+        DAQ_code = 1;
+        OutputFormat = 2;
+                    handles.choice = [];
+                    f=figure('Name','Choose the stimulator channels that correspond to the canal');
+                f.Position = [600 278 450 290];
+                set1_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[7:9],'Position',[300 5 130 215]);
+                set1_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',1,'fontsize',8,'Position',[305 225 100 30]);
+                set2_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[1:3],'Position',[165 5 130 215]);
+                set2_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',2,'fontsize',8,'Position',[170 225 100 30]);
+                set3_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[4:6],'Position',[30 5 130 215]);
+                set3_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',3,'fontsize',8,'Position',[35 225 100 30]);
+                animalEnum = uicontrol(f,'Style','popupmenu','String',{'GiGi','MoMo','Nancy','Yoda','DiDi','Fred'},'Value',1,'fontsize',8,'Position',[200 260 50 25],'CallBack',@changeENum);
+                okButton = uicontrol(f,'Style','pushbutton','String','Ok','fontsize',12,'Position',[415 230 30 30],'CallBack',{@ok_axis_Callback, handles});
+                uiwait(gcf)
+                delete(gcf)
+                canalInfo = getappdata(handles.stim_axis,'axisInfo');
+        for i = 1:length(handles.listing)
+            [Data] = voma__processeyemovements([handles.filepath,'\'],handles.listing(i).name,FieldGains,coilzeros,[],data_rot,DAQ_code,OutputFormat,[]);
+            handles.t = 0:1/Data.Fs:(length(Data.Var_x081)-1)/Data.Fs;
+            handles.f = figure;
+            handles.f.WindowKeyPressFcn = @confirmFiles;
+            handles.f.WindowButtonDownFcn = @mouseDownCallback;
+            handles.ax = subplot(1,2,1);
+            handles.ax.Units = 'pixels';
+
+            handles.plot = plot(handles.ax,handles.t,Data.Var_x081);
+                        handles.ax.Title.String = "Click '1' to use this SYNC signal";
+            handles.ax2 = subplot(1,2,2);
+            handles.ax2.Units = 'pixels';
+
+            handles.plot2 = plot(handles.ax2,handles.t,Data.Var_x087);
+                        handles.ax2.Title.String = "Click '2' to use this SYNC signal";
+            handles.choice = [];
+            guidata(handles.f,handles)
+            uiwait(handles.f)
+            handles = guidata(handles.f);
+            close(handles.f)
+            if handles.choice == 1
+                Data.Var_x081 = Data.Var_x081;
+            elseif handles.choice == 2
+                Data.Var_x081 = Data.Var_x087;
+            end
+            handles.t = 0:1/Data.Fs:(length(Data.Var_x081)-1)/Data.Fs;
+            handles.f = figure;
+            handles.f.WindowKeyPressFcn = @confirmFiles;
+            handles.f.WindowButtonDownFcn = @mouseDownCallback;
+            handles.ax = axes(handles.f);
+            handles.ax.Units = 'pixels';
+            handles.plot = plot(handles.ax,handles.t,Data.Var_x081);
+            handles.boundsBegin = [];
+            handles.boundsEnd = [];
+            if Data.Fs>200
+                try
+                    final = getFredSeg(Data);
+                    handles.boundsBegin = [final.start];
+                    handles.boundsEnd = [final.end];
+                    hold(handles.ax,'on')
+                    plot(handles.ax,handles.t(handles.boundsBegin),Data.Var_x081(handles.boundsBegin),'g*')
+                    plot(handles.ax,handles.t(handles.boundsEnd),Data.Var_x081(handles.boundsEnd),'r*')
+                    hold(handles.ax,'off')
+                    guidata(handles.f,handles)
+                catch
+                    g = selectBounds(Data);
+                    handles.boundsBegin = g.Data.boundsBegin;
+                    handles.boundsEnd = g.Data.boundsEnd;
+                    guidata(handles.f,handles)
+                end
+            else
+            go = 1;
+            k = 1;
+            while go
+                if length(handles.boundsBegin)>length(handles.boundsEnd)
+                    if (Data.Var_x081(k) < mean(Data.Var_x081)) && (Data.Var_x081(k-1)>mean(Data.Var_x081))
+                        if k-handles.boundsBegin(end)>40
+                        handles.boundsEnd = [handles.boundsEnd k-1];
+                        hold(handles.ax,'on')
+                        plot(handles.ax,handles.t(k-1),Data.Var_x081(k-1),'r*')
+                        hold(handles.ax,'off')
+                        end
+                    end
+                else
+                    if k > 1
+                        if (Data.Var_x081(k) > mean(Data.Var_x081)) && (Data.Var_x081(k-1)<mean(Data.Var_x081))
+                            if length(handles.boundsBegin)==length(handles.boundsEnd)
+                                if length(handles.boundsEnd)>0
+                                    if k-handles.boundsEnd(end)>20
+                                        handles.boundsBegin = [handles.boundsBegin k];
+                                    hold(handles.ax,'on')
+                                    plot(handles.ax,handles.t(k),Data.Var_x081(k),'g*')
+                                    hold(handles.ax,'off')
+                                    end
+                                else
+                                    handles.boundsBegin = [handles.boundsBegin k];
+                                    hold(handles.ax,'on')
+                                    plot(handles.ax,handles.t(k),Data.Var_x081(k),'g*')
+                                    hold(handles.ax,'off')
+                                end
+                            end
+                        end
+                    end
+                end
+                k = k +1;
+                if k == length(Data.Var_x081)
+                    if length(handles.boundsBegin)>length(handles.boundsEnd)
+                        handles.boundsEnd = [handles.boundsEnd k-50];
+                        hold(handles.ax,'on')
+                        plot(handles.ax,handles.t(k-50),Data.Var_x081(k-50),'r*')
+                        hold(handles.ax,'off')
+                    end
+                    go = 0;
+                end
+            end
+            guidata(handles.f,handles)
+            uiwait(handles.f)
+            end
+            
+      
+            handles = guidata(handles.f);
+            close(handles.f)
+
+            for j = 1:length(handles.boundsBegin)
+                
+                filename = handles.listing(i).name;
+                dashes = find(filename=='-');
+                dot = find(filename=='.');
+                amp = ['amp',num2str(10+10*(j-1))];
+                
+                % input all settings
+                handles.subj_id.String = {canalInfo.animal};
+                handles.visit_number.String = {'NA'};
+                dt = filename(1:dashes(3)-1);
+                dt = strrep(dt,'-','');
+                handles.date.String = dt;
+                handles.exp_type.String = {'ElectricalStim'};
+                handles.exp_condition.String = {'PulseTrains'};
+                handles.stim_frequency.String = {'Sinusoidal0to400'};
+                setappdata(handles.stim_frequency,'fq','200');
+                stimnum = filename(dashes(7)+1:dashes(8)-1);
+                refnum = filename(dashes(6)+1:dashes(7)-1); %was 5 and 6
+                handles.stim_type.String = {['stim',stimnum,'ref',refnum]};
+                switch stimnum
+                    case canalInfo.stimNum{2}'
+                        setappdata(handles.stim_axis,'ax',canalInfo.stimCanal{2});
+                        handles.stim_axis.String = canalInfo.stimCanal(2);
+                        setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+                        axSub = 'LP';
+                    case canalInfo.stimNum{1}'
+                        setappdata(handles.stim_axis,'ax',canalInfo.stimCanal{1});
+                        handles.stim_axis.String = canalInfo.stimCanal(1);
+                        setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+                        axSub = 'LA';
+                    case canalInfo.stimNum{3}'
+                        setappdata(handles.stim_axis,'ax',canalInfo.stimCanal{3});
+                        handles.stim_axis.String = canalInfo.stimCanal(3);
+                        setappdata(handles.stim_type,'type',handles.stim_type.String{1});
+                        axSub = 'LH';
+                end
+                inten = {[amp,'baseline200freq2delta200_sinusoidal_',axSub]};
+                setappdata(handles.stim_intensity,'intensity',inten{1});
+                handles.stim_intensity.String = inten;
+                
+                [handles] = update_seg_filename(hObject, eventdata, handles);
+                
+                handles.load_spread_sheet.BackgroundColor = [0.94 0.94 0.94];
+                handles.load_spread_sheet.Enable = 'on';
+                
+                
+                
+                
+                t=0:1/Data.Fs:(handles.boundsEnd(j)-handles.boundsBegin(j))/Data.Fs;
+                handles.Fs = Data.Fs;
+                handles.f = figure;
+                handles.f.Position = [588   558   904   420];
+                handles.f.WindowKeyPressFcn = @confirmFiles;
+                handles.ax = axes(handles.f);
+                handles.ax.Units = 'pixels';
+                handles.ax.Position = [73.8000   47.2000  800.0000  342.3000];
+                handles.s = (sin(2*pi*2*t))*20+20;
+                handles.l = filtfilt(ones(1,5)/5,1,Data.RE_Vel_LARP);
+                handles.r = filtfilt(ones(1,5)/5,1,Data.RE_Vel_RALP);
+                handles.z = filtfilt(ones(1,5)/5,1,Data.RE_Vel_Z);
+                handles.s1 = Data.Var_x081;
+                handles.j = j;
+                handles.p = [];
+                if handles.boundsEnd(j)+50>length(handles.t)
+                    bp = handles.boundsBegin(j)-50:handles.boundsEnd(j);
+                else
+                    bp = handles.boundsBegin(j)-50:handles.boundsEnd(j)+50;
+                end
+                handles.trig = plot(handles.ax,handles.t(bp),handles.s1(bp));
+                hold on
+                handles.lPlot = plot(handles.ax,handles.t(bp),handles.l(bp),'g');
+                handles.rPlot = plot(handles.ax,handles.t(bp),handles.r(bp),'b');
+                handles.zPlot = plot(handles.ax,handles.t(bp),handles.z(bp),'r');
+                handles.sPlot = plot(handles.ax,handles.t(handles.boundsBegin(j):handles.boundsEnd(j)),handles.s,'k');
+                hold off
+                handles.ax.Title.String = handles.seg_filename.String;
+                legend(handles.ax,'Trigger','LARP','RALP','LHRH')
+                handles.b = uicontrol('Style','pushbutton','String','Time Shift','Callback',@adjustTime);
+                ai = strfind(handles.ax.Title.String,'amp');
+                bi = strfind(handles.ax.Title.String,'baseline');
+                astr = handles.ax.Title.String(ai+3:bi-1);
+                handles.a = uicontrol('Style','edit','String',astr,'Callback',@adjustAmp);
+                handles.a.Position = [80 5 60 20];
+                handles.b.Position = [5 5 60 20];
+                handles.ax.YLim = [-200 200];
+                guidata(handles.f,handles)
+                                if j == 1
+                    figure
+                    plot(handles.t,handles.s1,'k')
+                    hold on
+                    plot(handles.t,handles.l,'g');
+                    plot(handles.t,handles.r,'b');
+                    plot(handles.t,handles.z,'r');
+                end
+                uiwait(handles.f)
+                handles = guidata(handles.f);
+                
+                if ~isempty(handles.p)
+                    Segment.segment_code_version = mfilename;
+                Segment.raw_filename = filename;
+                t = handles.sPlot.XData-handles.sPlot.XData(1);
+                Segment.start_t = t(1);
+                Segment.end_t = t(end);
+                Segment.LE_Position_X = interp1(handles.rPlot.XData,Data.LE_Pos_X(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                Segment.LE_Position_Y = interp1(handles.rPlot.XData,Data.LE_Pos_Y(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                Segment.LE_Position_Z = interp1(handles.rPlot.XData,Data.LE_Pos_Z(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                
+                Segment.RE_Position_X = interp1(handles.rPlot.XData,Data.RE_Pos_X(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                Segment.RE_Position_Y = interp1(handles.rPlot.XData,Data.RE_Pos_Y(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                Segment.RE_Position_Z = interp1(handles.rPlot.XData,Data.RE_Pos_Z(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                
+                Segment.LE_Velocity_X = interp1(handles.rPlot.XData,Data.LE_Vel_X(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                Segment.LE_Velocity_Y = interp1(handles.rPlot.XData,Data.LE_Vel_Y(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                Segment.LE_Velocity_LARP = interp1(handles.rPlot.XData,Data.LE_Vel_LARP(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                Segment.LE_Velocity_RALP = interp1(handles.rPlot.XData,Data.LE_Vel_RALP(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                Segment.LE_Velocity_Z = interp1(handles.rPlot.XData,Data.LE_Vel_Z(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData);
+                
+                Segment.RE_Velocity_X = interp1(handles.rPlot.XData,Data.RE_Vel_X(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                Segment.RE_Velocity_Y = interp1(handles.rPlot.XData,Data.RE_Vel_Y(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                Segment.RE_Velocity_LARP = interp1(handles.rPlot.XData,Data.RE_Vel_LARP(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                Segment.RE_Velocity_RALP = interp1(handles.rPlot.XData,Data.RE_Vel_RALP(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                Segment.RE_Velocity_Z = interp1(handles.rPlot.XData,Data.RE_Vel_Z(handles.boundsBegin(j)-50:handles.boundsEnd(j)+50),handles.sPlot.XData)';
+                if any(isnan(Segment.LE_Position_X))
+                    Segment.LE_Position_X = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Position_Y = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Position_Z = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_X = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_Y = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_LARP = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_RALP = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_Z = zeros(length(Segment.RE_Position_X),1);
+                elseif any(isnan(Segment.RE_Position_X))
+                    Segment.RE_Position_X = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Position_Y = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Position_Z = zeros(length(Segment.LE_Position_X),1);
+                        Segment.RE_Velocity_X = zeros(length(Segment.LE_Position_X),1);
+                        Segment.RE_Velocity_Y = zeros(length(Segment.LE_Position_X),1);
+                        Segment.RE_Velocity_LARP = zeros(length(Segment.LE_Position_X),1);
+                        Segment.RE_Velocity_RALP = zeros(length(Segment.LE_Position_X),1);
+                        Segment.RE_Velocity_Z = zeros(length(Segment.LE_Position_X),1);
+                    end
+                    Segment.Fs = Data.Fs;
+                    
+                    Stim_Interp = (sin(2*pi*2*t))*20+20;
+                    Time_Stim = t';
+                    Segment.Time_Eye =  Time_Stim;
+                    Segment.Time_Stim = Time_Stim;
+                    
+                    Segment.HeadMPUVel_X = zeros(1,length(Stim_Interp))';
+                    Segment.HeadMPUVel_Y = zeros(1,length(Stim_Interp))';
+                    Segment.HeadMPUVel_Z = Stim_Interp';
+                    
+                    Segment.HeadMPUAccel_X = zeros(1,length(Stim_Interp))';
+                    Segment.HeadMPUAccel_Y = zeros(1,length(Stim_Interp))';
+                    Segment.HeadMPUAccel_Z = zeros(1,length(Stim_Interp))';
+                    Segment.EyesRecorded = handles.eye_rec.String(handles.eye_rec.Value);
+                else
+                t=0:1/Data.Fs:(handles.boundsEnd(j)-handles.boundsBegin(j))/Data.Fs;
+                Segment.segment_code_version = mfilename;
+                Segment.raw_filename = filename;
+                Segment.start_t = t(1);
+                Segment.end_t = t(end);
+                Segment.LE_Position_X = Data.LE_Pos_X(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.LE_Position_Y = Data.LE_Pos_Y(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.LE_Position_Z = Data.LE_Pos_Z(handles.boundsBegin(j):handles.boundsEnd(j));
+                
+                Segment.RE_Position_X = Data.RE_Pos_X(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.RE_Position_Y = Data.RE_Pos_Y(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.RE_Position_Z = Data.RE_Pos_Z(handles.boundsBegin(j):handles.boundsEnd(j));
+                
+                Segment.LE_Velocity_X = Data.LE_Vel_X(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.LE_Velocity_Y = Data.LE_Vel_Y(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.LE_Velocity_LARP = Data.LE_Vel_LARP(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.LE_Velocity_RALP = Data.LE_Vel_RALP(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.LE_Velocity_Z = Data.LE_Vel_Z(handles.boundsBegin(j):handles.boundsEnd(j));
+                
+                Segment.RE_Velocity_X = Data.RE_Vel_X(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.RE_Velocity_Y = Data.RE_Vel_Y(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.RE_Velocity_LARP = Data.RE_Vel_LARP(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.RE_Velocity_RALP = Data.RE_Vel_RALP(handles.boundsBegin(j):handles.boundsEnd(j));
+                Segment.RE_Velocity_Z = Data.RE_Vel_Z(handles.boundsBegin(j):handles.boundsEnd(j));
+                if any(isnan(Segment.LE_Position_X))
+                    Segment.LE_Position_X = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Position_Y = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Position_Z = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_X = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_Y = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_LARP = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_RALP = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_Z = zeros(length(Segment.RE_Position_X),1);
+                elseif any(isnan(Segment.RE_Position_X))
+                    Segment.RE_Position_X = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Position_Y = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Position_Z = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_X = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_Y = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_LARP = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_RALP = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_Z = zeros(length(Segment.LE_Position_X),1);
+                end
+                Segment.Fs = Data.Fs;
+                
+                Stim_Interp = (sin(2*pi*2*t))*20+20;
+                Time_Stim = t';
+                Segment.Time_Eye = Time_Stim;
+                Segment.Time_Stim = Time_Stim;
+                
+                Segment.HeadMPUVel_X = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUVel_Y = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUVel_Z = Stim_Interp;
+                
+                Segment.HeadMPUAccel_X = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUAccel_Y = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUAccel_Z = zeros(1,length(Stim_Interp))';
+                Segment.EyesRecorded = handles.eye_rec.String(handles.eye_rec.Value);
+                if exist('final')
+                    if Data.Fs == 1000
+                        Segment.stim_ind = [final(j).Inds]-[final(j).Inds(1)];
+                    end
+                end
+                end
+                
+                handles.Segment = Segment;
+                
+                segments = str2num(handles.segment_number.String);
+                if segments == 0
+                    mkdir([handles.listing(1).folder,handles.ispc.slash,'Segments',handles.ispc.slash])
+                    setappdata(handles.save_segment,'foldername',[handles.listing(1).folder,handles.ispc.slash,'Segments',handles.ispc.slash]);
+                end
+                
+                
+                
+                handles.string_addon = [];
+                if ~handles.skipFlag
+                    [handles]=save_segment_Callback(hObject, eventdata, handles);
+                    count = count +1;
+                else
+                    count = count +1;
+                    segments = count;
+                    handles.experimentdata{segments,1} = [handles.seg_filename.String handles.string_addon];
+                    handles.experimentdata{segments,2} = [handles.date.String(5:6),'/',handles.date.String(7:8),'/',handles.date.String(1:4)];
+                    handles.experimentdata{segments,3} = handles.subj_id.String{handles.subj_id.Value};
+                    handles.experimentdata{segments,4} = handles.implant.String{handles.implant.Value};
+                    handles.experimentdata{segments,5} = handles.eye_rec.String{handles.eye_rec.Value};
+                    handles.experimentdata{segments,9} = [handles.exp_type.String{handles.exp_type.Value},'-',handles.exp_condition.String{handles.exp_condition.Value},'-',handles.stim_type.String{handles.stim_type.Value}];
+                    handles.experimentdata{segments,10} = handles.stim_axis.String{handles.stim_axis.Value};
+                    stim_freq = handles.stim_frequency.String{handles.stim_frequency.Value};
+                    handles.experimentdata{segments,12} = str2double(stim_freq);
+                    stim_int = handles.stim_intensity.String{handles.stim_intensity.Value};
+                    dps = find(handles.stim_intensity.String{handles.stim_intensity.Value} == 'd');
+                    stim_int(dps:end) = [];
+                    handles.experimentdata{segments,13} = str2num(stim_int);
+                    handles.experimentdata{segments,14} = [];
+                    handles.experimentdata{segments,15} = [];
+                    handles.experimentdata{segments,16} = [];
+                    handles.experimentdata{segments,17} = [];
+                    setappdata(handles.export_data,'data',handles.experimentdata);
+                end
+               
+                b = handles.boundsBegin(j)-Data.Fs*2.5:handles.boundsBegin(j);
+                if any(b<=0)
+                    b = 1:handles.boundsBegin(j);
+                end
+                t=0:1/Data.Fs:(length(b)-1)/Data.Fs;
+                Segment.segment_code_version = mfilename;
+                Segment.raw_filename = filename;
+                Segment.start_t = t(1);
+                Segment.end_t = t(end);
+                Segment.LE_Position_X = Data.LE_Pos_X(b);
+                Segment.LE_Position_Y = Data.LE_Pos_Y(b);
+                Segment.LE_Position_Z = Data.LE_Pos_Z(b);
+                
+                Segment.RE_Position_X = Data.RE_Pos_X(b);
+                Segment.RE_Position_Y = Data.RE_Pos_Y(b);
+                Segment.RE_Position_Z = Data.RE_Pos_Z(b);
+                
+                Segment.LE_Velocity_X = Data.LE_Vel_X(b);
+                Segment.LE_Velocity_Y = Data.LE_Vel_Y(b);
+                Segment.LE_Velocity_LARP = Data.LE_Vel_LARP(b);
+                Segment.LE_Velocity_RALP = Data.LE_Vel_RALP(b);
+                Segment.LE_Velocity_Z = Data.LE_Vel_Z(b);
+                
+                Segment.RE_Velocity_X = Data.RE_Vel_X(b);
+                Segment.RE_Velocity_Y = Data.RE_Vel_Y(b);
+                Segment.RE_Velocity_LARP = Data.RE_Vel_LARP(b);
+                Segment.RE_Velocity_RALP = Data.RE_Vel_RALP(b);
+                Segment.RE_Velocity_Z = Data.RE_Vel_Z(b);
+                if any(isnan(Segment.LE_Position_X))
+                    Segment.LE_Position_X = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Position_Y = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Position_Z = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_X = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_Y = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_LARP = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_RALP = zeros(length(Segment.RE_Position_X),1);
+                    Segment.LE_Velocity_Z = zeros(length(Segment.RE_Position_X),1);
+                elseif any(isnan(Segment.RE_Position_X))
+                    Segment.RE_Position_X = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Position_Y = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Position_Z = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_X = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_Y = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_LARP = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_RALP = zeros(length(Segment.LE_Position_X),1);
+                    Segment.RE_Velocity_Z = zeros(length(Segment.LE_Position_X),1);
+                end
+                Segment.Fs = Data.Fs;
+                
+                Stim_Interp = (sin(2*pi*2*t))*20+20;
+                Time_Stim = t';
+                Segment.Time_Eye = Time_Stim;
+                Segment.Time_Stim = Time_Stim;
+                
+                Segment.HeadMPUVel_X = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUVel_Y = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUVel_Z = Stim_Interp;
+                
+                Segment.HeadMPUAccel_X = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUAccel_Y = zeros(1,length(Stim_Interp))';
+                Segment.HeadMPUAccel_Z = zeros(1,length(Stim_Interp))';
+                Segment.EyesRecorded = handles.eye_rec.String(handles.eye_rec.Value);
+                if exist('final')
+                    if Data.Fs == 1000
+                        Segment.stim_ind = [final(j).Inds]-[final(j).Inds(1)];
+                    end
+                end
+                handles.params.segment_filename = handles.seg_filename.String;
+                
+                if isempty(getappdata(handles.save_segment,'foldername')) || (numel(getappdata(handles.save_segment,'foldername'))==1 && (getappdata(handles.save_segment,'foldername')==0))
+                    folder_name = {uigetdir('','Select Directory to Save the Segmented Data')};
+                    setappdata(handles.save_segment,'foldername',folder_name{1});
+                    cd(folder_name{1})
+                else
+                    
+                    cd(getappdata(handles.save_segment,'foldername'))
+                end
+                
+                d = struct();
+                d.Data = Segment;
+                
+                handles.string_addon = 'PRESTIM';
+                save([handles.params.segment_filename handles.string_addon '.mat'],'-struct','d')
+
+                close(handles.f)
+                handles.segment_number.String = num2str(count);
+            end
+            
+            
+        end
+        
+                        if handles.timesExported ==0
+                            handles.ss_FileName = [handles.subj_id.String{handles.subj_id.Value} '_ExperimentRecords'];
+                            set(handles.exp_spread_sheet_name,'String',[handles.ss_FileName '.mat']);
+                            handles.exportCond = 3;
+                            guidata(hObject,handles)
+                            handles = export_data_Callback(hObject, eventdata, handles);
+                        else
+                            handles.exportCond = 2;
+                            guidata(hObject,handles)
+                            handles = export_data_Callback(hObject, eventdata, handles);
+                        end
+          else
+              handles.segment_number.String = '0';
+            handles.exp_spread_sheet_name.String = '';
+            handles.worksheet_name.String = '';
+            handles.experimentdata = {};
+            setappdata(handles.export_data,'data','')
+            handles.exportCond = 0;
+            handles.timesExported = 0;
+            handles.whereToStartExp = 1;
+            handles.prevExportSize = 0;
+                        
+          end
     otherwise
         
         
         guidata(hObject,handles)
+end
+function adjustAmp(figHandle,varargin)
+    h = guidata(figHandle);                
+    nai = strfind(h.ax.Title.String,'amp');
+    nbi = strfind(h.ax.Title.String,'baseline');
+    nastr = h.ax.Title.String(nai+3:nbi-1);
+    h.ax.Title.String = strrep(h.ax.Title.String,['amp',nastr],['amp',h.a.String]);
+    h.seg_filename.String = strrep(h.seg_filename.String,['amp',nastr],['amp',h.a.String]);
+    h.stim_intensity.String = strrep(h.stim_intensity.String,['amp',nastr],['amp',h.a.String]);
+    setappdata(h.stim_intensity,'intensity',h.stim_intensity.String{1});
+    guidata(figHandle,h)
+end
+function adjustTime(figHandle,varargin)
+    h = guidata(figHandle);
+    if contains(h.stim_axis.String,'LARP')
+        ydID = find(ismember(h.lPlot.XData,h.sPlot.XData));
+        h.p = sinShift(h.sPlot.XData,h.sPlot.YData,h.lPlot.YData(ydID));
+    elseif contains(h.stim_axis.String,'RALP')
+        ydID = find(ismember(h.rPlot.XData,h.sPlot.XData));
+        h.p = sinShift(h.sPlot.XData,h.sPlot.YData,h.rPlot.YData(ydID));
+    elseif contains(h.stim_axis.String,'LHRH')
+        ydID = find(ismember(h.zPlot.XData,h.sPlot.XData));
+        h.p = sinShift(h.sPlot.XData,h.sPlot.YData,h.zPlot.YData(ydID));
+    end
+    h.trig.XData = (h.trig.XData-h.p(2))/h.p(1);
+    h.lPlot.XData = (h.lPlot.XData-h.p(2))/h.p(1);
+    h.rPlot.XData = (h.rPlot.XData-h.p(2))/h.p(1);
+    h.zPlot.XData = (h.zPlot.XData-h.p(2))/h.p(1);
+    guidata(figHandle,h)
+    
+end
+function mouseDownCallback(figHandle,varargin)
+% get the handles structure
+h = guidata(figHandle);
+% get the position where the mouse button was pressed (not released)
+% within the GUI
+if contains(figHandle.SelectionType,'normal')
+    currentPoint = get(figHandle, 'CurrentPoint');
+    x1            = currentPoint(1,1);
+    y            = currentPoint(1,2);
+    % get the position of the axes within the GUI
+    axesPos = get(h.ax,'Position');
+    minx    = axesPos(1);
+    miny    = axesPos(2);
+    maxx    = minx + axesPos(3);
+    maxy    = miny + axesPos(4);
+    % is the mouse down event within the axes?
+    if x1>=minx && x1<=maxx && y>=miny && y<=maxy
+        % do we have graphics objects?
+            % get the position of the mouse down event within the axes
+            currentPoint = get(h.ax, 'CurrentPoint');
+            x1            = currentPoint(2,1);
+            y            = currentPoint(2,2);
+            % we are going to use the x and y data for each graphic object
+            % and determine which one is closest to the mouse down event
+            minDist      = Inf;
+            minHndl      = 0;
+            minHndlInd = 0;
+            for k1=1:length(h.ax.Children)-1
+                if strcmp(h.ax.Children(k1).Marker,'*')
+                xData = get(h.ax.Children(k1),'XData');
+                yData = get(h.ax.Children(k1),'YData');
+                dist  = min((xData-x1).^2+(yData-y).^2);
+                end
+                if dist<15
+                if dist<minDist
+                    minHndl = h.ax.Children(k1);
+                    minHndlInd = k1;
+                    minDist = dist;
+                end
+                end
+            end
+            % if we have a graphics handle that is close to the mouse down
+            % event/position, then save the data
+            if minHndl~=0
+                if ~rem(minHndlInd,2)
+                    findTDE = find(h.t(h.boundsEnd)==h.ax.Children(minHndlInd-1).XData);
+                    findTDB = find(h.t(h.boundsBegin)==h.ax.Children(minHndlInd).XData);
+                    h.boundsBegin(findTDB) = [];
+                    h.boundsEnd(findTDE) = [];
+                    delete(h.ax.Children(minHndlInd-1:minHndlInd))
+                else
+                    findTDE = find(h.t(h.boundsEnd)==h.ax.Children(minHndlInd).XData);
+                    findTDB = find(h.t(h.boundsBegin)==h.ax.Children(minHndlInd+1).XData);
+                    h.boundsBegin(findTDB) = [];
+                    h.boundsEnd(findTDE) = [];
+                    delete(h.ax.Children(minHndlInd:minHndlInd+1))
+                end
+                guidata(figHandle,h)
+
+            end
+    end
+
+elseif contains(figHandle.SelectionType,'alt')
+    currentPoint = get(figHandle, 'CurrentPoint');
+    x1            = currentPoint(1,1);
+    y            = currentPoint(1,2);
+    % get the position of the axes within the GUI
+    axesPos = get(h.ax,'Position');
+    minx    = axesPos(1);
+    miny    = axesPos(2);
+    maxx    = minx + axesPos(3);
+    maxy    = miny + axesPos(4);
+    % is the mouse down event within the axes?
+    if x1>=minx && x1<=maxx && y>=miny && y<=maxy
+        % do we have graphics objects?
+            % get the position of the mouse down event within the axes
+            currentPoint = get(h.ax, 'CurrentPoint');
+            x1            = currentPoint(2,1);
+            y            = currentPoint(2,2);
+            % we are going to use the x and y data for each graphic object
+            % and determine which one is closest to the mouse down event
+            minDist      = Inf;
+            minHndl      = 0;
+            minHndlInd = 0;
+            for k1=1:length(h.ax.Children)-1
+                if strcmp(h.ax.Children(k1).Marker,'*')
+                xData = get(h.ax.Children(k1),'XData');
+                yData = get(h.ax.Children(k1),'YData');
+                dist  = min((xData-x1).^2+(yData-y).^2);
+                end
+                if dist<minDist
+                    minHndl = h.ax.Children(k1);
+                    minHndlInd = k1;
+                    minDist = dist;
+                end
+            end
+            % if we have a graphics handle that is close to the mouse down
+            % event/position, then save the data
+            if minHndl~=0
+                if ~rem(minHndlInd,2)
+                    findTDE = find(h.t(h.boundsEnd)==h.ax.Children(minHndlInd-1).XData);
+                    findTDB = find(h.t(h.boundsBegin)==h.ax.Children(minHndlInd).XData);
+                    [~,newBeg] = min(abs(h.t-(x1+.125)));
+                    [~,newEnd] = min(abs(h.t-(x1-.125)));
+                    h.boundsBegin  = [h.boundsBegin(1:findTDB) newBeg h.boundsBegin(findTDB+1:end)];
+                    h.boundsEnd = [h.boundsEnd(1:findTDE-1) newEnd h.boundsEnd(findTDE:end)];
+                    hold(h.ax,'on')
+                    plot(h.ax,h.t(newBeg),h.ax.Children(end).YData(newBeg),'g*')
+                    plot(h.ax,h.t(newEnd),h.ax.Children(end).YData(newEnd),'r*')
+                    hold(h.ax,'off')
+                else
+                    findTDE = find(h.t(h.boundsEnd)==h.ax.Children(minHndlInd).XData);
+                    findTDB = find(h.t(h.boundsBegin)==h.ax.Children(minHndlInd+1).XData);
+                    [~,newBeg] = min(abs(h.t-(x1+.125)));
+                    [~,newEnd] = min(abs(h.t-(x1-.125)));
+                    h.boundsBegin  = [h.boundsBegin(1:findTDB) newBeg h.boundsBegin(findTDB+1:end)];
+                    h.boundsEnd = [h.boundsEnd(1:findTDE-1) newEnd h.boundsEnd(findTDE:end)];
+                    hold(h.ax,'on')
+                    plot(h.ax,h.t(newBeg),h.ax.Children(end).YData(newBeg),'g*')
+                    plot(h.ax,h.t(newEnd),h.ax.Children(end).YData(newEnd),'r*')
+                    hold(h.ax,'off')
+                end
+                guidata(figHandle,h)
+
+            end
+    end
+end
+end
+
+function confirmFiles(fig,varargin)
+    h = guidata(fig);
+        key = varargin{1};
+        if strcmp(key.Key,'return')
+            h.skipFlag = 0;
+            guidata(fig,h);
+            uiresume(fig)
+        end
+        if strcmp(key.Key,'space')
+            h.skipFlag = 1;
+            guidata(fig,h);
+            uiresume(fig)
+        end
+        if strcmp(key.Key,'a')
+            h.boundsBegin(h.j) = h.boundsBegin(h.j)-3;
+            t1=0:1/h.Fs:(h.boundsEnd(h.j)-h.boundsBegin(h.j))/h.Fs;
+            h.s = (sin(2*pi*2*t1))*20+20;
+            y = h.ax.YLim;
+            xl = h.ax.XLim;
+            if ~isempty(h.p)
+                sub = h.p(2);
+                div = h.p(1);
+            else
+                sub = 0;
+                div = 1;
+            end
+            h.trig.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.trig.YData = h.s1(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.lPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.lPlot.YData = h.l(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.rPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.rPlot.YData = h.r(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.zPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.zPlot.YData = h.z(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.sPlot.XData = h.t(h.boundsBegin(h.j):h.boundsEnd(h.j));
+            h.sPlot.YData = h.s;
+            h.ax.YLim = y;
+            h.ax.XLim = xl;
+            guidata(fig,h)
+        end
+        if strcmp(key.Key,'s')
+            h.boundsBegin(h.j) = h.boundsBegin(h.j)+3;
+            t1=0:1/h.Fs:(h.boundsEnd(h.j)-h.boundsBegin(h.j))/h.Fs;
+            h.s = (sin(2*pi*2*t1))*20+20;
+            y = h.ax.YLim;
+            xl = h.ax.XLim;
+            if ~isempty(h.p)
+                sub = h.p(2);
+                div = h.p(1);
+            else
+                sub = 0;
+                div = 1;
+            end
+            h.trig.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.trig.YData = h.s1(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.lPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.lPlot.YData = h.l(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.rPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.rPlot.YData = h.r(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.zPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.zPlot.YData = h.z(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.sPlot.XData = h.t(h.boundsBegin(h.j):h.boundsEnd(h.j));
+            h.sPlot.YData = h.s;
+            h.ax.YLim = y;
+            h.ax.XLim = xl;
+            guidata(fig,h)
+        end
+        if strcmp(key.Key,'d')
+            h.boundsEnd(h.j) = h.boundsEnd(h.j)-3;
+            t1=0:1/h.Fs:(h.boundsEnd(h.j)-h.boundsBegin(h.j))/h.Fs;
+            h.s = (sin(2*pi*2*t1))*20+20;
+            y = h.ax.YLim;
+            xl = h.ax.XLim;
+            if ~isempty(h.p)
+                sub = h.p(2);
+                div = h.p(1);
+            else
+                sub = 0;
+                div = 1;
+            end
+            h.trig.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.trig.YData = h.s1(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.lPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.lPlot.YData = h.l(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.rPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.rPlot.YData = h.r(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.zPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.zPlot.YData = h.z(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.sPlot.XData = h.t(h.boundsBegin(h.j):h.boundsEnd(h.j));
+            h.sPlot.YData = h.s;
+            h.ax.YLim = y;
+            h.ax.XLim = xl;
+            guidata(fig,h)
+        end
+        if strcmp(key.Key,'f')
+            h.boundsEnd(h.j) = h.boundsEnd(h.j)+3;
+            t1=0:1/h.Fs:(h.boundsEnd(h.j)-h.boundsBegin(h.j))/h.Fs;
+            h.s = (sin(2*pi*2*t1))*20+20;
+            y = h.ax.YLim;
+            xl = h.ax.XLim;
+            if ~isempty(h.p)
+                sub = h.p(2);
+                div = h.p(1);
+            else
+                sub = 0;
+                div = 1;
+            end
+            h.trig.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.trig.YData = h.s1(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.lPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.lPlot.YData = h.l(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.rPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.rPlot.YData = h.r(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.zPlot.XData = (h.t(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50)-sub)/div;
+            h.zPlot.YData = h.z(h.boundsBegin(h.j)-50:h.boundsEnd(h.j)+50);
+            h.sPlot.XData = h.t(h.boundsBegin(h.j):h.boundsEnd(h.j));
+            h.sPlot.YData = h.s;
+            h.ax.YLim = y;
+            h.ax.XLim = xl;
+            guidata(fig,h)
+        end
+        if isempty(h.choice)
+        if strcmp(key.Key,'1')
+            h.ax.Color = [0 1 0];
+            pause(.3);
+            h.choice = 1;
+            guidata(fig,h)
+            uiresume(fig)
+        end
+        if strcmp(key.Key,'2')
+            h.ax2.Color = [0 1 0];
+            pause(.3);
+            h.choice = 2;
+            guidata(fig,h)
+            uiresume(fig)
+        end
+        end
+        
 end
 
 if handles.params.system_code == 4
@@ -3397,6 +4270,9 @@ switch choice.stim
         handles.listing(toDel) = [];
         [y,detect] = max(a);
         [z,detect2] = max(a(a<y));
+        if length(a) == 1
+            z = y;
+        end
         indsForSeg = 1:length(handles.listing);
         handles.totalSegment = length(indsForSeg);
         sortNames = sort_nat({handles.listing(indsForSeg).name})';
@@ -3407,24 +4283,24 @@ switch choice.stim
         f=figure('Name','Choose the stimulator channels that correspond to the canal');
         %f.Position = [360 278 450 290];
         f.Position = [600 278 450 290];
-        %                     set1_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[7:9],'Position',[300 5 130 215]);
-        %                     set1_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',1,'fontsize',8,'Position',[305 225 100 30]);
-        %                     set2_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[1:3],'Position',[165 5 130 215]);
-        %                     set2_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',2,'fontsize',8,'Position',[170 225 100 30]);
-        %                     set3_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[4:6],'Position',[30 5 130 215]);
-        %                     set3_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',3,'fontsize',8,'Position',[35 225 100 30]);
-        set1_stimNum = uicontrol(f,'Style','listbox','String',{'27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'},'Max',24,'Min',0,'Value',[1:8],'Position',[300 5 130 215]);
-        set1_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',1,'fontsize',8,'Position',[305 225 100 30]);
-        set2_stimNum = uicontrol(f,'Style','listbox','String',{'27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'},'Max',15,'Min',0,'Value',[17:24],'Position',[165 5 130 215]);
-        set2_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',2,'fontsize',8,'Position',[170 225 100 30]);
-        set3_stimNum = uicontrol(f,'Style','listbox','String',{'27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'},'Max',15,'Min',0,'Value',[9:16],'Position',[30 5 130 215]);
-        set3_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',3,'fontsize',8,'Position',[35 225 100 30]);
-        %% MEG CHANGING 7/29/2019
-        set4_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26'},'Max',26,'Min',0,'Value',[1:13],'Position',[435 5 130 215]);
-        set4_stimCanal = uicontrol(f,'Style','popupmenu','String',{'Utricle','Saccule'},'Value',2,'fontsize',8,'Position',[440 225 100 30]);
-        set5_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26'},'Max',26,'Min',0,'Value',[14:26],'Position',[570 5 130 215]);
-        set5_stimCanal = uicontrol(f,'Style','popupmenu','String',{'Utricle','Saccule'},'Value',1,'fontsize',8,'Position',[575 225 100 30]);
-        animalEnum = uicontrol(f,'Style','popupmenu','String',{'GiGi','MoMo','Nancy','Yoda','JoJo'},'Value',1,'fontsize',8,'Position',[200 260 50 25],'CallBack',@changeENum)
+                            set1_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[7:9],'Position',[300 5 130 215]);
+                            set1_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',1,'fontsize',8,'Position',[305 225 100 30]);
+                            set2_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[1:3],'Position',[165 5 130 215]);
+                            set2_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',2,'fontsize',8,'Position',[170 225 100 30]);
+                            set3_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'},'Max',15,'Min',0,'Value',[4:6],'Position',[30 5 130 215]);
+                            set3_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',3,'fontsize',8,'Position',[35 225 100 30]);
+%         set1_stimNum = uicontrol(f,'Style','listbox','String',{'27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'},'Max',24,'Min',0,'Value',[1:8],'Position',[300 5 130 215]);
+%         set1_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',1,'fontsize',8,'Position',[305 225 100 30]);
+%         set2_stimNum = uicontrol(f,'Style','listbox','String',{'27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'},'Max',15,'Min',0,'Value',[17:24],'Position',[165 5 130 215]);
+%         set2_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',2,'fontsize',8,'Position',[170 225 100 30]);
+%         set3_stimNum = uicontrol(f,'Style','listbox','String',{'27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'},'Max',15,'Min',0,'Value',[9:16],'Position',[30 5 130 215]);
+%         set3_stimCanal = uicontrol(f,'Style','popupmenu','String',{'LHRH','RALP','LARP'},'Value',3,'fontsize',8,'Position',[35 225 100 30]);
+%         %% MEG CHANGING 7/29/2019
+%         set4_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26'},'Max',26,'Min',0,'Value',[1:13],'Position',[435 5 130 215]);
+%         set4_stimCanal = uicontrol(f,'Style','popupmenu','String',{'Utricle','Saccule'},'Value',2,'fontsize',8,'Position',[440 225 100 30]);
+%         set5_stimNum = uicontrol(f,'Style','listbox','String',{'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26'},'Max',26,'Min',0,'Value',[14:26],'Position',[570 5 130 215]);
+%         set5_stimCanal = uicontrol(f,'Style','popupmenu','String',{'Utricle','Saccule'},'Value',1,'fontsize',8,'Position',[575 225 100 30]);
+         animalEnum = uicontrol(f,'Style','popupmenu','String',{'GiGi','MoMo','Nancy','Yoda','JoJo'},'Value',1,'fontsize',8,'Position',[200 260 50 25],'CallBack',@changeENum)
         okButton = uicontrol(f,'Style','pushbutton','String','Ok','fontsize',12,'Position',[415 230 30 30],'CallBack',{@ok_axis_Callback, handles});
         %guidata(f,handles)
         uiwait(gcf)
@@ -3766,7 +4642,7 @@ switch choice.stim
                             if isempty(startStim)
                                 startStim = strfind(filename,'Stim');
                             end
-                            stimnum = {filename(startStim+4:r(1)-2)};
+                            stimnum = {filename(startStim+4:r(1)-1)};
                             switch stimnum{1}
                                 case handles.canalInfo.stimNum{1}
                                     setappdata(handles.stim_axis,'ax',handles.canalInfo.stimCanal{1});
@@ -3874,6 +4750,7 @@ switch choice.stim
                                                 if length(locs)==posCheck
                                                     qI(posCheck+1) = [];
                                                     stim_pos_thresh_ind(posCheck+1) = [];
+                                                    posCheck = posCheck - 1;
                                                 end
                                                 
                                                 posCheck = posCheck + 1;
@@ -4038,6 +4915,9 @@ switch choice.stim
                                 Stim = 1./TS_intervalS./10';
                                 if any(strfind(filename,'sinusoidal')) || any(strfind(filename,'VirtSine'))
                                     Stim = denoiseSync(TS_intervalS,TS_idxS);
+                                    if Stim(1)>40
+                                        Stim = Stim./10;
+                                    end
                                 else
                                     Stim(Stim>4)=20;
                                     Stim(Stim<20)=0;
@@ -4457,6 +5337,14 @@ switch hObject.Value
         hObject.Parent.Children(4).Value = [1 2 3];
         hObject.Parent.Children(6).Value = [4 5 6 14];
         hObject.Parent.Children(8).Value = [7 8 9 15];
+    case 5 %Didi
+        hObject.Parent.Children(4).Value = [4 5 6];
+        hObject.Parent.Children(6).Value = [1 2 3];
+        hObject.Parent.Children(8).Value = [7 8 9];
+    case 6 %Fred
+        hObject.Parent.Children(4).Value = [4 5 6];
+        hObject.Parent.Children(6).Value = [1 2 3];
+        hObject.Parent.Children(8).Value = [7 8 9];
 end
 end
 
@@ -4584,17 +5472,17 @@ options.ISI = [];
 uiwait(d2);
 
 
-    function ontime_callback(popup,event)
+    function ontime = ontime_callback(popup,event)
         ontime = str2double(get(popup,'string'));
         
     end
 
 
-    function offtime_callback(popup,event)
+    function offtime = offtime_callback(popup,event)
         offtime = str2double(get(popup,'string'));
     end
 
-    function ISI_callback(popup,event)
+    function ISI = ISI_callback(popup,event)
         ISI = str2double(get(popup,'string'));
     end
 
@@ -4660,17 +5548,17 @@ options.preposttime = [];
 uiwait(d2);
 
 
-    function freq_callback(popup,event)
+    function [ontime, offtime] = freq_callback(popup,event)
         freq = str2double(get(popup,'string'));
         ontime = ((1/freq)/2) * 1000; % This parameter is saved in [ms]
         offtime = (1/freq)/2 * 1000; % This parameter is saved in [ms]
     end
 
-    function preposttime_callback(popup,event)
+    function preposttime = preposttime_callback(popup,event)
         preposttime = str2double(get(popup,'string'));
         
     end
-    function ISI_callback(popup,event)
+    function ISI = ISI_callback(popup,event)
         ISI = str2double(get(popup,'string'));
     end
 
@@ -4797,7 +5685,7 @@ handles.string_addon = [];
 
 
 
-% Import the Field Gain file, collected using the vordaq/showall
+% Import the Field Gain file, collected using the vor/showall
 % software
 fieldgainname = [FieldGainPath FieldGainFile];
 delimiter = '\t';
@@ -5398,9 +6286,9 @@ switch handles.exportCond
         title = 'File Name';
         dims = [1 35];
         definput = {[handles.params.subj_id '_ExperimentRecords']};
-        handles.ss_FileName = inputdlg(prompt,title,dims,definput)
+        handles.ss_FileName = inputdlg(prompt,title,dims,definput);
         handles.ss_FileName = handles.ss_FileName{1};
-        handles.ss_PathName = uigetdir(cd,'Choose directory where files will be saved')
+        handles.ss_PathName = uigetdir(cd,'Choose directory where files will be saved');
         set(handles.exp_spread_sheet_name,'String',[handles.ss_FileName '.mat']);
         cd(handles.ss_PathName);
         labels = {'File_Name' 'Date' 'Subject' 'Implant' 'Eye_Recorded' 'Compression' 'Max_PR_pps' 'Baseline_pps' 'Function' 'Mod_Canal' 'Mapping_Type' 'Frequency_Hz' 'Max_Velocity_dps' 'Phase_degrees' 'Cycles' 'Phase_Direction' 'Notes'};
@@ -5408,7 +6296,18 @@ switch handles.exportCond
             handles.worksheet_name.String = handles.worksheet_name.String(1:31);
         end
         handles.experimentdata = getappdata(handles.export_data,'data');
+        if contains(handles.experimentdata(1,1),'.mat')
         handles.experimentdata(:,1)=strrep(handles.experimentdata(:,1),'.mat','');
+        end
+        if isempty(handles.worksheet_name.String)
+            prompt = {'Enter the desired sheet name'};
+        title = 'Sheet Name';
+        dims = [1 35];
+        definput = {['']};
+        handles.sheetName = inputdlg(prompt,title,dims,definput);
+        handles.worksheet_name.String = handles.sheetName{1};
+        temp = handles.sheetName{1};
+        end
         temp = handles.worksheet_name.String;
         temp(temp=='-') = '_';
         temp(temp==' ') = '';
@@ -5416,7 +6315,7 @@ switch handles.exportCond
         t = cell2table([handles.experimentdata],'VariableNames',labels);
         eval([var '=t']);
         save(handles.exp_spread_sheet_name.String,var);
-        writetable(t,[handles.ss_FileName '.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true)
+        writetable(t,[handles.ss_FileName '.xlsx'],'Sheet',temp,'Range','A:Q','WriteVariableNames',true);
         handles.export_data.BackgroundColor = [0    1    0];
         pause(1);
         handles.export_data.BackgroundColor = [0.9400    0.9400    0.9400];
