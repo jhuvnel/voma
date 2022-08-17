@@ -37,6 +37,27 @@ saveas(nancy.ccLARPPlot,[figDir,name,'.svg']);
 saveas(nancy.ccLARPPlot,[figDir,name,'.jpg']);
 saveas(nancy.ccLARPPlot,[figDir,name,'.fig']);
 %%
+PN = load('R:\Morris, Brian\Monkey Data\Nancy\20200506\Cycles\Plots.mat');
+%%
+figDir = 'R:\Morris, Brian\Monkey Data\Nancy\20200506\Figures\';
+animal = 'Nancy';
+dates = [{'date20200506'}];
+st = [1 2 3];
+rft = [11];
+directions = [{'RALP'}];% 
+ldgFlag = 'off';
+byReforByStim = 1; %1 by ref 0 by stim
+lor = 0; %1 left eye 0 right eye
+plottype = 'InvsOut_noLDG';
+name = ['LEGEND-Nancy_eyeMisalignmentandVelocity_LHRH_Current_ByStim_Bipolar_Leye-20200617MedEl-microtext'];
+nancy = makePlots(figDir,animal,dates,st,rft,directions,PN.Plots,plottype,ldgFlag,name,byReforByStim,lor);
+%%
+
+%figDir = 'R:\Morris, Brian\Monkey Data\Nancy\20191118\Final Figures\';
+saveas(nancy.ccLARPPlot,[figDir,name,'.svg']);
+saveas(nancy.ccLARPPlot,[figDir,name,'.jpg']);
+saveas(nancy.ccLARPPlot,[figDir,name,'.fig']);
+%%
 PG = load('R:\Morris, Brian\Monkey Data\GiGi\20190724\Spike2 Files\current sweep\Cycles\Plots.mat');
 %%
 figDir = 'R:\Morris, Brian\Monkey Data\GiGi\20190724\Spike2 Files\current sweep\Figures\';
@@ -54,11 +75,21 @@ saveas(GiGi.ccLARPPlot,[figDir,name,'.svg']);
 saveas(GiGi.ccLARPPlot,[figDir,name,'.jpg']);
 saveas(GiGi.ccLARPPlot,[figDir,name,'.fig']);
 %%
-function [plotting] = makePlots(figDir,animal,dates,st,rft,directions,Plots,plottype,ldgFlag,name)
+function [plotting] = makePlots(figDir,animal,dates,st,rft,directions,Plots,plottype,ldgFlag,name,byReforByStim,lor)
 if strcmp(ldgFlag,'on')
     plotFlag = 'off';
 elseif strcmp(ldgFlag,'off')
      plotFlag = 'on';
+end
+if byReforByStim
+    tty = 'ref';
+else
+    tty = 'source';
+end
+if lor
+    pt = 'plotL';
+else
+    pt = 'plotR';
 end
 plotting = struct();
 plotting.ccLARPPlot = figure('units','normalized','outerposition',[0 0 1 1]);
@@ -138,15 +169,15 @@ for s = 1:length(st)
         %sgtitle(plotting.ccLARPPlot,{['Average Left Eye Velocity and Misalignment Magnitude, Animal ',an,' ',plotDir]; ' '},'FontSize', 22, 'FontWeight', 'Bold');
         ePos = getePos(animal,st(s));
         plotting.ccLARPV(ax).axs = subtightplot(2,length(st),ax,[0.025 0.000000000005],[0.10 0.075],[.05 .05],'Parent', plotting.ccLARPPlot,'visible',plotFlag);
-        plotting.ccLARPVData(s,r).line = copyobj(Plots.(animal).(date).(direction).(stim).(ref).source.magV.line.plotL,plotting.ccLARPV(ax).axs);
-        plotting.ccLARPVData(s,r).points = copyobj([Plots.(animal).(date).(direction).(stim).(ref).source.magV.point.PlotL],plotting.ccLARPV(ax).axs);
-        t = [Plots.(animal).(date).(direction).(stim).(ref).source.magV.point.twitchPlotL]~=0;
-        plotting.ccLARPVData(s,r).error = copyobj([Plots.(animal).(date).(direction).(stim).(ref).source.magV.point.erPlotL],plotting.ccLARPV(ax).axs);  
+        plotting.ccLARPVData(s,r).line = copyobj(Plots.(animal).(date).(direction).(stim).(ref).(tty).magV.line.plotR,plotting.ccLARPV(ax).axs);
+        plotting.ccLARPVData(s,r).points = copyobj([Plots.(animal).(date).(direction).(stim).(ref).(tty).magV.point.PlotR],plotting.ccLARPV(ax).axs);
+        t = [Plots.(animal).(date).(direction).(stim).(ref).(tty).magV.point.twitchPlotR]~=0;
+        plotting.ccLARPVData(s,r).error = copyobj([Plots.(animal).(date).(direction).(stim).(ref).(tty).magV.point.erPlotR],plotting.ccLARPV(ax).axs);  
         plotting.ccLARPVData(s,r).co = plotting.ccLARPVData(s,r).line.XData(max(find((plotting.ccLARPVData(s,r).line.YData<20))));
          set(plotting.ccLARPVData(s,r).error,'LineWidth',4)
          set(plotting.ccLARPVData(s,r).error,'CapSize',12)
          if any(t)
-        plotting.ccLARPVData(s,r).tw = copyobj([Plots.(animal).(date).(direction).(stim).(ref).source.magV.point(t).twitchPlotL],plotting.ccLARPV(ax).axs);
+        plotting.ccLARPVData(s,r).tw = copyobj([Plots.(animal).(date).(direction).(stim).(ref).(tty).magV.point(t).twitchPlotR],plotting.ccLARPV(ax).axs);
         set(plotting.ccLARPVData(s,r).tw,'MarkerSize',25)
          end
         
@@ -206,14 +237,14 @@ for s = 1:length(st)
         set(plotting.ccLARPVData(s,r).points,'MarkerSize',15,'LineWidth',3)
         
         plotting.ccLARPM(ax).axs = subtightplot(2,length(st),ax+length(st),[0.025 0.000000000005],[0.10 0.075],[.05 .05],'Parent', plotting.ccLARPPlot,'visible',plotFlag);
-        plotting.ccLARPMData(s,r).line = copyobj(Plots.(animal).(date).(direction).(stim).(ref).source.magM.line.plotL,plotting.ccLARPM(ax).axs);
-        plotting.ccLARPMData(s,r).points = copyobj([Plots.(animal).(date).(direction).(stim).(ref).source.magM.point.PlotL],plotting.ccLARPM(ax).axs);
-        t = [Plots.(animal).(date).(direction).(stim).(ref).source.magM.point.twitchPlotL]~=0;
-                plotting.ccLARPMData(s,r).error = copyobj([Plots.(animal).(date).(direction).(stim).(ref).source.magM.point.erPlotL],plotting.ccLARPM(ax).axs); 
+        plotting.ccLARPMData(s,r).line = copyobj(Plots.(animal).(date).(direction).(stim).(ref).(tty).magM.line.plotR,plotting.ccLARPM(ax).axs);
+        plotting.ccLARPMData(s,r).points = copyobj([Plots.(animal).(date).(direction).(stim).(ref).(tty).magM.point.PlotR],plotting.ccLARPM(ax).axs);
+        t = [Plots.(animal).(date).(direction).(stim).(ref).(tty).magM.point.twitchPlotR]~=0;
+                plotting.ccLARPMData(s,r).error = copyobj([Plots.(animal).(date).(direction).(stim).(ref).(tty).magM.point.erPlotR],plotting.ccLARPM(ax).axs); 
                         set(plotting.ccLARPMData(s,r).error,'LineWidth',4)
          set(plotting.ccLARPMData(s,r).error,'CapSize',12)
          if any(t)
-        plotting.ccLARPMData(s,r).tw = copyobj([Plots.(animal).(date).(direction).(stim).(ref).source.magM.point(t).twitchPlotL],plotting.ccLARPM(ax).axs);
+        plotting.ccLARPMData(s,r).tw = copyobj([Plots.(animal).(date).(direction).(stim).(ref).(tty).magM.point(t).twitchPlotR],plotting.ccLARPM(ax).axs);
         set(plotting.ccLARPMData(s,r).tw,'MarkerSize',25)
          end
         
@@ -282,7 +313,7 @@ for s = 1:length(st)
             plotting.ccLARPM(ax).axs.YLabel.FontSize = 30;
             
         end
-        tn = Plots.(animal).(date).(direction).(stim).(ref).source.magM.ldgNameL;
+        tn = Plots.(animal).(date).(direction).(stim).(ref).(tty).magM.ldgNameR;
 
         if length(tn)==2
             co = tn(2);
@@ -684,6 +715,8 @@ end
 % saveas(plotting.ccLHRHlot,[figDir,name,'.jpg']);
 % saveas(plotting.ccLHRHlot,[figDir,name,'.fig']);
 % %close(plotting.ccLHRHlot);
+%%
+
 %%
 function ePos = getePos(animal,j)
 ePos = '';

@@ -1247,10 +1247,10 @@ switch handles.params.system_code
             eyesRecorded.Position = [1.4    0.4    0.075    0.15];
             handles.leftEye = uicontrol(eyesRecorded,'Style','checkbox','String','Left Eye');
             handles.leftEye.Units = 'normalized';
-            handles.leftEye.Position = [0.03    0.5    0.5 .5];
+            handles.leftEye.Position = [0.03    0.4    0.5 .5];
             handles.rightEye = uicontrol(eyesRecorded,'Style','checkbox','String','Right Eye');
             handles.rightEye.Units = 'normalized';
-            handles.rightEye.Position = [0.5 0.5 .5 .5];
+            handles.rightEye.Position = [0.5 0.4 .5 .5];
             handles.leftEyeCh = uicontrol(eyesRecorded,'Style','listbox','String',{' ','Ch1Ch2','Ch3Ch4'},'Value',3);
             handles.leftEyeCh.Units = 'normalized';
             handles.leftEyeCh.Position = [0.03    0.3    0.410    0.3000];
@@ -1261,19 +1261,23 @@ switch handles.params.system_code
             handles.eyes.Units = 'normalized';
             handles.eyes.Position = [0.3    0.05    0.5    0.2000];
             handles.eyes.FontSize = 18;
+            txt = uicontrol(eyesRecorded,'Style','text','String','Chek the box for the eyes rcorded and select the correct channel');
+            txt.Units = 'normalized';
+            txt.BackgroundColor = [1 1 1];
+            txt.Position = [0.03 0.7 0.95 .3];
             waitfor(handles.eyes,'Value');
             
             
-            if handles.leftEye.Value == 0
-                handles.EyeCh = handles.leftEyeCh.String{2};
-                handles.eye_rec.Value = 4;
-                
-            elseif handles.rightEye.Value == 0
-                handles.EyeCh = handles.rightEyeCh.String{3};
-                handles.eye_rec.Value = 3;
-            else
+            if handles.leftEye.Value && handles.rightEye.Value
                 handles.EyeCh = {handles.rightEyeCh.String{2},handles.rightEyeCh.String{3}};
                 handles.eye_rec.Value = 2;
+                
+            elseif handles.rightEye.Value
+                handles.EyeCh = handles.rightEyeCh.String{3};
+                handles.eye_rec.Value = 4;
+            else
+                handles.EyeCh = handles.leftEyeCh.String{2};
+                handles.eye_rec.Value = 3;
             end
             handles.text53.BackgroundColor = [0.94 0.94 0.94];
             delete(eyesRecorded)
@@ -2104,19 +2108,23 @@ switch handles.params.system_code
             handles.eyes.Units = 'normalized';
             handles.eyes.Position = [0.3    0.05    0.5    0.2000];
             handles.eyes.FontSize = 18;
+            txt = uicontrol(eyesRecorded,'Style','text','String','Chek the box for the eyes rcorded and select the correct channel');
+            txt.Units = 'normalized';
+            txt.BackgroundColor = [1 1 1];
+            txt.Position = [0.03 0.7 0.95 .3];
             waitfor(handles.eyes,'Value');
             
             
-            if handles.leftEye.Value == 0
-                handles.EyeCh = handles.leftEyeCh.String{2};
-                handles.eye_rec.Value = 4;
-                
-            elseif handles.rightEye.Value == 0
-                handles.EyeCh = handles.rightEyeCh.String{3};
-                handles.eye_rec.Value = 3;
-            else
+            if handles.leftEye.Value && handles.rightEye.Value
                 handles.EyeCh = {handles.rightEyeCh.String{2},handles.rightEyeCh.String{3}};
                 handles.eye_rec.Value = 2;
+                
+            elseif handles.rightEye.Value
+                handles.EyeCh = handles.rightEyeCh.String{3};
+                handles.eye_rec.Value = 4;
+            else
+                handles.EyeCh = handles.leftEyeCh.String{2};
+                handles.eye_rec.Value = 3;
             end
             handles.text53.BackgroundColor = [0.94 0.94 0.94];
             delete(eyesRecorded)
@@ -3207,19 +3215,23 @@ switch handles.params.system_code
         handles.eyes.Units = 'normalized';
         handles.eyes.Position = [0.3    0.05    0.5    0.2000];
         handles.eyes.FontSize = 18;
+        txt = uicontrol(eyesRecorded,'Style','text','String','Chek the box for the eyes rcorded and select the correct channel');
+        txt.Units = 'normalized';
+        txt.BackgroundColor = [1 1 1];
+        txt.Position = [0.03 0.7 0.95 .3];
         waitfor(handles.eyes,'Value');
-        
-        handles.text53.BackgroundColor = 'r';
-        if handles.leftEye.Value == 0
-            handles.EyeCh = handles.leftEyeCh.String{2};
-            handles.eye_rec.Value = 4;
-            
-        elseif handles.rightEye.Value == 0
-            handles.EyeCh = handles.rightEyeCh.String{3};
-            handles.eye_rec.Value = 3;
-        else
+
+
+        if handles.leftEye.Value && handles.rightEye.Value
             handles.EyeCh = {handles.rightEyeCh.String{2},handles.rightEyeCh.String{3}};
             handles.eye_rec.Value = 2;
+
+        elseif handles.rightEye.Value
+            handles.EyeCh = handles.rightEyeCh.String{3};
+            handles.eye_rec.Value = 4;
+        else
+            handles.EyeCh = handles.leftEyeCh.String{2};
+            handles.eye_rec.Value = 3;
         end
         handles.text53.BackgroundColor = [0.94 0.94 0.94];
         delete(eyesRecorded)
@@ -5659,19 +5671,23 @@ handles.eyes = uicontrol(eyesRecorded,'Style','radiobutton','String','ok');
 handles.eyes.Units = 'normalized';
 handles.eyes.Position = [0.3    0.05    0.5    0.2000];
 handles.eyes.FontSize = 18;
+txt = uicontrol(eyesRecorded,'Style','text','String','Chek the box for the eyes rcorded and select the correct channel');
+txt.Units = 'normalized';
+txt.BackgroundColor = [1 1 1];
+txt.Position = [0.03 0.7 0.95 .3];
 waitfor(handles.eyes,'Value');
 
 
-if handles.leftEye.Value == 0
-    handles.EyeCh = handles.leftEyeCh.String{2};
-    handles.eye_rec.Value = 4;
-    
-elseif handles.rightEye.Value == 0
-    handles.EyeCh = handles.rightEyeCh.String{3};
-    handles.eye_rec.Value = 3;
-else
+if handles.leftEye.Value && handles.rightEye.Value
     handles.EyeCh = {handles.rightEyeCh.String{2},handles.rightEyeCh.String{3}};
     handles.eye_rec.Value = 2;
+
+elseif handles.rightEye.Value
+    handles.EyeCh = handles.rightEyeCh.String{3};
+    handles.eye_rec.Value = 4;
+else
+    handles.EyeCh = handles.leftEyeCh.String{2};
+    handles.eye_rec.Value = 3;
 end
 handles.text53.BackgroundColor = [0.94 0.94 0.94];
 delete(eyesRecorded)
